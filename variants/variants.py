@@ -1,21 +1,16 @@
 import pandas as pd
 import vcf
 import sys, os, re
-
-def run_once(f):
-    def wrapper(*args, **kwargs):
-        if not wrapper.has_run:
-            wrapper.has_run = True
-            return f(*args, **kwargs)
-    wrapper.has_run = False
-    return wrapper
+import ped
+import func
                                                 
 class Variants:
     """Class describing a vcf file. Consists of pandas data frame, and metadata found in the vcf header.
        Start, end coordinates are zero-based, half-open """
-    def __init__(self, fname, family_id, chrom=None, start=None, end=None):
+    def __init__(self, fname, family_id, ped, chrom=None, start=None, end=None):
         self.fname = fname
         self.family_id = family_id
+        self.ped = ped 
         self.vcf_reader = vcf.Reader(open(self.fname, 'r'))
         if not chrom is None:
             self.vcf_reader = self.vcf_reader.fetch(chrom, start, end)
@@ -30,6 +25,7 @@ class Variants:
         self.infos = self.vcf_reader.infos
         self.metadata = self.vcf_reader.metadata
         self.samples = self.vcf_reader.samples
+        self.samples_to_keep = self.vcf_reader.samples
         self.required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER']
         self.info_fields = self.infos.keys()
         self.format_fields = self.formats.keys()
@@ -89,17 +85,30 @@ class Variants:
         return line_info
 
     def _sample2member(self, sample_name):
-        if 'p1' in sample_name:
-            return 'p1'
-        elif 'mo' in sample_name:
-            return 'mo'
-        else:
-            return 'fa'
+        return sample_name
+#        m = re.search('\.(s\d)|\.(p\d)|\.(fa)|\.(mo)', sample_name)
+#        if not m:
+#            return sample_name
+#        else:
+#            ml = [i for i in m.groups() if i is not None]
+#            if len(ml) > 1:
+#                print 'More than one match in sample name'
+#                raise
+#            else:
+#                return ml[0]
+#        for m in ['p1', 'p2', 'p3', 'p4', 'p5']:
+#            if m in sample_name:
+#                return m
+#            elif 'mo' in sample_name:
+#                return 'mo'
+#            else:
+#                return 'fa'
     
     def _colNamesFormat(self): 
         col_names_format = []
-        memb = [self._sample2member(x) for x in self.samples]
-        for smpl in memb:
+#        memb = [self._sample2member(x.sample) for x in self.current_record.samples]
+        for smpl in self.samples:
+            #print 'processing sample ', smpl
             for format_f in self.format_fields:
                     if format_f == 'AD':
                         col_names_format.append('_'.join(['format', smpl, 'ref', format_f])) 
@@ -116,27 +125,35 @@ class Variants:
     def _parseFormat(self, i_alt_allel):
         line_format = []
         for smpl in self.current_record.samples:
-            for format_f in self.format_fields:
-                try:
-                    if not smpl.called:
-                        line_format = [None] * 8
-                    else:
-                        format_v = smpl[format_f]
+           # print '  '
+           # print 'parsing sample ', smpl.sample
+            if not smpl.called:
+                line_format += [None] * (len(self.format_fields) + 3 +1)
+                continue
+            else:
+                for format_f in self.format_fields:
+           #         print line_format
+           #         print 'parsing', format_f
+                    try:
+                        format_v = getattr(smpl.data, format_f, None)
                         if format_f == 'AD':
                             if format_v is None:
                                 line_format += [None] * 2
                             else:
                                 line_format += format_v
+                                #print format_f, format_v, line_format
                         elif format_f == 'PL':
                             if format_v is None:
                                 line_format += [None] * 3
                             else:
                                 line_format += format_v
+                                #print format_f, format_v, line_format
                         else:
                             line_format.append(format_v)
-                except:
-                    print self.current_record, self.current_record.INFO, smpl, smpl.called
-                    raise
+                            #print format_f, format_v, line_format
+                    except:
+                        print self.current_record, self.current_record.INFO, smpl, smpl.called
+                        raise
             line_format.append(smpl.gt_type)
         return line_format
     def _varType(self):
@@ -163,6 +180,8 @@ class Variants:
             if len(record.ALT) > 1: #for now skip all multiallelic
                 num_multiallelic += 1
                 continue
+            #print self.current_record, self.current_record.INFO, self.current_record.samples
+            #print ' '
             for i_alt, nucl_alt in enumerate(record.ALT):
                 line_required = [record.CHROM, 
                         record.POS, 
@@ -172,19 +191,25 @@ class Variants:
                         record.QUAL, 
                         self._formatFilter(record.FILTER)]
                 #INFO
-            line_info = self._parseInfo(i_alt)
-            #FORMAT
-            line_format = self._parseFormat(i_alt)
-            line_extra = [self._varType(), record.is_transition]
-            lines.append(line_required + line_info + line_format + line_extra)
+                line_info = self._parseInfo(i_alt)
+               # print line_info
+                #FORMAT
+                line_format = self._parseFormat(i_alt)
+               # print line_format
+                line_extra = [self._varType(), record.is_transition]
+               # print line_extra
+                lines.append(line_required + line_info + line_format) #+ line_extra)
         #        print line
         #        if i > 2:
         #            sys.exit()
-        self.variants = pd.DataFrame(lines, dtype=str)
-        self.variants.columns = self.required_fields + col_names_info + col_names_format + col_names_extra
-        self.variants['family_id'] = self.family_id
-        #self.variants[1:] = self.variants[1:].convert_objects(convert_numeric=True)
-        print "%s multiallelic sites skipped" % num_multiallelic
+        if not lines:
+            print 'no variants in this region'
+        else:
+            self.variants = pd.DataFrame(lines, dtype=str)
+            self.variants.columns = self.required_fields + col_names_info  + col_names_format #+ col_names_extra
+            self.variants['family_id'] = self.family_id
+            #self.variants[1:] = self.variants[1:].convert_objects(convert_numeric=True)
+            print "%s multiallelic sites skipped" % num_multiallelic
     
     def keepOnlyPossibleDonovos():
         pass
@@ -193,7 +218,4 @@ class Variants:
         pass
 
 if __name__ == '__main__':
-    infile = '/mnt/scratch/asalomatov/SSC_rerun/denovo_analysis/rerun200fam/11006-HC-pm50-ann.vcf.gz'
-    myvars = Variants(infile, '11006')
-
-
+    pass
