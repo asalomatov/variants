@@ -1,16 +1,14 @@
 import pandas as pd
 import vcf
 import sys, os, re
-import ped
 import func
                                                 
 class Variants:
     """Class describing a vcf file. Consists of pandas data frame, and metadata found in the vcf header.
        Start, end coordinates are zero-based, half-open """
-    def __init__(self, fname, family_id, ped, chrom=None, start=None, end=None):
+    def __init__(self, fname, family_id, chrom=None, start=None, end=None):
         self.fname = fname
         self.family_id = family_id
-        self.ped = ped 
         self.vcf_reader = vcf.Reader(open(self.fname, 'r'))
         if not chrom is None:
             self.vcf_reader = self.vcf_reader.fetch(chrom, start, end)
@@ -198,7 +196,7 @@ class Variants:
                # print line_format
                 line_extra = [self._varType(), record.is_transition]
                # print line_extra
-                lines.append(line_required + line_info + line_format) #+ line_extra)
+                lines.append(line_required + line_info + line_format + line_extra)
         #        print line
         #        if i > 2:
         #            sys.exit()
@@ -206,7 +204,7 @@ class Variants:
             print 'no variants in this region'
         else:
             self.variants = pd.DataFrame(lines, dtype=str)
-            self.variants.columns = self.required_fields + col_names_info  + col_names_format #+ col_names_extra
+            self.variants.columns = self.required_fields + col_names_info  + col_names_format + col_names_extra
             self.variants['family_id'] = self.family_id
             #self.variants[1:] = self.variants[1:].convert_objects(convert_numeric=True)
             print "%s multiallelic sites skipped" % num_multiallelic

@@ -112,14 +112,15 @@ def refAtPos(chrom, pos, genref='/mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/gen
     return ref_allel
 refAtPos(2, 12340909)
 
+import func
 def procIndelRows(row, pos_field):
     if row['ref'] == '-':
         pos = row[pos_field] - 1
-        ref_allel = refAtPos(row['chr'], pos)
+        ref_allel = func.refAtPos(row['chr'], pos)
         return pd.Series([pos, ref_allel, ref_allel + row['alt'], 'ins'], index=['pos1', 'ref1', 'alt1', 'vartype'])
     elif row['alt'] == '-':
         pos = row[pos_field] - 1
-        ref_allel = refAtPos(row['chr'], pos)
+        ref_allel = func.refAtPos(row['chr'], pos)
         return pd.Series([pos, ref_allel + row['ref'], ref_allel, 'del'], index=['pos1', 'ref1', 'alt1', 'vartype'])
     else:
         pos = row[pos_field]
@@ -165,7 +166,7 @@ pcgc['file'] = pcgc['id'] + '_' + pcgc['id'] + '-02_' + pcgc['id'] + '-01.annota
 pcgc['file'][~pcgc['has_file']] = None
 sum(pcgc['file'].isnull())
 
-pcgc['file_has_variant'] = None
+pcgc['file_variant'] = None
 sum(pcgc['file'].isnull())
 type(pcgc.id)
 pcgc.id.head()
@@ -185,20 +186,7 @@ pcgc.head()
 #            row['file_has_variant'] = True
 
 
-def fileHasVariant(fname, fam_id, chrom, pos_start, pos_end):
-    myvars = Variants(fname, fam_id, chrom, pos_start, pos_end)
-    next_var = None
-    fam_var = []
-    for next_var in myvars.vcf_reader:
-        alt_allel = []
-        for nucl_alt in next_var.ALT: 
-            alt_allel.append(nucl_alt.sequence)
-        for v in alt_allel:
-            fam_var.append('_'.join([fam_id, next_var.CHROM, str(next_var.POS), next_var.REF, v]))
-    return fam_var
-
-
-x_1 = pcgc[pcgc['has_file']==True].apply(lambda row: fileHasVariant('/mnt/scratch/asalomatov/data/columbia/vcf/' + row['file'], row['id'], \
+x_1 = pcgc[pcgc['has_file']==True].apply(lambda row: func.fileHasVariant('/mnt/scratch/asalomatov/data/columbia/vcf/' + row['file'], row['id'], \
         row['chr'], row['pos1'] - 1, row['pos1']), axis=1)
 
 type(x_1)
@@ -238,7 +226,10 @@ def mySum(x):
     total = len(x['id'])
     return pd.Series ([total], index = ['total'])
 
-pcgc[pcgc.has_file].groupby(['source', 'vartype', 'result', 'file_has_variant']).apply(mySum)
+pcgc_sum = pcgc[pcgc.has_file].groupby(['source', 'vartype', 'result', 'file_has_variant']).apply(mySum)
+pcgc_sum.to_excel
+pcgc_sum.to_excel('pcgc_sum.xls', index=False)
+pcgc.to_excel('pcgc.xls', index=False)
 pcgc_0.groupby(['source', 'vartype', 'result', 'has_file', 'file_has_variant']).apply(mySum)
 pcgc_0.groupby(['source', 'result', 'has_file', 'file_has_variant']).apply(mySum)
 pcgc_0[pcgc_0.has_file].groupby(['source', 'result', 'has_file', 'file_has_variant']).apply(mySum)
@@ -318,5 +309,47 @@ y[(y['source']=='pcgc13') & (y['file_has_variant'].notnull()) & (y['result']=='n
 pcgc[(pcgc['source']=='pcgc13') & (pcgc['file_has_variant']True) & (pcgc['result']=='not_confirmed')]
 y.dtypes
 
+
+
+### process Iioss and Krumm variants
+ssc_dnv = pd.read_table('/mnt/scratch/asalomatov/data/SSC/SSCdeNovoCalls/SSC_exome_denovo_Ios_Krumm.csv',
+        sep="\t", index_col=False, skiprows=1, header=None)
+ssc_dnv.columns
+ssc_dnv.shape
+ssc_dnv.dtypes
+ssc_dnv.tail()
+ssc_dnv.Study.value_counts()
+ssc_dnv = ssc_dnv[[4,0,1,2,3,11,12]]
+ssc_dnv.columns = ['ind_id', 'chr', 'pos', 'ref', 'alt', 'status', 'descr']
+ssc_dnv.head()
+ssc_dnv['vartype'] = 'snp'
+x = ssc_dnv['alt'].apply(len)
+y = ssc_dnv['ref'].apply(len)
+ssc_dnv['vartype'][(x > 1)]= 'del'
+ssc_dnv['vartype'][(y > 1)]= 'ins'
+ssc_dnv['vartype'].value_counts()
+ssc_dnv['status'].value_counts()
+ssc_dnv[ssc_dnv['vartype'] == \
+    'snp'].to_csv("/mnt/scratch/asalomatov/data/SSC/SSCdeNovoCalls/ssc_exome_all_snp.txt", sep="\t", header=True, index=False)
+
+ssc_dnv_known_status = ssc_dnv[ssc_dnv['status'] != 'ND']
+ssc_dnv_known_status.shape
+ssc_dnv_known_status.shape
+ssc_dnv_known_status.head()
+ssc_dnv_known_status.tail()
+ssc_dnv_known_status['vartype'].value_counts()
+ssc_dnv_known_status[ssc_dnv_known_status['vartype'] != 'snp'].to
+ssc_dnv_known_status[ssc_dnv_known_status['vartype'] !=
+        'snp'].to_csv("/mnt/scratch/asalomatov/data/SSCdeNovoCalls/ssc_exome_verified_indels.txt", sep="\t", header=True, index=False)
+ssc_dnv_known_status[ssc_dnv_known_status['vartype'] == \
+    'snp'].to_csv("/mnt/scratch/asalomatov/data/SSCdeNovoCalls/ssc_exome_verified_snp.txt", sep="\t", header=True, index=False)
+ssc_dnv_known_status.groupby(['vartype', 'status']).apply(len)
+
+
+
+### dbSNP fields
+myfile = '/mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/variation/dbsnp_138.vcf.gz'
+myvars = variants.Variants(myfile, 'aaa')
+myvars.describeInfoFields()
 
 

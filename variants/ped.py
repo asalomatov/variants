@@ -48,60 +48,71 @@ class Ped:
     def getFather(self, family_id):
         res = self.ped['ind_id'][(self.ped['fam_id'] == family_id) & (self.ped['sex'] == 1) &  \
                 self.ped['fa_id'].isnull() & self.ped['mo_id'].isnull() ]
+        if len(res.index) == 0: return None
         assert len(res) == 1
         return res.iloc[0]
 
     def getMother(self, family_id):
         res = self.ped['ind_id'][(self.ped['fam_id'] == family_id) & (self.ped['sex'] == 2) &  \
                 self.ped['fa_id'].isnull() & self.ped['mo_id'].isnull() ]
+        if len(res.index) == 0: return None
         assert len(res) == 1
         return res.iloc[0]
 
     def getChildsFather(self, individial_id):
         res = self.ped['fa_id'][(self.ped['ind_id'] == individial_id)]
+        if len(res.index) == 0: return None
         assert len(res) == 1
         return res.iloc[0]
 
     def getChildsMother(self, individial_id):
         res = self.ped['mo_id'][(self.ped['ind_id'] == individial_id)]
+        if len(res.index) == 0: return None
         assert len(res) == 1
         return res.iloc[0]
 
     def isAffected(self, individial_id):
         res = self.ped['pheno'][(self.ped['ind_id'] == individial_id)] == 2
+        if len(res.index) == 0: return None
         assert len(res) == 1
         return res.iloc[0]
 
     def getIndivVCF(self, individial_id):
         res = self.ped['vcf'][(self.ped['ind_id'] == individial_id)]
+        if len(res.index) == 0: return None
         assert len(res) == 1
         return res.iloc[0]
 
     def getIndivBAM(self, individial_id):
         res = self.ped['bam'][(self.ped['ind_id'] == individial_id)]
+        if len(res.index) == 0: return None
         assert len(res) == 1
         return res.iloc[0]
 
     def getFamily(self, individial_id):
         res = self.ped['fam_id'][(self.ped['ind_id'] == individial_id)]
+        if len(res.index) == 0: return None
         assert len(res) == 1
         return res.iloc[0]
 
     def getFamilyVCF(self, family_id):
         res = self.ped['vcf'][(self.ped['fam_id'] == family_id)]
         res = res.unique()
+        if len(res.index) == 0: return None
         assert len(res) == 1
         return res[0]
 
     def getFamilyBam(self, family_id):
         res = self.ped['bam'][(self.ped['fam_id'] == family_id)]
         res = res.unique()
+        if len(res.index) == 0: return None
         assert len(res) == 1
         return res[0]
 
     def getAllProbands(self):
         res = self.ped['ind_id'][self.ped['pheno'] == 2]
         res = res.tolist()
+        if not res: return None
         return res
 
     def getAllTrios(self):
@@ -112,6 +123,7 @@ class Ped:
     def getAllQuads(self):
         fam = self.ped['fam_id'].unique()
         res = [x for x in fam if len(self.getAllMembers(x)) == 4]
+        if not res: return None
         return res
 
     def isTrio(self, family_id):
