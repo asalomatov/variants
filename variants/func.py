@@ -40,3 +40,16 @@ def fileHasVariant(fname, fam_id, chrom, pos_start, pos_end):
 def refAtPos(chrom, pos, genref='/mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa'):
     ref_allel = pysam.faidx(genref, str(chrom)+':'+str(pos)+'-'+str(pos))[1].strip()
     return ref_allel
+
+def df2sklearn(mydf, col_to_keep):
+    if 'status' in mydf.columns:
+        mydf['status01'] = 1
+        mydf['status01'][mydf['status'] == 'N'] = 0
+        col_to_keep += ['status01']
+    col_to_keep = list(set(col_to_keep).intersection(set(mydf.columns)))
+    print col_to_keep
+    #res = mydf[col_to_keep]
+    mydf[col_to_keep] = mydf[col_to_keep].astype(float)
+    mydf = mydf.dropna(subset = col_to_keep)
+    return mydf[col_to_keep] 
+
