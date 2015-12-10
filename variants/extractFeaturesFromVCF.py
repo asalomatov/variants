@@ -9,6 +9,7 @@ import features_vcf
 import numpy as np
 import os
 
+
 variants = reload(variants)
 func = reload(func)
 ped = reload(ped)

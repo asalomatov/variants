@@ -53,3 +53,9 @@ def df2sklearn(mydf, col_to_keep):
     mydf = mydf.dropna(subset = col_to_keep)
     return mydf[col_to_keep] 
 
+def varType(row):
+    if len(row['Ref']) == len(row['Alt']):
+        return 'snp'
+    else:
+        return 'indel'
+
