@@ -2,7 +2,8 @@ import pandas as pd
 import vcf
 import sys, os, re
 import func
-                                                
+import collections
+                                            
 class Variants:
     """Class describing a vcf file. Consists of pandas data frame, and metadata found in the vcf header.
        Start, end coordinates are zero-based, half-open """
@@ -208,6 +209,45 @@ class Variants:
             self.variants['family_id'] = self.family_id
             #self.variants[1:] = self.variants[1:].convert_objects(convert_numeric=True)
             print "%s multiallelic sites skipped" % num_multiallelic
+    
+    def readVcfToDF(self, chunk_size=None):
+        """read vcf file into pandas DF without parsing"""
+        # after github/hammerlab/varcode/vcf but keeping sample information
+        path = self.fname        
+        compression = None
+        if path.endswith(".gz"):
+            compression = "gzip"
+        elif path.endswith(".bz2"):
+            compression = "bz2"
+        cat = 'cat'
+        if compression is not None:
+            cat = 'zcat'
+        cmd = ' '.join([cat, path, '| grep ^# | grep -v ^##'])
+        vcf_clmns = func.runInShell(cmd, True).split('\t')
+        vcf_clmns = [x.strip() for x in vcf_clmns]        
+        vcf_clmns = [x.strip('#') for x in vcf_clmns]        
+        vcf_field_types = collections.OrderedDict()
+        for i in vcf_clmns:
+            vcf_field_types[i] = str
+        vcf_field_types['POS'] = int
+        reader = pd.read_table(
+            path,
+            compression=compression,
+            comment="#",
+            chunksize=chunk_size,
+            dtype=vcf_field_types,
+            names=list(vcf_field_types),
+            usecols=range(len(vcf_field_types)))
+        return reader
+
+    def extractNonRef(self, sample_name):
+        """Extract variant loci for a given sample from self.variants DF """
+        gt = self.variants[sample_name].apply(lambda i: i.split(':')[0])
+        gt = [i.strip() for i in gt]
+        self.variants[sample_name+'_gt'] = gt        
+        c1 = self.variants[sample_name+'_gt'].isin(['0/0'])
+        c2 = self.variants[sample_name+'_gt'].apply(lambda i: '.' in i)        
+        return self.variants[(~c1) & (~c2)]         
     
     def keepOnlyPossibleDonovos():
         pass

@@ -28,8 +28,14 @@ class Ped:
         else:
             self.ped['vcf'] = file_pat
 
-    def addBam(self, field='ind_id', file_pat='/mnt/ceph/asalomatov/SSC_Eichler/data_S3/%s-*.bam', num_subst=2):
-        pass
+    def addBam(self, field='ind_id', file_pat='/mnt/ceph/asalomatov/SSC_Eichler/data_S3/%s*.bam', num_subst=2):
+        num_subst = len(re.findall('\%s', file_pat))
+        print num_subst, ' substitutions found'
+        if num_subst > 0:
+            x = self.ped[field].apply(lambda f: func.listFiles(file_pat % ((f,) * num_subst)))
+            self.ped['bam'] = pd.Series(x, index=self.ped.index)
+        else:
+            self.ped['vcf'] = file_pat
 
     def getAllMembers(self, family_id):
         return self.ped['ind_id'][self.ped['fam_id'] == family_id].tolist()

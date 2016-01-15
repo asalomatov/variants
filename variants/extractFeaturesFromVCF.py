@@ -8,7 +8,7 @@ import pandas as pd
 import features_vcf
 import numpy as np
 import os
-
+import sklearn
 
 variants = reload(variants)
 func = reload(func)
@@ -180,30 +180,53 @@ df_neg['status'] = 'N'
 df_neg.columns
 
 ### annotate training set with features from vcf files
-train_set = "/mnt/scratch/asalomatov/data/SSC/SSCdeNovoCalls/ssc_exome_verified_snp.txt"
-train_set = "/mnt/scratch/asalomatov/data/SSC/SSCdeNovoCalls/ssc_exome_all_snp.txt"
-ftrs = fv.FeaturesVcf(myped, train_set) 
+import os
+import sys
+sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/variants/variants')
+import variants
+import ped
+
+import func
+import features_vcf as fv
+import pandas as pd
+import numpy as np
+
+
+ped_file = '/mnt/scratch/asalomatov/data/SSC/SSCped/SSC.ped'
+myped = ped.Ped(ped_file, ['collection'])
+myped.addVcf(file_pat = '/mnt/scratch/asalomatov/data/SSC/wes/vcf/raw/%s.family.vqsr.sorted.vcf.gz')
+myped.ped.head()
+dnv_file = "/mnt/scratch/asalomatov/data/SSC/SSCdeNovoCalls/ssc_denovo_clean_snp.tsv"
+ftrs = fv.FeaturesVcf(myped, dnv_file) 
 ftrs.ped.ped.head()
+ftrs.variants.head()
+ftrs.variants.chr.value_counts()
+ftrs.variants.shape
+
 df_train = ftrs.extractFeatures()
 len(df_train)
 df_train = pd.concat(df_train)
-
 df_train.shape
+df_train.head()
 df_train.columns
-df_train.status
 
 def addVar(df, field):
     try: df['var'] = df[field].map(str) + '_' + df.POS.map(str) + '_' +  df.REF.map(str)  + '_' +  df.ALT.map(str) 
     except: df['var'] = df[field].map(str) + '_' + df.pos.map(str) + '_' +  df.ref.map(str)  + '_' +  df.alt.map(str) 
     return df
 
+# join to add status column
 df_train = addVar(df_train, 'ind_id')
-df_neg = addVar(df_neg, 'ind_id')
 ftrs.variants = addVar(ftrs.variants, 'ind_id')
 ftrs.variants.status.value_counts()
 df_train = pd.merge(df_train, ftrs.variants[['var', 'status']], how='left', on='var')
 df_train.status.value_counts()
+df_train.status.isnull().sum()
+df_train = df_train[~df_train.status.isnull()]
 df_train['status'][df_train['status'] == 'ND'] = 'Y'
+df_train.to_csv("/mnt/scratch/asalomatov/data/SSC/SSCdeNovoCalls/ssc_denovo_clean_snp_Kr_GATK.tsv", sep="\t", index=False)
+
+df_neg = addVar(df_neg, 'ind_id')
 df_neg = pd.merge(df_neg, ftrs.variants[['var', 'status']], how='left', on='var')
 df_neg.status.value_counts()
 df_neg.shape
