@@ -1,8 +1,8 @@
 import sys
 sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/variants/variants')
+import func
 import variants
 import ped
-import func
 import features_vcf as fv
 import pandas as pd
 import features_vcf

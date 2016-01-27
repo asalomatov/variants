@@ -10,7 +10,7 @@ class FeaturesVcf:
     def __init__(self, ped_obj, variants_file ):
         """variants_file contains variants to be annotated with the features from 
         corresponding vcf files, it must be a tab delimeted file containing the following columns
-        'ind_id'  'chr' 'pos' 'ref' 'alt', all additional columns will be ignored.
+        'ind_id'  'chr' 'pos' 'ref' 'alt', 'status', extra columns may be present.
         Example:
         
         ind_id  chr pos ref alt status  descr   vartype

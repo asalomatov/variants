@@ -238,16 +238,49 @@ class Variants:
             dtype=vcf_field_types,
             names=list(vcf_field_types),
             usecols=range(len(vcf_field_types)))
-        return reader
+        self.variants = reader
+        return 0
 
-    def extractNonRef(self, sample_name):
-        """Extract variant loci for a given sample from self.variants DF """
+    def vcfDF2regions(self, reg_file_name, vartype='SNP'):
+        """ Create regions file to supply to bam-readcount.
+        CHROM\tSTART\tEND, 1-based
+        """
+        if vartype == 'SNP':
+            ref_len = self.variants['REF'].apply(len)
+            def splitAlt(a):
+                return min(map(len,','.split(a)))                
+            alt_len = self.variants['REF'].apply(splitAlt)
+            c1 = ref_len == 1
+            c2 = alt_len == 1
+            self.variants[['CHROM', 'POS', 'POS']][c1 & c2].to_csv(\
+            reg_file_name, sep="\t", header=False, index=False)
+            
+        else:
+            sys.exit('Only SNPs are currently implemented')
+
+    def removeHomRef(self, sample_name):
+        """Remove non variant loci. Remove loci with missing genotype from
+        self.variants DF
+        """
         gt = self.variants[sample_name].apply(lambda i: i.split(':')[0])
         gt = [i.strip() for i in gt]
         self.variants[sample_name+'_gt'] = gt        
         c1 = self.variants[sample_name+'_gt'].isin(['0/0'])
         c2 = self.variants[sample_name+'_gt'].apply(lambda i: '.' in i)        
-        return self.variants[(~c1) & (~c2)]         
+        self.variants = self.variants[(~c1) & (~c2)]         
+        return 0
+    
+    def removeHomVar(self, sample_name):
+        """Remove loci where sample_name has 1/1 genotype, or undefined 
+        genotype"""
+        gt = self.variants[sample_name].apply(lambda i: i.split(':')[0])
+        gt = [i.strip() for i in gt]
+        self.variants[sample_name+'_gt'] = gt        
+        c1 = self.variants[sample_name+'_gt'].isin(['1/1'])
+        c2 = self.variants[sample_name+'_gt'].apply(lambda i: '.' in i)        
+        c3 = self.variants[sample_name+'_gt'].apply(lambda i: '0' in i)        
+        self.variants = self.variants[(~c1) & (~c2) & c3]         
+        return 0
     
     def keepOnlyPossibleDonovos():
         pass
