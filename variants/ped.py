@@ -18,6 +18,7 @@ class Ped:
         self.ped = pd.read_table(self.fname)
         self.ped.columns = ['fam_id', 'ind_id', 'fa_id', 'mo_id', 'sex', 'pheno'] + extra_column_names
         self.ped.replace(['.', '0', 0, -9, '-9'], [None]*5, inplace=True)
+        self.ped['fam_id'] = self.ped['fam_id'].astype(str) 
 
     def addVcf(self, field='fam_id', file_pat='/mnt/ceph/asalomatov/SSC_Eichler/rerun/ssc%s/%s-JHC-vars.vcf.gz'):
         num_subst = len(re.findall('\%s', file_pat))
@@ -35,7 +36,26 @@ class Ped:
             x = self.ped[field].apply(lambda f: func.listFiles(file_pat % ((f,) * num_subst)))
             self.ped['bam'] = pd.Series(x, index=self.ped.index)
         else:
-            self.ped['vcf'] = file_pat
+            self.ped['bam'] = file_pat
+
+    def addBai(self, field='ind_id', file_pat='/mnt/ceph/asalomatov/SSC_Eichler/data_S3/%s*bam.bai', num_subst=2):
+        num_subst = len(re.findall('\%s', file_pat))
+        print num_subst, ' substitutions found'
+        if num_subst > 0:
+            x = self.ped[field].apply(lambda f: func.listFiles(file_pat % ((f,) * num_subst)))
+            self.ped['bai'] = pd.Series(x, index=self.ped.index)
+        else:
+            self.ped['bai'] = file_pat
+
+    def addTestFile(self, field='ind_id', file_pat='/mnt/scratch/asalomatov/data/SSC/wes/feature_sets/fb/all_SNP/%s'):
+        num_subst = len(re.findall('\%s', file_pat))
+        print num_subst, ' substitutions found'
+        if num_subst > 0:
+            x = self.ped[field].apply(lambda f: func.listFiles(file_pat % ((f,) * num_subst)))
+            self.ped['test'] = pd.Series(x, index=self.ped.index)
+        else:
+            self.ped['test'] = file_pat
+
 
     def getAllMembers(self, family_id):
         return self.ped['ind_id'][self.ped['fam_id'] == family_id].tolist()
