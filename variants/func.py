@@ -88,8 +88,11 @@ def runInShell(cmd, return_output=False):
         sys.stderr.write(stderr)
         return 1
        
-def runBamReadcounts(vcffile, bamfile, output_dir, genome_ref = \
-    '/mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa'):
+def runBamReadcounts(vcffile, bamfile, output_dir,
+                     genome_ref='/mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/\
+                     genomes/Hsapiens/GRCh37/seq/GRCh37.fa',
+                     brc='/mnt/scratch/asalomatov/software/installs/\
+                     bin/bam-readcount'):
     """exctract regions from vcf and supply them to bam-readcount"""
     makeDir(output_dir)
     if checkFile(vcffile) is None:
@@ -105,24 +108,29 @@ def runBamReadcounts(vcffile, bamfile, output_dir, genome_ref = \
     outp_fn = os.path.join(output_dir, bam_name+'.txt')    
     cmd1 = cat + vcffile + \
         " | grep -v ^# | awk \'{print $1\"\t\"$2\"\t\"$2}' > " + tmp_bed
-    cmd2 = ' '.join(['/mnt/scratch/asalomatov/software/installs/bin/bam-readcount -f', genome_ref, bamfile, '-l',tmp_bed, \
+    cmd2 = ' '.join([brc, '-f', genome_ref, bamfile, '-l',tmp_bed, \
             ' > '+outp_fn])
-    cmd3 = 'rm -rf '+tmp_dir
+    cmd3 = ' '  # 'rm -rf '+tmp_dir
     cmd = ';'.join([cmd1, cmd2, cmd3])
     return runInShell(cmd)
     
-def runBamReadcountsRegions(regionsfile, bamfile, output_file, genome_ref = \
-    '/mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa'):
+
+def runBamReadcountsRegions(regionsfile,
+                            bamfile,
+                            output_file,
+                            genome_ref='/mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa',
+                            brc='/mnt/scratch/asalomatov/software/installs/bin/bam-readcount'):
     """exctract features using bam-readcount"""
     if checkFile(regionsfile) is None:
         sys.exit('No regions file!')
     if checkFile(bamfile) is None:
         sys.exit('No bam file!')
-    cmd = ' '.join(['/mnt/scratch/asalomatov/software/installs/bin/bam-readcount -f', genome_ref, bamfile, '-l',regionsfile, \
-            ' > '+output_file])
+    cmd = ' '.join([brc, '-f', genome_ref, bamfile, '-l', regionsfile,
+                    ' > ' + output_file])
     return runInShell(cmd)
     
-def readBamReadcount(file_name, vartype):
+
+def readBamReadcount1(file_name, vartype):
     """Read bam-readcount output into pandas DF,
     vartype = ['SNP', 'INS', 'DEL', 'INDEL']
     """
@@ -158,7 +166,32 @@ def readBamReadcount(file_name, vartype):
             sep='\t')
         res = reader.apply(parseBamReadcount, axis=1)
         return reader[['CHROM', 'POS', 'REF', 'DP']].merge(res, left_index=True, right_index=True)
-        
+
+
+def readBamReadcount(file_name, n_clmns_per_allele=14):
+    """Read bam-readcount output into pandas DF.
+    """
+    clm_names = ['CHROM', 'POS',
+                 'REF', 'DP', 'ZERO', 'A', 'C', 'G', 'T', 'N', 'INDEL']
+    clm_dtypes = collections.OrderedDict()
+    for i in clm_names:
+        clm_dtypes[i] = str
+    reader = pandas.read_csv(
+        file_name,
+        header=None,
+        dtype=clm_dtypes,
+        names=list(clm_names),
+        # usecols=[0, 1, 2, 3, 5, 6, 7, 8, 9, 10],
+        sep='\t')
+    reader['INDEL'][reader.INDEL.isnull()] = ':'.join(['0'] *
+                                                      n_clmns_per_allele)
+    reader.drop('ZERO', axis=1, inplace=True)
+    # return reader
+    res = reader.apply(parseBamReadcountIndel, axis=1)
+    return reader[['CHROM', 'POS', 'REF', 'DP']].merge(res, left_index=True,
+                                                       right_index=True)
+
+
 def parseBamReadcount(row):
     # first split ref data
     ref_split = row[row['REF']].split(':')
@@ -174,7 +207,7 @@ def parseBamReadcount(row):
     cum_array = numpy.zeros(12)
     alts = []
     for i in possib_alt:
-        if int(row[i][2]) > 0: 
+        if int(row[i][2]) > 0:
             num_allels += 1
             row_list = row[i].split(':')
             allel_count = float(row_list[1])
@@ -184,7 +217,7 @@ def parseBamReadcount(row):
     if alt_read_count > 0:
         cum_array = cum_array / alt_read_count
 
-    clmns_detail = [ 'base',
+    clmns_detail = ['base',
             'count',
             'avg_mapping_quality',
             'avg_base_quality',
@@ -198,11 +231,65 @@ def parseBamReadcount(row):
             'avg_dist_to_q2_start_in_q2_reads',
             'avg_clipped_length',
             'avg_dist_to_effective_3p_end']        
-    res = pandas.Series(ref_split + [num_allels, '_'.join(alts), alt_read_count] + 
+    res = pandas.Series(ref_split + [num_allels, '_'.join(alts), alt_read_count] +
             cum_array.tolist(),
             ['REF_'+ x for x in clmns_detail] + ['num_allels'] +
            ['ALT_'+ x for x in clmns_detail] )
     return res
+
+
+def parseBamReadcountIndel(row):
+    # first split ref data
+    ref_split = row[row['REF']].split(':')
+    ref_split = ref_split[:1] + [float(x) for x in ref_split[1:]]
+    #  split indel data
+    indel_split = row['INDEL'].split(':')
+    indel_split = indel_split[:1] + [float(x) for x in indel_split[1:]]
+    # now arrgegate information for alt allels
+    possib_alt = []
+    if row['REF'] == 'A': possib_alt = ['C', 'G', 'T']
+    if row['REF'] == 'C': possib_alt = ['A', 'G', 'T']
+    if row['REF'] == 'G': possib_alt = ['A', 'C', 'T']
+    if row['REF'] == 'T': possib_alt = ['A', 'C', 'G']
+    num_allels = 0
+    alt_read_count = 0
+    cum_array = numpy.zeros(12)
+    alts = []
+    for i in possib_alt:
+        if int(row[i][2]) > 0:
+            num_allels += 1
+            row_list = row[i].split(':')
+            allel_count = float(row_list[1])
+            alt_read_count += allel_count
+            alts += row_list[:2]
+            cum_array += allel_count * numpy.array(row_list[2:], dtype=float)
+    if alt_read_count > 0:
+        cum_array = cum_array / alt_read_count
+
+    clmns_detail = ['base',
+                    'count',
+                    'avg_mapping_quality',
+                    'avg_base_quality',
+                    'avg_se_mapping_quality',
+                    'num_plus_strand',
+                    'num_minus_strand',
+                    'avg_pos_as_fraction',
+                    'avg_num_mismatches_as_fraction',
+                    'avg_sum_mismatch_qualities',
+                    'num_q2_containing_reads',
+                    'avg_dist_to_q2_start_in_q2_reads',
+                    'avg_clipped_length',
+                    'avg_dist_to_effective_3p_end']     
+    res = pandas.Series(ref_split +
+                        [num_allels, '_'.join(alts), alt_read_count] +
+                        cum_array.tolist() +
+                        indel_split,
+                        ['REF_'+ x for x in clmns_detail] +
+                        ['num_allels'] +
+                        ['ALT_'+ x for x in clmns_detail] +
+                        ['INDEL_'+ x for x in clmns_detail])
+    return res
+
 
 def addSuffix(x, sfx):
     return [i + sfx for i in x]

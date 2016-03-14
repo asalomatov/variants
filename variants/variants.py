@@ -3,14 +3,15 @@ import vcf
 import sys, os, re
 import func
 import collections
-                                            
+
+
 class Variants:
     """Class describing a vcf file. Consists of pandas data frame, and metadata found in the vcf header.
        Start, end coordinates are zero-based, half-open """
     def __init__(self, fname, family_id, chrom=None, start=None, end=None):
         self.fname = fname
         self.family_id = family_id
-        self.vcf_reader = vcf.Reader(open(self.fname, 'r'))
+        self.vcf_reader = None
         if not chrom is None:
             self.vcf_reader = self.vcf_reader.fetch(chrom, start, end)
         self.current_record = None
@@ -18,6 +19,10 @@ class Variants:
         self.chrom = chrom
         self.start = start
         self.end = end
+        self.required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER']
+
+    def initReader(self):
+        self.vcf_reader = vcf.Reader(open(self.fname, 'r'))
         self.contigs = self.vcf_reader.contigs
         self.filters = self.vcf_reader.filters
         self.formats = self.vcf_reader.formats
@@ -25,7 +30,6 @@ class Variants:
         self.metadata = self.vcf_reader.metadata
         self.samples = self.vcf_reader.samples
         self.samples_to_keep = self.vcf_reader.samples
-        self.required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER']
         self.info_fields = self.infos.keys()
         self.format_fields = self.formats.keys()
         self.reference = self.metadata['reference']
@@ -246,15 +250,17 @@ class Variants:
         CHROM\tSTART\tEND, 1-based
         """
         if vartype == 'SNP':
-            ref_len = self.variants['REF'].apply(len)
-            def splitAlt(a):
-                return min(map(len,','.split(a)))                
-            alt_len = self.variants['REF'].apply(splitAlt)
-            c1 = ref_len == 1
-            c2 = alt_len == 1
-            self.variants[['CHROM', 'POS', 'POS']][c1 & c2].to_csv(\
-            reg_file_name, sep="\t", header=False, index=False)
-            
+            ref_len = self.variants.REF.apply(len)
+            alt_len_min = self.variants.ALT.apply(lambda x: min(map(len, x.split(','))))
+            alt_len_max = self.variants.ALT.apply(lambda x: max(map(len, x.split(','))))
+            # following conditions to capture SNPs and MNPs
+            c1 = ref_len == alt_len_min
+            c2 = ref_len == alt_len_max
+            print sum((ref_len > 1) & (c1 | c2)), 'number of MNPs'
+            print sum((ref_len == 1) & (c1 | c2)), 'number of SNPs'
+            self.variants['pos_end'] = self.variants['POS'] + ref_len - 1
+            self.variants[['CHROM', 'POS', 'pos_end']][c1 | c2].to_csv(
+                reg_file_name, sep="\t", header=False, index=False)
         else:
             sys.exit('Only SNPs are currently implemented')
 
@@ -268,6 +274,22 @@ class Variants:
         c1 = self.variants[sample_name+'_gt'].isin(['0/0'])
         c2 = self.variants[sample_name+'_gt'].apply(lambda i: '.' in i)        
         self.variants = self.variants[(~c1) & (~c2)]         
+        return 0
+
+    def removeUndefined(self, sample_name):
+        """Remove genotypes like ./. from self.variants DF
+        """
+        gt = self.variants[sample_name].apply(lambda i: i.split(':')[0])
+        gt = [i.strip() for i in gt]
+        self.variants[sample_name+'_gt'] = gt        
+        c1 = self.variants[sample_name+'_gt'].apply(lambda i: '.' in i)        
+        self.variants = self.variants[~c1]         
+        return 0
+
+    def removeNaN(self, sample_name):
+        """Remove NaN from self.variants DF
+        """
+        self.variants = self.variants[~self.variants[sample_name].isnull()]
         return 0
     
     def removeHomVar(self, sample_name):

@@ -10,61 +10,51 @@ from multiprocessing import Pool
 
 
 print sys.argv
-if len(sys.argv) != 4:
-    sys.exit('three arguments required: child_id caller output/dir')
+if len(sys.argv) != 3:
+    sys.exit('two arguments required: child_id output/dir')
 #child_id = '11006.p1'
 #caller = 'fb'
 child_id = sys.argv[1]
-caller = sys.argv[2]
-output_directory = sys.argv[3]
+output_directory = sys.argv[2]
 min_DP = 7
 var_type = 'SNP'
-vcf_pat = ''
-if caller == 'hc':
-    vcf_pat = '/mnt/scratch/asalomatov/data/SSC/wes/vcf/hc/%s.family.vqsr.sorted-norm.vcf'
-elif caller == 'fb':
-    vcf_pat = '/mnt/scratch/asalomatov/data/SSC/wes/vcf/fb/%s.family.freebayes.sorted-norm.vcf'
-else:
-    sys.exit('unknown caller, exiting... ')
+vcf_pat = '/mnt/scratch/asalomatov/data/columbia/vcf/%s_%s-02_%s-01.annotated-norm.vcf.gz'
+#vcf_pat = '/mnt/scratch/asalomatov/data/columbia/rerun_fb/%s-norm.vcf.gz'
+bam_pat = '/mnt/scratch/asalomatov/data/columbia/bam/Sample.%s.bam'
+bai_pat = '/mnt/scratch/asalomatov/data/columbia/bam/Sample.%s.bam.bai'
+infile_ped = '/mnt/scratch/asalomatov/data/columbia/pcgc_ped.txt'
+known_vars = '/mnt/scratch/asalomatov/data/columbia/pcgc_denovo_snp.tsv'
+output_dir = output_directory
+output_dir_known = ''
+func.runInShell('mkdir -p ' + output_dir)
+if known_vars:
+    output_dir_known = os.path.join(output_dir, 'known')
+    func.runInShell('mkdir -p ' + output_dir_known)
 
-output_dir = os.path.join(output_directory, caller)
-all_dir = output_dir + '/all_' + var_type
-known_dir = output_dir + '/known_' + var_type
-func.runInShell('mkdir -p ' + all_dir)
-func.runInShell('mkdir -p ' + known_dir)
 
 def multi_wrap_readBamReadcount(args):
     return func.readBamReadcount(*args)
-
-
 
 ### SSC ped
 #ped = reload(ped)
 #func = reload(func)
 #features = reload(features)
 
-infile_ped = '/mnt/scratch/asalomatov/data/SSC/SSCped/SSC.ped'
-myped = ped.Ped(infile_ped, ['collection'])
+myped = ped.Ped(infile_ped)
 myped.addVcf(file_pat=vcf_pat)
 #myped.addVcf()
 myped.ped.dropna(subset=['vcf'], inplace=True)
 myped.ped.shape
 #myped.addBam()
-myped.addBam(file_pat='/mnt/scratch/asalomatov/data/SSC/wes/bam/%s.realigned.recal.bam')
+myped.addBam(file_pat=bam_pat)
 myped.ped.dropna(subset=['bam'], inplace=True)
 myped.ped.shape
-myped.addBai(file_pat='/mnt/scratch/asalomatov/data/SSC/wes/bam/%s.realigned.recal.bam.bai')
+myped.addBai(file_pat=bai_pat)
 myped.ped.dropna(subset=['bai'], inplace=True)
 myped.ped.shape
 myped.ped.head()
 
-
-#func = reload(func)
-#ped = reload(ped)
-#features = reload(features)
-#variants = reload(variants)
-
-f = features.Features(myped, '/mnt/scratch/asalomatov/data/SSC/SSCdeNovoCalls/ssc_denovo_clean_snp.tsv')
+f = features.Features(myped, known_vars)
 if not f.initTrioFor(child_id):
     sys.stderr.write('\nfailed to initialize trio for ' + child_id)
 else:
@@ -83,17 +73,13 @@ else:
     fam_f = fam_f.merge(fam_features[1], how='inner', on=['CHROM', 'POS'])
     fam_f = fam_f.merge(fam_features[2], how='inner', on=['CHROM', 'POS'])
     fam_f['ind_id'] = child_id
-
-
-# add status, and extra fields then save to file
-    f.verified_variants.columns = ['ind_id', 'CHROM', 'POS', 'ref', 'alt', 'status',  'descr', 'vartype']
-    f.verified_variants['POS'] = f.verified_variants['POS'].astype(str)
-    fam_f = fam_f.merge(f.verified_variants[['ind_id', 'CHROM', 'POS', 'status',  'descr', 'vartype']], 
-            how='left', on=['ind_id', 'CHROM', 'POS'])
-    fam_f.ix[fam_f.status.isnull(), 'status'] = 'NA'
-    fam_f.shape
-    fam_f.dtypes
-    fam_f.status.value_counts()
+    # mark verified if information is available
+    if known_vars:
+        f.verified_variants.columns = ['ind_id', 'CHROM', 'POS', 'ref', 'alt', 'status',  'descr']
+        f.verified_variants['POS'] = f.verified_variants['POS'].astype(str)
+        fam_f = fam_f.merge(f.verified_variants[['ind_id', 'CHROM', 'POS', 'status', 'descr']],
+                            how='left', on=['ind_id', 'CHROM', 'POS'])
+        fam_f.ix[fam_f.status.isnull(), 'status'] = 'NA'
     clmns_to_drop = [# 'REF_offspring',
                      'REF_father',
                      'REF_mother',
@@ -114,18 +100,16 @@ else:
                      'ALT_base_mother',
                      'INDEL_base_offspring',
                      'INDEL_base_father',
-                     'INDEL_base_mother',
-                     'vartype']
-#clmns_to_keep = [i for i in fam_f if i not in clmns_to_drop]
+                     'INDEL_base_mother']
     fam_f.drop(clmns_to_drop, axis=1, inplace=True)
-    fam_f['DP_offspring'] =  fam_f['REF_count_offspring'] + fam_f['ALT_count_offspring']
-    fam_f['DP_father'] =  fam_f['REF_count_father'] + fam_f['ALT_count_father']
-    fam_f['DP_mother'] =  fam_f['REF_count_mother'] + fam_f['ALT_count_mother']
+    fam_f['DP_offspring'] = fam_f['REF_count_offspring'] + fam_f['ALT_count_offspring']
+    fam_f['DP_father'] = fam_f['REF_count_father'] + fam_f['ALT_count_father']
+    fam_f['DP_mother'] = fam_f['REF_count_mother'] + fam_f['ALT_count_mother']
     sum(fam_f.DP_offspring - fam_f.REF_count_offspring - fam_f.ALT_count_offspring)
     sum(fam_f.DP_offspring - fam_f.REF_count_offspring - fam_f.ALT_count_offspring != 0)
     sum(fam_f.DP_father - fam_f.REF_count_father - fam_f.ALT_count_father)
     sum(fam_f.DP_father - fam_f.REF_count_father - fam_f.ALT_count_father != 0)
-## filter out DP < 8
+    # filter out DP < 8
     c1 = fam_f['DP_offspring'] > min_DP
     c2 = fam_f['DP_father'] > min_DP
     c3 = fam_f['DP_mother'] > min_DP
@@ -134,10 +118,10 @@ else:
     fam_f.columns
     fam_f.dtypes
     print fam_f.shape
-    fam_f.to_csv(os.path.join(all_dir, child_id), sep='\t', index=False)
+    fam_f.to_csv(os.path.join(output_dir, child_id), sep='\t', index=False)
     x = fam_f[~fam_f.status.isin(['NA'])]
     if not x.empty:
-        x.to_csv(os.path.join(known_dir, child_id), sep='\t', index=False)
+        x.to_csv(os.path.join(output_dir_known, child_id), sep='\t', index=False)
 
 
 

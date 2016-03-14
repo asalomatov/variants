@@ -7,12 +7,14 @@ import sys, os
 import tempfile
 from multiprocessing import Pool
 
+
 def multi_wrap(args):
     return func.runBamReadcountsRegions(*args)
-        
+
+
 class Features:
     """Given list of variants extract features from vcf files"""
-    def __init__(self, ped_obj, variants_file ):
+    def __init__(self, ped_obj, variants_file=''):
         """variants_file contains variants to be annotated with the features 
         from corresponding vcf files, it must be a tab delimeted file 
         containing the following columns
@@ -38,7 +40,10 @@ class Features:
         self.mother_bam = ''
         self.is_affected = None
         self.trio_initialized = False
-        self.verified_variants = pd.read_table(variants_file, index_col=False)
+        self.verified_variants = None
+        if variants_file:
+            self.verified_variants = pd.read_table(variants_file,
+                                                   index_col=False, dtype=str)
         self.test_set = pd.DataFrame()
         self.train_set = pd.DataFrame()
         self.sample_features = ''
@@ -99,18 +104,21 @@ class Features:
         sys.stdout.write('removing ' + tmpdir)
         func.runInShell('rm -rf ' + tmpdir)
 
-    def extractFeatures(self):
+    def extractFeatures(self, n_cores=3):
         """For the defined sample extract variant loci from the vcf file.
         """
         vrs = variants.Variants(self.sample_vcf, self.family_id)
         vrs.readVcfToDF()
+        vrs.removeNaN(self.sample_id)
+        vrs.removeNaN(self.father_id)
+        vrs.removeNaN(self.mother_id)
         vrs.removeHomRef(self.sample_id)
         vrs.removeHomVar(self.father_id)
         vrs.removeHomVar(self.mother_id)
         temp_dir = tempfile.mkdtemp()
-        reg_file = tempfile.mktemp(dir=temp_dir, suffix='_' + self.sample_id \
-        +'.region' )
-        print reg_file        
+        reg_file = tempfile.mktemp(dir=temp_dir, suffix='_' + self.sample_id +
+                                   '.region')
+        print reg_file      
         sys.stdout.flush()        
         vrs.vcfDF2regions(reg_file)
         self.sample_features = os.path.join(temp_dir, self.sample_id + '.features')
@@ -119,9 +127,8 @@ class Features:
         print self.father_features
         self.mother_features = os.path.join(temp_dir, self.mother_id + '.features')
         print self.mother_features
-        sys.stdout.flush()        
-
-        pool = Pool(3)
+        sys.stdout.flush()
+        pool = Pool(n_cores)
         results = pool.map(multi_wrap, \
             [(reg_file, self.sample_bam, self.sample_features), \
             (reg_file, self.father_bam, self.father_features), \
@@ -131,6 +138,3 @@ class Features:
             sys.stderr.write('Feature extraction failed')
             return 1
         return 0
-        
-        
-        

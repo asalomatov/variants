@@ -15,7 +15,7 @@ class Ped:
     def __init__(self, ped_file_name, extra_column_names=[]):
         """read ped file into pandas data frame"""
         self.fname = ped_file_name
-        self.ped = pd.read_table(self.fname)
+        self.ped = pd.read_table(self.fname, usecols=range(6+len(extra_column_names)))
         self.ped.columns = ['fam_id', 'ind_id', 'fa_id', 'mo_id', 'sex', 'pheno'] + extra_column_names
         self.ped.replace(['.', '0', 0, -9, '-9'], [None]*5, inplace=True)
         self.ped['fam_id'] = self.ped['fam_id'].astype(str) 
@@ -73,7 +73,8 @@ class Ped:
 
     def getFather(self, family_id):
         res = self.ped['ind_id'][(self.ped['fam_id'] == family_id) & (self.ped['sex'] == 1) &  \
-                self.ped['fa_id'].isnull() & self.ped['mo_id'].isnull() ]
+                self.ped['fa_id'].isnull() & self.ped['mo_id'].isnull()]
+        print res
         if len(res.index) == 0: return None
         assert len(res) == 1
         return res.iloc[0]
@@ -124,8 +125,7 @@ class Ped:
     def getFamilyVCF(self, family_id):
         res = self.ped['vcf'][(self.ped['fam_id'] == family_id)]
         res = res.unique()
-        if len(res.index) == 0: return None
-        assert len(res) == 1
+        if res.size == 0: return None
         return res[0]
 
     def getFamilyBam(self, family_id):
