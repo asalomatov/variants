@@ -68,7 +68,7 @@ if __name__ == '__main__':
 #    infile_ped = '/mnt/scratch/asalomatov/data/SSC/SSCped/SSC.ped'
     known_vars = '/mnt/scratch/asalomatov/data/SSC/wes/feature_sets_01/fb/known_SNP/fb_known_snp.tsv'
     extra_vars = '/mnt/scratch/asalomatov/data/SSC/wes/feature_sets_01/fb/all_SNP/fb_all_snp.tsv'
-    list_of_features = '/mnt/xfs1/home/asalomatov/projects/variants/variants/ssc_wes_features_noINDEL.txt'
+    list_of_features = '/mnt/xfs1/home/asalomatov/projects/variants/variants/ssc_wes_features_noINDEL_noDP.txt'
 #    myped = ped.Ped(infile_ped, ['collection'])
 #    myped.addTestFile(field='ind_id', file_pat='/mnt/scratch/asalomatov/data/SSC/wes/feature_sets_01/fb/all_SNP/%s')
 #    myped.ped.dropna(subset=['test'], inplace=True)
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     dim = int(sys.argv[3])
     trn = train.TrainTest(known_vars,
                           list_of_features,
-                          'status')
+                          ['status'], ['descr'])
     trn.readFeatureList()
     trn.readDataSet()
     print 'data_set shape is ', trn.data_set.shape

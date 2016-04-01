@@ -167,10 +167,14 @@ if __name__ == '__main__':
 #    trn.getMetrics()
 
 
+#models1 = { 
+#    'RandomForestClassifier': RandomForestClassifier(),
+#    'GradientBoostingClassifier': GradientBoostingClassifier(),
+#    'SVC': svm.SVC()
+#}
+
 models1 = { 
-    'RandomForestClassifier': RandomForestClassifier(),
-    'GradientBoostingClassifier': GradientBoostingClassifier(),
-    'SVC': svm.SVC()
+    'GradientBoostingClassifier': GradientBoostingClassifier()
 }
 
 params1 = {
@@ -178,7 +182,7 @@ params1 = {
     'GradientBoostingClassifier': dict(
             n_estimators=[100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
             max_depth=[1, 2, 3, 4, 5],
-            learning_rate=[0.0001, 0.001, 0.005, 0.01, 0.03, 0.05, 0.075, 0.1, 0.2]),
+            learning_rate=[0.001, 0.005, 0.01, 0.03, 0.05, 0.075, 0.1, 0.2]),
     'SVC': dict(kernel=['linear', 'rbf'],
                 C=[0.001, 0.01, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5],
                 class_weight=['balanced', None])
@@ -187,4 +191,6 @@ params1 = {
 helper1 = EstimatorSelectionHelper(models1, params1)
 helper1.fit(trn.train_set_X, trn.train_set_y, cv=n_folds, scoring='roc_auc', n_jobs=n_jobs)
 
+helper1.score_summary(sort_by='mean_score').to_csv('grid_search_GBM.csv',
+                                                   index=False)
 print helper1.score_summary(sort_by='min_score').head(50)

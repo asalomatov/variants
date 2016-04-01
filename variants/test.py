@@ -20,7 +20,7 @@ myped = ped.Ped(ped_file)
 myped.addTestFile(field='ind_id', file_pat=test_set_pat)
 myped.ped.dropna(subset=['test'], inplace=True)
 myped.ped.reset_index(inplace=True)
-:b
+
 test_labels = numpy.array([], dtype=int)
 pred_labels = numpy.array([], dtype=int)
 test_var_id = numpy.array([], dtype=str)
@@ -40,6 +40,8 @@ for i, row in myped.ped.iterrows():
     tst.addLabels(level=lvl)
     print 'data_set shape is ', tst.data_set.shape
     print tst.data_set.label.value_counts()
+    tst.dropNA('label')
+    print 'data_set shape with non null labels is ', tst.data_set.shape
     tst.model = m_pkl['model']
     tst.stdize = m_pkl['stdize']  # bool(int(sys.argv[6]))
     tst.trshold = m_pkl['threshold']  # float(sys.argv[7])
@@ -58,7 +60,7 @@ res = pandas.DataFrame({'test_labels': test_labels, 'pred_labels': pred_labels,
                         'pred_prob': pred_prob, 'test_var_id': test_var_id,
                         'test_var_alleles': test_alleles})
 m_name = os.path.basename(m)
-m_name = '.'.join(m_name.split('.')[:-1])
+m_name = '.'.join(m_name.split('.')[:-1]) + '_tstlvl' + str(lvl)
 res['method'] = m_name
 res.to_csv(os.path.join(os.path.dirname(test_set_pat), m_name + '.csv'), index=False)
 

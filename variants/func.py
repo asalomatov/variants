@@ -295,6 +295,55 @@ def addSuffix(x, sfx):
     return [i + sfx for i in x]
 
 
+def splitVarId(x):
+    res = x.split('_')
+    return pandas.Series(res, ['ind_id', 'CHROM', 'POS'])
 
+
+def splitAlleles(x):
+    res = x.split('_')
+    col_names = ['REF', 'ref_DP', 'ALT', 'alt_DP']
+    if len(res) > 4:
+        col_names += ['ALT1', 'alt1_DP']
+    if len(res) == 8:
+        col_names += ['ALT2', 'alt2_DP']
+    DP = sum(map(int, res[1::2]))
+    res += [DP]
+    col_names += ['DP']
+    return pandas.Series(res, col_names)
+
+
+def mergeClmnsToInfo(df, clmn_list=[]):
+    if len(clmn_list) == 0:
+        clmn_list = df.columns
+    x = None
+    for i in clmn_list:
+        df['col_i'] = i + '='
+        if x is None:
+            x = df['col_i'] + df[i].astype(str) + ';'
+        else:
+            x += df['col_i'] + df[i].astype(str) + ';'
+    return x
+
+
+def writePredAsVcf(pred_df, outp_file, min_DP=0):
+    pred_df.reset_index(inplace=True, drop=True)
+    res1 = pred_df.var_id.apply(splitVarId)
+    res2 = pred_df.test_var_alleles.apply(splitAlleles)
+    x = pred_df.merge(res1, left_index=True, right_index=True)
+    x = x.merge(res2, left_index=True, right_index=True)
+    print 'shape all DP:', x.shape
+    x = x[x['DP'] >= min_DP]
+    print 'shape DP >= ', min_DP
+    print x.shape
+    required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER']
+    for i in required_fields:
+        if i not in x.columns:
+            x[i] = '.'
+    info_col = [i for i in x.columns if i not in required_fields]
+    x['INFO'] = mergeClmnsToInfo(x, info_col)
+    x[required_fields + ['INFO']].to_csv(outp_file, sep='\t', index=False,
+                                         header=False)
+    return 0
 
 

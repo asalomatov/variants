@@ -117,6 +117,34 @@ class TrainTest:
             c1 = self.data_set.status.isin(['ND'])
             c2 = self.data_set.descr.isin(['both'])
             self.data_set.ix[c1 & c2, 'label'] = 1
+        elif level == 8:
+            self.data_set['label'] = 0
+            c_Y = self.data_set[self.y_name[0]].isin(['Y'])
+            c_N = self.data_set[self.y_name[0]].isin(['N'])
+            self.data_set.ix[c_Y, 'label'] = 1
+            self.data_set.ix[c_N, 'label'] = 0
+            c_ND = self.data_set.status.isin(['ND'])
+            self.data_set.ix[c_ND, 'label'] = None
+        elif level == 9:
+            self.data_set['label'] = 0
+            c_Y = self.data_set[self.y_name[0]].isin(['Y'])
+            c_N = self.data_set[self.y_name[0]].isin(['N'])
+            c_Krumm = self.data_set.descr.isin(['Krumm'])
+            c_both = self.data_set.descr.isin(['both'])
+            c_ioss = self.data_set.descr.isin(['Iossifov'])
+            self.data_set.ix[c_Y & (c_Krumm | c_both), 'label'] = 1
+            self.data_set.ix[c_N & (c_Krumm | c_both), 'label'] = 0
+            c_ND = self.data_set.status.isin(['ND'])
+            self.data_set.ix[c_ND | c_ioss, 'label'] = None
+        elif level == 10:  # columbia data only 
+            self.data_set['label'] = 0
+            c_Y = self.data_set[self.y_name[0]].isin(['Y'])
+            c_N = self.data_set[self.y_name[0]].isin(['N'])
+            c_after = self.data_set.descr.isin(['after'])
+            c_before = self.data_set.descr.isin(['before'])
+            self.data_set.ix[c_Y & c_after, 'label'] = 1
+            self.data_set.ix[c_N & c_after, 'label'] = 0
+            self.data_set.ix[c_before, 'label'] = None
         else:
             sys.exit('Unknown level, exiting...\n')
 
@@ -144,7 +172,7 @@ class TrainTest:
                 df['DP_father'].astype(float)
         df['allele_balance_by_DP_mother'] = df['allele_balance_mother'] /\
                             df['DP_mother'].astype(float)
-     
+
     def readFeatureList(self):
         """features_file contains names of the columns to be
         used as features, one per line
@@ -173,9 +201,10 @@ class TrainTest:
         self.data_set = self.data_set[self.feature_list + ['var_id'] +
                                       ['offspring_alleles']]
 
-    def readExtraVars(self, file_name,  n_extra=50000):
+    def readExtraVars(self, file_name,  n_extra=0):
         if n_extra > 0:
-            x  = pandas.read_csv(file_name, sep='\t', nrows=n_extra)
+            x = pandas.read_csv(file_name, sep='\t', nrows=n_extra)
+            x = x[x.status.isnull()]
             x = self.addAlleleBalance(x)
             self.addAllelesBalByDP(x)
             self.addVarID(x)

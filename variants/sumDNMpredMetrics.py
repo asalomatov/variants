@@ -7,9 +7,11 @@ import pandas
 import ped
 import features
 
-dnm_pred_file = sys.argv[2]
-print dnm_pred_file
 output_file = sys.argv[1]
+dnm_pred_file = sys.argv[2]
+lvl = int(sys.argv[3])
+print dnm_pred_file
+
 known_vars = '/mnt/scratch/asalomatov/data/SSC/SSCdeNovoCalls/ssc_denovo_clean_snp.tsv'
 cum_metr_df = pandas.DataFrame()
 
@@ -33,7 +35,8 @@ tst = train.TrainTest('x',
                       ['status'],
                       ['descr'])
 tst.data_set = dnm
-tst.addLabels(level=4)
+tst.addLabels(level=lvl)
+tst.dropNA('label')
 tst.pred_y_prob = tst.data_set['SCORE'].astype(float)
 tst.test_set_y = tst.data_set['label'].astype(int)
 
