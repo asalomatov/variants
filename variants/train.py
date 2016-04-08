@@ -23,6 +23,9 @@ from unbalanced_dataset import SMOTE
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
+from keras.models import Sequential, model_from_json
+from keras.layers.core import Dense, Activation, Dropout
+
 # %matplotlib qt
 # sns.set()
 # plt.rcParams['font.size'] = 14
@@ -54,6 +57,7 @@ class TrainTest:
         self.stdize = True
         self.feature_importance = None
         self.threshold = 0.5
+        self.is_keras = False
 
     def addAlleleBalance(self, mydf=None):
         if mydf is None:
@@ -322,11 +326,31 @@ class TrainTest:
                        'threshold': self.threshold,
                        'metrics': self.perf_mertics}
         joblib.dump(model_descr, os.path.join(output_dir, self.method + '.pkl'))
-        
+
+    def saveKerasModel(self, output_dir='./'):
+        weights_file = os.path.join(output_dir, self.method + '.h5')
+        self.model.save_weights(weights_file, overwrite=True)
+        json_data = self.model.to_json()
+        model_descr = {'model': json_data,
+                       'weights_file': weights_file,
+                       'train_var_id': self.train_set_var_id,
+                       'stdize': self.stdize,
+                       'features': self.feature_list,
+                       'feature_importance': self.feature_importance,
+                       'y_name': self.y_name,
+                       'extra_col_names': self.extra_column_names,
+                       'method': self.method,
+                       'threshold': self.threshold,
+                       'metrics': self.perf_mertics}
+        joblib.dump(model_descr, os.path.join(output_dir, self.method + '.pkl'))
+
     def predictClass(self, threshold=0.5):
         # prediction
         #self.pred_y = self.model.predict(self.test_set_X)
-        self.pred_y_prob = self.model.predict_proba(self.test_set_X)[:, 1]
+        if self.is_keras:
+            self.pred_y_prob = self.model.predict_proba(self.test_set_X)[:, 0]
+        else:
+            self.pred_y_prob = self.model.predict_proba(self.test_set_X)[:, 1]
         self.pred_y = binarize(self.pred_y_prob.reshape(1, -1),
                                threshold)[0].astype(int)
 
@@ -413,6 +437,7 @@ if __name__ == '__main__':
                  '_splt' + str(trn_tst_splt) +\
                  '_' + str(n_extra) +\
                  '_' + str(smote_type)
+    print 'mtd is', mtd
     if mtd == 'GBM':
  #       n_estimators = 1000
  #       max_depth = 3
@@ -460,6 +485,31 @@ if __name__ == '__main__':
                                     random_state=0)
         trn.fitClassifier()
         trn.predictClassOneClass()
+    elif mtd == 'dl_seq':
+        trn.model = Sequential()
+        trn.model.add(Dense(256, input_dim=72, init='uniform',
+                            activation='tanh'))
+#        trn.model.add(Dropout(0.5))
+ #       trn.model.add(Dense(256, activation='relu'))
+ #       trn.model.add(Dropout(0.5))
+        trn.model.add(Dense(1, activation='sigmoid'))
+        trn.model.compile(loss='binary_crossentropy', optimizer='sgd')
+        trn.model.fit(trn.train_set_X, trn.train_set_y,
+                      batch_size=10,
+                      nb_epoch=50,
+                      shuffle=True,
+                      show_accuracy=False)
+        x = trn.model.evaluate(trn.test_set_X,
+                               trn.test_set_y,
+                               batch_size=212,
+                               verbose=1,
+                               show_accuracy=True)
+        trn.pred_y_prob = trn.model.predict_proba(trn.test_set_X)
+        trn.pred_y = binarize(trn.pred_y_prob.reshape(1, -1),
+                              trn.threshold)[0].astype(int)
+        trn.getMetrics()
+        trn.saveKerasModel()
+        sys.exit(1)
     else:
         sys.exit('Unknown classifier!')
     trn.getMetrics()

@@ -7,6 +7,7 @@ import pandas
 import ped
 import os
 from sklearn.externals import joblib
+from keras.models import model_from_json
 
 m = sys.argv[1]
 print sys.argv
@@ -14,6 +15,7 @@ lvl = int(sys.argv[2])
 test_set_pat = sys.argv[3]
 list_of_features = sys.argv[4]
 ped_file = sys.argv[5]
+is_keras = bool(int(sys.argv[6]))
 m_pkl = joblib.load(m)
 
 myped = ped.Ped(ped_file)
@@ -33,6 +35,8 @@ for i, row in myped.ped.iterrows():
                           list_of_features,
                           m_pkl['y_name'],
                           m_pkl['extra_col_names'])
+    if is_keras:
+        tst.is_keras = True
     tst.readFeatureList()
     #tst.readTestSet()
     tst.readDataSet()
@@ -42,7 +46,11 @@ for i, row in myped.ped.iterrows():
     print tst.data_set.label.value_counts()
     tst.dropNA('label')
     print 'data_set shape with non null labels is ', tst.data_set.shape
-    tst.model = m_pkl['model']
+    if tst.is_keras:
+        tst.model = model_from_json(m_pkl['model'])
+        tst.model.load_weights(m_pkl['weights_file'])
+    else:
+        tst.model = m_pkl['model']
     tst.stdize = m_pkl['stdize']  # bool(int(sys.argv[6]))
     tst.trshold = m_pkl['threshold']  # float(sys.argv[7])
     tst.train_set_var_id = m_pkl['train_var_id']

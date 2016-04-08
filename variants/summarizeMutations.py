@@ -2,8 +2,9 @@
 import pandas, numpy
 import sys, os
 sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/variants/variants')
-import train
+import func, ped, train
 import yaml
+
 
 def calcMetr(vn_df, msg=' '):
     tst = train.TrainTest('x',
@@ -18,6 +19,7 @@ def calcMetr(vn_df, msg=' '):
     print pandas.Series(tst.test_set_y).value_counts()
     print msg
     tst.getMetrics()
+
 
 def getDiff(df_full, df_new, msg, field='var_id'):
     df_full_d = df_full[~df_full[field].duplicated()]
@@ -94,6 +96,16 @@ cols_to_output = [u'CHROM',
                   u'pLI',
                   u'pRec',
                   u'pNull',
+                  u'spidex_dpsi_max_tissue',
+                  u'spidex_dpsi_zscore',
+                  u'spidex_gene',
+                  u'spidex_strand',
+                  u'spidex_transcript',
+                  u'spidex_exon_number',
+                  u'spidex_location',
+                  u'spidex_cds_type',
+                  u'spidex_ss_dist',
+                  u'FILTER',
                   u'var_id',
                   u'v_id']
 
@@ -148,9 +160,9 @@ vn_diff =  getDiff(vn_full, vn, msg='cohort_freq')
 
 vn.ix[:, 'effect_cat'] = None
 vn.ix[vn['ANN[*].EFFECT'].str.contains(
-    '|'.join(cfg['snpeff']['effect_dmgmis'])), 'effect_cat'] = 'mis' 
-vn.ix[vn['ANN[*].EFFECT'].str.contains(
     '|'.join(cfg['snpeff']['effect_synon'])), 'effect_cat'] = 'syn' 
+vn.ix[vn['ANN[*].EFFECT'].str.contains(
+    '|'.join(cfg['snpeff']['effect_dmgmis'])), 'effect_cat'] = 'mis' 
 vn.ix[vn['ANN[*].EFFECT'].str.contains(
     '|'.join(cfg['snpeff']['effect_lof'])), 'effect_cat'] = 'lof' 
 print vn.shape
@@ -201,7 +213,15 @@ print vn.status.value_counts()
 calcMetr(vn, msg='protein coding metrics')
 vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='protein')])
 
-vn = vn.replace('ZZZ', '.') 
+vn = vn.replace('ZZZ', '.')
+myped=ped.Ped('/mnt/scratch/asalomatov/data/columbia/pcgc_ped.txt')
+myped.addVcf(file_pat='/mnt/scratch/asalomatov/data/columbia/vcf/%s_%s-02_%s-01.annotated-norm.vcf.gz') 
+myped.ped.dropna(subset=['vcf'], inplace=True)
+myped.ped.reset_index(inplace=True)
+vn['FILTER'] = vn.apply(func.getFieldFromVCF, args=(myped,), axis=1)
+vn = vn[~vn.FILTER.isnull()]
+
+
 
 c_missense = vn['effect_cat'] == 'mis'
 c_lof = vn['effect_cat'] == 'lof'
@@ -245,11 +265,11 @@ print vn.shape
 
 c_FN = (vn.pred_labels == 0) & vn.status.isin(['Y'])
 vn_FN = vn[cols_to_output][c_FN]
-vn_FN = vn_FN[~vn_FN.var_id.duplicated()]
+#vn_FN = vn_FN[~vn_FN.v_id.duplicated()]
 
 c_TP = (vn.pred_labels == 1) & vn.status.isin(['Y'])
 vn_TP = vn[cols_to_output][c_TP]
-vn_TP = vn_TP[~vn_TP.var_id.duplicated()]
+#vn_TP = vn_TP[~vn_TP.v_id.duplicated()]
 
 
 vn[cols_to_output[:-2]].to_csv(

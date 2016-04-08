@@ -3,7 +3,8 @@ import sys, os
 import func
 
 pred_file = sys.argv[1]
-tag = sys.argv[2]
+min_DP = int(sys.argv[2])
+tag = sys.argv[3]
 
 kv_vcf = pandas.read_csv('/mnt/scratch/asalomatov/data/columbia/feature_sets/known/all_known.txt', sep='\t')
 kv_vcf = kv_vcf[['ind_id','CHROM', 'POS', 'REF_offspring', 'ALT_base_offspring', 'status', 'descr', 'DP_offspring', 'DP_father', 'DP_mother']]
@@ -27,5 +28,6 @@ print 'status', mypred_u_res.status.value_counts()
 print 'pred_labels', mypred_u_res.pred_labels.value_counts()
 print 'test_labels', mypred_u_res.test_labels.value_counts()
 func.writePredAsVcf(mypred_u_res,
-                    '/mnt/scratch/asalomatov/data/columbia/vars_of_intr_gbm' + tag + '.tsv')
+                    '/mnt/scratch/asalomatov/data/columbia/vars_of_intr_gbm' +
+                    tag + '.tsv', min_DP=min_DP)
 

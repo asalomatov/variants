@@ -70,6 +70,9 @@ pred_list = ['GBM_lvl7_stdFalse_cut0.5_splt0.99_300_train01_0329_100_1_0.1.csv',
              'GBM_lvl9_stdFalse_cut0.5_splt0.99_3000_train01_0329_100_1_0.1_tstlvl7.csv',
              'GBM_lvl9_stdFalse_cut0.5_splt0.99_4000_train01_0329_100_1_0.1_tstlvl7.csv',
              'GBM_lvl9_stdFalse_cut0.5_splt0.99_5000_train01_0329_100_1_0.1_tstlvl7.csv']
+
+pred_list = ['dl_seq_lvl9_stdFalse_cut0.5_splt0.99_30000__0405_tstlvl10.csv',
+             'dl_seq_lvl9_stdFalse_cut0.5_splt0.99_30000__0405_tstlvl9.csv']
              
 for d in work_dirs:
     for p in pred_list:

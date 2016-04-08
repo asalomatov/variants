@@ -70,11 +70,13 @@ def df2sklearn(mydf, col_to_keep):
     mydf = mydf.dropna(subset = col_to_keep)
     return mydf[col_to_keep] 
 
+
 def varType(row):
     if len(row['Ref']) == len(row['Alt']):
         return 'snp'
     else:
         return 'indel'
+
 
 def runInShell(cmd, return_output=False):
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -87,7 +89,25 @@ def runInShell(cmd, return_output=False):
     else:
         sys.stderr.write(stderr)
         return 1
-       
+
+
+def getFieldFromVCF(row, ped_obj, field=6):
+    ind_id = row['ind_id']
+    vcf = ped_obj.getIndivVCF(ind_id)
+    cat = 'bcftools view'
+#    if os.path.splitext(vcf)[1] == '.gz':
+#        cat = 'zcat '
+    chrom = str(row['CHROM'])
+    pos = str(row['POS'])
+    # print cat, vcf, chrom, pos
+    cmd = ' '.join([cat, vcf, ':'.join([chrom, pos]), '| grep -v ^# | grep ', str(pos)])
+    #print cmd
+    res = runInShell(cmd, return_output=1)
+    if type(res) == int:
+        return None
+    return res.split('\t')[field]
+
+
 def runBamReadcounts(vcffile, bamfile, output_dir,
                      genome_ref='/mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/\
                      genomes/Hsapiens/GRCh37/seq/GRCh37.fa',
