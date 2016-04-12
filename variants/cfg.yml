@@ -1,0 +1,32 @@
+db_nsfp:
+  cadd_phred: 25
+  combined:
+    cadd_phred: 15
+    polyphen2_pred:
+    - D
+    sift_pred:
+    - D
+  metaSVM_pred:
+  - D
+max_cohort_freq: 1
+population_AF: 0.001
+snpeff:
+  biotype:
+  - protein_coding
+  effect_dmgmis:
+  - missense_variant
+  effect_lof:
+  - exon_loss_variant
+  - frameshift_variant
+  - stop_gained
+  - stop_lost
+  - start_lost
+  - splice_acceptor_variant
+  - splice_donor_variant
+  - splice_region_variant
+  effect_synon:
+  - synonymous_variant
+  genes: []
+  impact_dmgmis: []
+  impact_lof:
+  - HIGH

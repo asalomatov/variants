@@ -1,6 +1,4 @@
-
 import os
-import variants
 import pysam
 import subprocess
 import sys
@@ -11,6 +9,7 @@ import pandas
 import numpy
 import collections
 
+
 def makeDir(path):
     try:
         os.mkdir(path)
@@ -18,12 +17,14 @@ def makeDir(path):
         if exception.errno != errno.EEXIST:
             raise
 
+
 def checkFile(fname):
     """file name if file exists, None otherwise"""
     if os.path.isfile(fname):
         return fname
     else:
         return None
+
 
 def listFiles(pattern):
     l = glob.glob(pattern)
@@ -34,6 +35,7 @@ def listFiles(pattern):
     else:
         return l
     
+
 def run_once(f):
     def wrapper(*args, **kwargs):
         if not wrapper.has_run:
@@ -42,21 +44,11 @@ def run_once(f):
     wrapper.has_run = False
     return wrapper
 
-def fileHasVariant(fname, fam_id, chrom, pos_start, pos_end):
-    myvars = variants.Variants(fname, fam_id, chrom, pos_start, pos_end)
-    next_var = None
-    fam_var = []
-    for next_var in myvars.vcf_reader:
-        alt_allel = []
-        for nucl_alt in next_var.ALT: 
-            alt_allel.append(nucl_alt.sequence)
-        for v in alt_allel:
-            fam_var.append('_'.join([fam_id, next_var.CHROM, str(next_var.POS), next_var.REF, v]))
-    return fam_var
 
 def refAtPos(chrom, pos, genref='/mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa'):
     ref_allel = pysam.faidx(genref, str(chrom)+':'+str(pos)+'-'+str(pos))[1].strip()
     return ref_allel
+
 
 def df2sklearn(mydf, col_to_keep):
     if 'status' in mydf.columns:
@@ -67,12 +59,15 @@ def df2sklearn(mydf, col_to_keep):
     print col_to_keep
     #res = mydf[col_to_keep]
     mydf[col_to_keep] = mydf[col_to_keep].astype(float)
-    mydf = mydf.dropna(subset = col_to_keep)
+    mydf = mydf.dropna(subset=col_to_keep)
     return mydf[col_to_keep] 
 
 
 def varType(row):
-    if len(row['Ref']) == len(row['Alt']):
+    c1 = len(row['Ref']) == len(row['Alt'])
+#    c2 = ',' in row['Ref']
+#    c3 = ',' in row['Alt']
+    if c1:
         return 'snp'
     else:
         return 'indel'
@@ -89,23 +84,6 @@ def runInShell(cmd, return_output=False):
     else:
         sys.stderr.write(stderr)
         return 1
-
-
-def getFieldFromVCF(row, ped_obj, field=6):
-    ind_id = row['ind_id']
-    vcf = ped_obj.getIndivVCF(ind_id)
-    cat = 'bcftools view'
-#    if os.path.splitext(vcf)[1] == '.gz':
-#        cat = 'zcat '
-    chrom = str(row['CHROM'])
-    pos = str(row['POS'])
-    # print cat, vcf, chrom, pos
-    cmd = ' '.join([cat, vcf, ':'.join([chrom, pos]), '| grep -v ^# | grep ', str(pos)])
-    #print cmd
-    res = runInShell(cmd, return_output=1)
-    if type(res) == int:
-        return None
-    return res.split('\t')[field]
 
 
 def runBamReadcounts(vcffile, bamfile, output_dir,

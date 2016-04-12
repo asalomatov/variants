@@ -1,7 +1,7 @@
 import pandas as pd
 import vcf
 import sys, os, re
-import func
+import utlts
 import collections
 
 
@@ -227,7 +227,7 @@ class Variants:
         if compression is not None:
             cat = 'zcat'
         cmd = ' '.join([cat, path, '| grep ^# | grep -v ^##'])
-        vcf_clmns = func.runInShell(cmd, True).split('\t')
+        vcf_clmns = utlts.runInShell(cmd, True).split('\t')
         vcf_clmns = [x.strip() for x in vcf_clmns]        
         vcf_clmns = [x.strip('#') for x in vcf_clmns]        
         vcf_field_types = collections.OrderedDict()
@@ -291,7 +291,7 @@ class Variants:
         """
         self.variants = self.variants[~self.variants[sample_name].isnull()]
         return 0
-    
+
     def removeHomVar(self, sample_name):
         """Remove loci where sample_name has 1/1 genotype, or undefined 
         genotype"""
@@ -303,7 +303,35 @@ class Variants:
         c3 = self.variants[sample_name+'_gt'].apply(lambda i: '0' in i)        
         self.variants = self.variants[(~c1) & (~c2) & c3]         
         return 0
-    
+
+    def getFieldFromVCF(row, ped_obj, field=6):
+        ind_id = row['ind_id']
+        vcf = ped_obj.getIndivVCF(ind_id)
+        cat = 'bcftools view'
+    #    if os.path.splitext(vcf)[1] == '.gz':
+    #        cat = 'zcat '
+        chrom = str(row['CHROM'])
+        pos = str(row['POS'])
+        # print cat, vcf, chrom, pos
+        cmd = ' '.join([cat, vcf, ':'.join([chrom, pos]), '| grep -v ^# | grep ', str(pos)])
+        #print cmd
+        res = utlts.runInShell(cmd, return_output=1)
+        if type(res) == int:
+            return None
+        return res.split('\t')[field]
+
+    def fileHasVariant(fname, fam_id, chrom, pos_start, pos_end):
+        myvars = Variants(fname, fam_id, chrom, pos_start, pos_end)
+        next_var = None
+        fam_var = []
+        for next_var in myvars.vcf_reader:
+            alt_allel = []
+            for nucl_alt in next_var.ALT: 
+                alt_allel.append(nucl_alt.sequence)
+            for v in alt_allel:
+                fam_var.append('_'.join([fam_id, next_var.CHROM, str(next_var.POS), next_var.REF, v]))
+        return fam_var
+
     def keepOnlyPossibleDonovos():
         pass
 
