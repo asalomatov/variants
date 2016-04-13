@@ -1,1 +1,8 @@
 include variants/models/*
+include *.md
+recursive-include variants *.ipynb
+recursive-include variants *.py
+recursive-include variants *.txt
+recursive-include variants *.yml
+prune variants/work
+prune variants/.ipynb_checkpoints
