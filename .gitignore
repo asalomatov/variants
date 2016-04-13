@@ -1,6 +1,7 @@
 working_models/
 working_config/
 output/
+variants/work/
 *#*#
 .~lock*
 
