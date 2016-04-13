@@ -1,7 +1,7 @@
 import pandas as pd
 import vcf
 import sys, os, re
-import utlts
+import func
 import collections
 
 
@@ -227,7 +227,7 @@ class Variants:
         if compression is not None:
             cat = 'zcat'
         cmd = ' '.join([cat, path, '| grep ^# | grep -v ^##'])
-        vcf_clmns = utlts.runInShell(cmd, True).split('\t')
+        vcf_clmns = func.runInShell(cmd, True).split('\t')
         vcf_clmns = [x.strip() for x in vcf_clmns]        
         vcf_clmns = [x.strip('#') for x in vcf_clmns]        
         vcf_field_types = collections.OrderedDict()
@@ -315,7 +315,7 @@ class Variants:
         # print cat, vcf, chrom, pos
         cmd = ' '.join([cat, vcf, ':'.join([chrom, pos]), '| grep -v ^# | grep ', str(pos)])
         #print cmd
-        res = utlts.runInShell(cmd, return_output=1)
+        res = func.runInShell(cmd, return_output=1)
         if type(res) == int:
             return None
         return res.split('\t')[field]
