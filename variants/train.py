@@ -34,7 +34,8 @@ from keras.layers.core import Dense, Activation, Dropout
 
 class TrainTest:
 
-    def __init__(self, data_set_file, feature_list_file, y_name=[], extra_col_names=[]):
+    def __init__(self, data_set_file, feature_list_file, y_name=[],
+                 extra_col_names=[]):
         self.data_set = None
         self.train_set_X = None
         self.train_set_y = None
