@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/variants/variants')
+#sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/variants/variants')
 import ped
 import variants
 import func
