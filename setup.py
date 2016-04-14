@@ -1,14 +1,18 @@
 from setuptools import setup, find_packages
+from glob import glob
 
 if __name__ == '__main__':
     setup(
         name='variants',
         packages=find_packages(),
         version='0.1.0',
+        package_data={b'variants': ['models/*']},
+        include_package_data=True,
         description='Genomic variants manipulation and filtering.',
         long_description='',
         url='https://github.com/asalomatov/variants',
         author='Andrei Salomatov',
+        author_email='Andrei.Salomatov@gmail.com',
         license='MIT',
         classifiers=[
             'Development Status :: 3 - Alpha',
