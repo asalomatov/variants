@@ -6,7 +6,7 @@ if __name__ == '__main__':
         name='variants',
         packages=find_packages(),
         version='0.1.0',
-        package_data={b'variants': ['models/*']},
+        package_data={'variants': ['models/*']},
         include_package_data=True,
         description='Genomic variants manipulation and filtering.',
         long_description='',
