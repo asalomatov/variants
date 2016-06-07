@@ -4,11 +4,11 @@ from glob import glob
 if __name__ == '__main__':
     setup(
         name='variants',
-        packages=find_packages(),
+        packages=['variants'],
         version='0.1.0',
-        package_data={'': ['denovo_classifier_model/*', 'denovo_classifier_config/*']},
+        package_data={'variants': ['denovo_classifier_model/*', 'denovo_classifier_config/*']},
         include_package_data=True,
-        description='Genomic variants manipulation and filtering.',
+        description='Genomic variants manipulation and filtering',
         long_description='',
         url='https://github.com/asalomatov/variants',
         author='Andrei Salomatov',
