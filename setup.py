@@ -24,7 +24,7 @@ if __name__ == '__main__':
             'Topic :: Scientific/Engineering :: Bio-Informatics',
             ],
         install_requires=[
-            'sklearn>=0.17',
+            'sklearn',
             'pandas>=0.17.1',
             'numpy>=1.10.2',
             'keras>=0.3.3'
