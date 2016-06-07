@@ -1,0 +1,9 @@
+bam_pattern: /mnt/scratch/asalomatov/data/SPARK/bam/%s.bam
+known_variants:
+min_DP: 10
+output_directory: /mnt/xfs1/home/asalomatov/projects/spark/feature_sets/hc
+ped_file: /mnt/scratch/asalomatov/data/SPARK/spark.ped
+variant_type: SNP
+vcf_pattern: /mnt/xfs1/home/asalomatov/projects/spark/%s/%s-JHC-vars.vcf.gz
+bam_readcount: /mnt/scratch/asalomatov/software/installs/bin/bam-readcount
+genome_ref: /mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa

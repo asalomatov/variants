@@ -1,6 +1,5 @@
-#!/mnt/xfs1/home/asalomatov/miniconda2/bin/python
+from __future__ import print_function
 import sys
-#sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/variants/variants')
 import func
 import train
 import numpy
@@ -10,10 +9,9 @@ import os
 from sklearn.externals import joblib
 from keras.models import model_from_json
 import yaml
-import summarizeVariants
 
-print 'command line:'
-print sys.argv
+
+
 
 child_id = sys.argv[1]
 config_file = sys.argv[2]

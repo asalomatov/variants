@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 #sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/variants/variants')
 import ped
@@ -43,6 +44,8 @@ class TrainTest:
         self.test_set_var_id = []
         self.train_set_alleles = []
         self.test_set_alleles = []
+        self.test_set_DP_father = []
+        self.test_set_DP_mother = []
         self.test_set_X = None
         self.test_set_y = None
         self.pred_y = None
@@ -55,6 +58,7 @@ class TrainTest:
         self.method = None
         self.model = None
         self.perf_mertics = None
+        self.roc = None
         self.stdize = True
         self.feature_importance = None
         self.threshold = 0.5
@@ -245,8 +249,8 @@ class TrainTest:
             verbose = True
             if ratio < 1:
                 ratio = 1 / ratio
-            print 'upsample ratio: ', ratio
-            print 'smote type: ', over_sample
+            print('upsample ratio: %s' % ratio)
+            print('smote type: %s' % over_sample)
             if over_sample == 'SMOT':
                 smote = SMOTE(ratio=ratio, verbose=verbose, kind='regular')
             elif over_sample == 'SMOT_bl1':
@@ -256,20 +260,24 @@ class TrainTest:
             elif over_sample == 'SMOT_svm':
                 smote = SMOTE(ratio=ratio, verbose=verbose, kind='svm')
             else:
-                print 'unknown SMOTE type'
+                print('unknown SMOTE type')
             if smote is not None:
-                print 'applying SMOTE...'
-                self.train_set_X, self.train_set_y = smote.fit_transform(self.train_set_X, self.train_set_y)
+                print('applying SMOTE...')
+                self.train_set_X, self.train_set_y = smote.fit_transform(self.train_set_X,
+                                                                         self.train_set_y)
 
     def data2Test(self):
         c1 = self.data_set.var_id.isin(self.train_set_var_id)
-        print sum(c1), 'variants will be removed'
+        print(str(sum(c1)) + ' variants will be removed')
         self.test_set_X = self.data_set[self.feature_list][~c1].values
         self.test_set_y = self.data_set.label[~c1].astype(int).values
         self.test_set_var_id = self.data_set.var_id[~c1].astype(str).values
         self.test_set_alleles = self.data_set.offspring_alleles[~c1].astype(str).values
+        self.test_set_DP_offspring = self.data_set.DP_offspring[~c1].astype(int).values
+        self.test_set_DP_father = self.data_set.DP_father[~c1].astype(int).values
+        self.test_set_DP_mother = self.data_set.DP_mother[~c1].astype(int).values
         if self.stdize:
-            print 'scaling data'
+            print('scaling data')
             self.test_set_X = scale(self.test_set_X)
 
     def keepPosOnly(self):
@@ -286,10 +294,9 @@ class TrainTest:
             self.feature_importance = pandas.DataFrame({
                 'contrib': self.model.feature_importances_,
                 'name': self.feature_list})
-            self.feature_importance.sort(['contrib'], ascending=[False], inplace=True)
+            self.feature_importance.sort_values(['contrib'], ascending=[False], inplace=True)
             self.feature_importance.to_csv(self.method + '_feature_contrib.csv',
-                                           index=False,
-                                           sep='\t')
+                                           index=False)
         model_descr = {'model': self.model,
                        'train_var_id': self.train_set_var_id,
                        'stdize': self.stdize,
@@ -325,7 +332,8 @@ class TrainTest:
                        'extra_col_names': self.extra_column_names,
                        'method': self.method,
                        'threshold': self.threshold,
-                       'metrics': self.perf_mertics}
+                       'metrics': self.perf_mertics,
+                       'roc': self.roc}
         joblib.dump(model_descr, os.path.join(output_dir, self.method + '.pkl'))
 
     def saveKerasModel(self, output_dir='./'):
@@ -389,14 +397,19 @@ class TrainTest:
         if len(numpy.unique(self.test_set_y)) > 1 and self.pred_y_prob is not None:
             roc_auc = metrics.roc_auc_score(self.test_set_y, self.pred_y_prob)
             self.perf_mertics['roc_auc'] = [roc_auc]
-        print self.perf_mertics
+            fpr, tpr, thresholds = metrics.roc_curve(self.test_set_y,
+                                                     self.pred_y_prob)
+            roc_df = pandas.DataFrame({'fpr': fpr,
+                                       'tpr': tpr,
+                                       'threshold': thresholds})
+            self.roc = roc_df
+        print(self.perf_mertics)
         #print metrics.classification_report(y_test, y_pred)
-        #fpr, tpr, thresholds = metrics.roc_curve(y_test, y_pred[:,1]) 
         #plt.plot(fpr, tpr)
         #plt.show()
 
 if __name__ == '__main__':
-    print sys.argv
+    print(sys.argv)
     n_extra = int(sys.argv[1])
     lvl = int(sys.argv[2])
     feature_set_dir = sys.argv[3]
@@ -414,7 +427,8 @@ if __name__ == '__main__':
     myped.addTestFile(field='ind_id', file_pat=os.path.join(feature_set_dir, 'fb/all_SNP/%s'))
     myped.ped.dropna(subset=['test'], inplace=True)
     myped.ped.reset_index(inplace=True)
-    print myped.ped.shape
+    print('ped shape:')
+    print(myped.ped.shape)
     trn = train.TrainTest(known_vars,
                           list_of_features,
                           ['status'],
@@ -423,29 +437,36 @@ if __name__ == '__main__':
     trn.threshold = trshold
     trn.readFeatureList()
     trn.readDataSet()
-    print 'data_set shape is ', trn.data_set.shape
+    print('data_set shape is %s' % ' '.join(map(str, trn.data_set.shape)))
     if n_extra > 0:
         trn.readExtraVars(extra_vars, n_extra=n_extra)
-        print 'data_set shape is ', trn.data_set.shape
     trn.addLabels(level=lvl)
     trn.dropNA('label')
-    print 'data_set shape is ', trn.data_set.shape
+    print('data_set shape is %s' % ' '.join(map(str, trn.data_set.shape)))
+    print('label balance is ')
+    print(trn.data_set.label.value_counts())
     trn.splitTrainTest(trn_size=trn_tst_splt, over_sample=smote_type)
-    print 'train_set shape is ', trn.train_set_X.shape
+    print('train_set shape is %s' % ' '.join(map(str, trn.train_set_X.shape)))
+    print('test_set shape is %s' % ' '.join(map(str, trn.test_set_X.shape)))
+    # set test set equal to train set for final eval
+    if trn_tst_splt > .9:
+        print('test set is equan to train set')
+        trn.test_set_X = trn.train_set_X
+        trn.test_set_y = trn.train_set_y
     trn.method = mtd + '_lvl' + str(lvl) +\
                  '_std' + str(trn.stdize) +\
                  '_cut' + str(trn.threshold) +\
                  '_splt' + str(trn_tst_splt) +\
                  '_' + str(n_extra) +\
                  '_' + str(smote_type)
-    print 'mtd is', mtd
+    print('mtd is %s' % mtd)
     if mtd == 'GBM':
- #       n_estimators = 1000
+ #       n_estiators = 1000
  #       max_depth = 3
  #       learning_rate = 0.01
-        n_estimators = 100
+        n_estimators = 2000
         max_depth = 1
-        learning_rate = 0.1
+        learning_rate = 0.075
         trn.method += '_' + '_'.join(map(str,
                                    [n_estimators, max_depth, learning_rate]))
         trn.model = GradientBoostingClassifier(n_estimators=n_estimators,
@@ -458,7 +479,7 @@ if __name__ == '__main__':
         trn.fitClassifier()
         trn.predictClass(trn.threshold)
     elif mtd == 'RF':
-        n_estimators = 100
+        n_estimators = 2000
         max_depth = 1
         trn.method += '_' + '_'.join(map(str, [n_estimators, max_depth]))
         trn.model = RandomForestClassifier(max_depth=max_depth,
@@ -471,7 +492,7 @@ if __name__ == '__main__':
         #C = 1.25
         #class_weight = 'balanced'
         kernel = 'linear'
-        C = 1
+        C = 0.25
         class_weight = 'balanced'
         trn.method += '_' + '_'.join(map(str,
                                    [kernel, C, class_weight]))

@@ -8,6 +8,8 @@ import glob
 import pandas
 import numpy
 import collections
+sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/variants/variants')
+import train
 
 
 def makeDir(path):
@@ -292,10 +294,11 @@ def parseBamReadcountIndel(row):
 def addSuffix(x, sfx):
     return [i + sfx for i in x]
 
-
 def splitVarId(x):
-    res = x.split('_')
-    return pandas.Series(res, ['ind_id', 'CHROM', 'POS'])
+    x_spl = x.split('_')
+    if len(x_spl) > 3:
+        x_spl = ['_'.join(x_spl[:-2])] + x_spl[-2:]
+    return pandas.Series(x_spl, ['ind_id', 'CHROM', 'POS'])
 
 
 def splitAlleles(x):
@@ -345,3 +348,36 @@ def writePredAsVcf(pred_df, outp_file, min_DP=0):
     return 0
 
 
+def getFieldFromVCF(row, ped_obj, field=6):
+    ind_id = row['ind_id']
+    vcf = ped_obj.getIndivVCF(ind_id)
+    cat = 'bcftools view'
+#    if os.path.splitext(vcf)[1] == '.gz':
+#        cat = 'zcat '
+    chrom = str(row['CHROM'])
+    pos = str(row['POS'])
+    cmd = ' '.join([cat, vcf, ':'.join([chrom, pos]), '| grep -v ^# | grep ', str(pos)])
+    print cmd
+    res = runInShell(cmd, return_output=1)
+    if type(res) == int:
+        return None
+    return res.split('\t')[field]
+
+
+def summPred(pred_file, cut_off):
+    tst = train.TrainTest('x',
+                          '/mnt/xfs1/home/asalomatov/projects/variants/variants/ssc_wes_features_noINDEL_noDP.txt',
+                          ['status'],
+                          ['descr'])
+    if not os.path.isfile(pred_file):
+        sys.exit('No such file ; ' + pred_file)
+    df = pandas.read_csv(pred_file)
+    df = df[~df.test_var_id.duplicated()]
+    tst.test_set_y = df['test_labels']
+    # tst.pred_y = df['pred_labels']
+    tst.pred_y = (df['pred_prob'] > cut_off).astype(int)
+    tst.pred_y_prob = df['pred_prob']
+    tst.getMetrics()
+    tst.perf_mertics['method'] = os.path.basename(pred_file)
+    tst.perf_mertics['prob_cutoff'] = cut_off
+    return tst

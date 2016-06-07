@@ -6,7 +6,7 @@ if __name__ == '__main__':
         name='variants',
         packages=find_packages(),
         version='0.1.0',
-        package_data={'variants': ['models/*']},
+        package_data={'variants': ['denovo_classifier_model/*', 'denovo_classifier_config/*']},
         include_package_data=True,
         description='Genomic variants manipulation and filtering.',
         long_description='',
@@ -24,6 +24,7 @@ if __name__ == '__main__':
             'Topic :: Scientific/Engineering :: Bio-Informatics',
             ],
         install_requires=[
+            'sklearn>=0.17',
             'pandas>=0.17.1',
             'numpy>=1.10.2',
             'keras>=0.3.3'

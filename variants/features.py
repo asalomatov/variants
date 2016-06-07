@@ -1,3 +1,4 @@
+from __future__ import print_function
 import variants
 import ped
 import func
@@ -25,7 +26,7 @@ class Features:
         
         Example variants_file:
         
-        ind_id  chr pos ref alt status  descr   vartype
+        ind_id chr pos ref alt status descr vartype
         14075.p1    1   3519049 AC  A   Y   both    ins
         14338.s1    1   6653682 TCC T   Y   Iossifov    ins
         """
@@ -42,7 +43,7 @@ class Features:
         self.trio_initialized = False
         self.verified_variants = None
         if variants_file:
-            self.verified_variants = pd.read_table(variants_file,
+            self.verified_variants = pd.read_table(variants_file, usecols=range(7),
                                                    index_col=False, dtype=str)
         self.test_set = pd.DataFrame()
         self.train_set = pd.DataFrame()
@@ -50,6 +51,7 @@ class Features:
         self.father_features = ''
         self.mother_features = ''
         self.family_features = ''
+
     def initTrioFor(self, sample_id):
         """sample_id of a proband or a sibling. Bam files for the trio, and 
         a vcf file for the child have to be specified in ped object.
@@ -71,31 +73,31 @@ class Features:
             return False
         self.father_id = self.ped.getFather(self.family_id)       
         if self.father_id is None:
-            sys.stderr.write( 'no father in family ' + self.family_id + '\n')
+            sys.stderr.write('no father in family ' + self.family_id + '\n')
             return False
         self.mother_id = self.ped.getMother(self.family_id)       
         if self.mother_id is None:
-            sys.stderr.write( 'no mother in family ' + self.family_id + '\n')
+            sys.stderr.write('no mother in family ' + self.family_id + '\n')
             return False
         self.sample_vcf = self.ped.getIndivVCF(self.sample_id)       
         if self.sample_vcf is None:
-            sys.stderr.write( 'no vcf file for ' + self.sample_id + '\n')
+            sys.stderr.write('no vcf file for ' + self.sample_id + '\n')
             return False
         self.sample_bam = self.ped.getIndivBAM(self.sample_id)       
         if self.sample_bam is None:
-            sys.stderr.write( 'no bam file for ' + self.sample_id + '\n')
+            sys.stderr.write('no bam file for ' + self.sample_id + '\n')
             return False
         self.father_bam = self.ped.getIndivBAM(self.father_id)       
         if self.father_bam is None:
-            sys.stderr.write( 'no bam file for ' + self.father_id + '\n')
+            sys.stderr.write('no bam file for ' + self.father_id + '\n')
             return False
         self.mother_bam = self.ped.getIndivBAM(self.mother_id)       
         if self.mother_bam is None:
-            sys.stderr.write( 'no bam file for ' + self.mother_id + '\n')
+            sys.stderr.write('no bam file for ' + self.mother_id + '\n')
             return False
         self.is_affected = self.ped.isAffected(self.sample_id)       
         if self.is_affected is None:
-            sys.stderr.write( 'no phenotype for ' + self.sample_id + '\n')
+            sys.stderr.write('no phenotype for ' + self.sample_id + '\n')
             return False
         return True
     
@@ -109,31 +111,57 @@ class Features:
         """
         vrs = variants.Variants(self.sample_vcf, self.family_id)
         vrs.readVcfToDF()
+        print('all variants')
+        print(vrs.variants.shape)
         vrs.removeNaN(self.sample_id)
+        print('rm nan child')
+        print(vrs.variants.shape)
         vrs.removeNaN(self.father_id)
+        print('rm nan fa')
+        print(vrs.variants.shape)
         vrs.removeNaN(self.mother_id)
-        vrs.removeHomRef(self.sample_id)
-        vrs.removeHomVar(self.father_id)
-        vrs.removeHomVar(self.mother_id)
+        print('rm nan mo')
+        print(vrs.variants.shape)
+        # vrs.removeHomRef(self.sample_id)
+        # vrs.removeHomVar(self.father_id)
+        # vrs.removeHomVar(self.mother_id)
+        vrs.removeNoGT(self.sample_id)
+        print('rm no GT child')
+        print(vrs.variants.shape)
+        vrs.removeNoGT(self.father_id)
+        print('rm no GT fa')
+        print(vrs.variants.shape)
+        vrs.removeNoGT(self.mother_id)
+        print('rm no GT mo')
+        print(vrs.variants.shape)
+        vrs.keepOnlyPossibleDenovos(self.sample_id,
+                                    self.father_id,
+                                    self.mother_id)
+        print('keep de novos')
+        print(vrs.variants.shape)
         temp_dir = tempfile.mkdtemp()
-        reg_file = tempfile.mktemp(dir=temp_dir, suffix='_' + self.sample_id +
+        reg_file = tempfile.mktemp(dir=temp_dir,
+                                   suffix='_' + self.sample_id +
                                    '.region')
-        print reg_file      
+        print(reg_file)
         sys.stdout.flush()        
         vrs.vcfDF2regions(reg_file)
-        self.sample_features = os.path.join(temp_dir, self.sample_id + '.features')
-        print self.sample_features
-        self.father_features = os.path.join(temp_dir, self.father_id + '.features')
-        print self.father_features
-        self.mother_features = os.path.join(temp_dir, self.mother_id + '.features')
-        print self.mother_features
+        self.sample_features = os.path.join(temp_dir,
+                                            self.sample_id + '.features')
+        print(self.sample_features)
+        self.father_features = os.path.join(temp_dir,
+                                            self.father_id + '.features')
+        print(self.father_features)
+        self.mother_features = os.path.join(temp_dir,
+                                            self.mother_id + '.features')
+        print(self.mother_features)
         sys.stdout.flush()
         pool = Pool(n_cores)
-        results = pool.map(multi_wrap, \
-            [(reg_file, self.sample_bam, self.sample_features), \
-            (reg_file, self.father_bam, self.father_features), \
-            (reg_file, self.mother_bam, self.mother_features)])
-        print results
+        results = pool.map(multi_wrap,
+                           [(reg_file, self.sample_bam, self.sample_features),
+                            (reg_file, self.father_bam, self.father_features),
+                            (reg_file, self.mother_bam, self.mother_features)])
+        print(results)
         if max(results) > 0:
             sys.stderr.write('Feature extraction failed')
             return 1

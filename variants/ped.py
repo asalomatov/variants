@@ -15,7 +15,7 @@ class Ped:
     def __init__(self, ped_file_name, extra_column_names=[]):
         """read ped file into pandas data frame"""
         self.fname = ped_file_name
-        self.ped = pd.read_table(self.fname, usecols=range(6+len(extra_column_names)))
+        self.ped = pd.read_table(self.fname, usecols=range(6+len(extra_column_names)), header=None)
         self.ped.columns = ['fam_id', 'ind_id', 'fa_id', 'mo_id', 'sex', 'pheno'] + extra_column_names
         self.ped.replace(['.', '0', 0, -9, '-9'], [None]*5, inplace=True)
         self.ped['fam_id'] = self.ped['fam_id'].astype(str) 

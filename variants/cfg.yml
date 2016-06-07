@@ -30,3 +30,5 @@ snpeff:
   impact_dmgmis: []
   impact_lof:
   - HIGH
+bam_readcount: /mnt/scratch/asalomatov/software/installs/bin/bam-readcount
+genome_ref: /mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa
