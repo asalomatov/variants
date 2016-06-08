@@ -6,7 +6,7 @@ if __name__ == '__main__':
         name='variants',
         packages=['variants'],
         version='0.1.0',
-        package_data={'variants': ['denovo_classifier_model/*', 'denovo_classifier_config/*']},
+        package_data={'variants': ['denovo_classifier_model_SNP/*', 'denovo_classifier_config/*']},
         include_package_data=True,
         scripts=['variants/scripts/call_de_novo.py'],
         description='Genomic variants manipulation and filtering',
