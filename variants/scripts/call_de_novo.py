@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from __future__ import print_function
 import sys
 import func
@@ -172,7 +173,7 @@ else:
     pred_prob = numpy.array([], dtype=float)
     dp_offspring = numpy.array([], dtype=int)
     dp_father = numpy.array([], dtype=int)
-    p_mother = numpy.array([], dtype=int)
+    dp_mother = numpy.array([], dtype=int)
 
     for i, row in myped.ped.iterrows():
         if row['ind_id'] != child_id:
