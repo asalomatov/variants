@@ -201,6 +201,16 @@ class TrainTest:
                                       ['var_id'] + ['offspring_alleles'] +
                                       self.extra_column_names]
 
+    def addExtraColumns(self):
+        self.addAlleleBalance()
+        self.addAllelesBalByDP(self.data_set)
+        self.addVarID(self.data_set)
+        self.addAlleles(self.data_set)
+        self.data_set = self.data_set[self.feature_list +
+                                      self.y_name +
+                                      ['var_id'] + ['offspring_alleles'] +
+                                      self.extra_column_names]
+
     def readTestSet(self):
         self.data_set = pandas.read_csv(self.data_set_file, sep='\t')
         self.addAlleleBalance()

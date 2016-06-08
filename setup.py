@@ -8,6 +8,7 @@ if __name__ == '__main__':
         version='0.1.0',
         package_data={'variants': ['denovo_classifier_model/*', 'denovo_classifier_config/*']},
         include_package_data=True,
+        scripts=['variants/scripts/call_de_novo.py'],
         description='Genomic variants manipulation and filtering',
         long_description='',
         url='https://github.com/asalomatov/variants',

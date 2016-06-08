@@ -8,7 +8,6 @@ import glob
 import pandas
 import numpy
 import collections
-sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/variants/variants')
 import train
 
 

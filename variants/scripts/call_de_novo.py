@@ -11,6 +11,7 @@ from sklearn.externals import joblib
 from keras.models import model_from_json
 import yaml
 import argparse
+from multiprocessing import Pool
 
 
 # wrap a funtion for use with multiprocessing
@@ -48,9 +49,6 @@ config_file = args.yaml_config_file[0]
 prob_cutoff = args.class_probability_threshold[0]
 model = args.sklearn_model_pkl[0]
 
-if not os.path.isfile(model):
-    script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-
 # get parameters from yaml config file
 with open(config_file, 'r') as f:
     cfg = yaml.safe_load(f)
@@ -63,11 +61,29 @@ ped_file = cfg['ped_file']
 known_vars = None
 output_dir = cfg['output_directory']
 test_set_pat = output_dir + '/%s'
-m_pkl = joblib.load(model)
 
+if not os.path.isfile(model):
+    script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    print(script_dir)
+    model_dir = os.path.abspath(os.path.join(script_dir,
+                                             '..',
+                                             'denovo_classifier_model_' +
+                                             var_type.upper()))
+    mdl_files = os.listdir(model_dir)
+    model = [i for i in mdl_files if '.pkl_' not in i]
+    if len(model) != 1:
+        print('found %s models' % len(model))
+        print('supply one model via --sklearn_model_pkl argument')
+        sys.exit(1)
+    model = os.path.join(model_dir, model[0])
+    print(model)
+
+m_pkl = joblib.load(model)
 list_of_features = m_pkl['features']
+# hardcode lvl, this is intended for external use only
 lvl = 0
 is_keras = bool(int(m_pkl['is_keras']))
+
 if lvl == 0:
     m_pkl['extra_col_names'] = []
     m_pkl['y_name'] = []
@@ -88,8 +104,6 @@ myped.addBai(file_pat=bai_pat)
 myped.ped.dropna(subset=['bai'], inplace=True)
 
 f = features.Features(myped, known_vars)
-
-sys.exit(1)
 
 # trio has to be complete with no files missing
 if not f.initTrioFor(child_id):
@@ -147,95 +161,94 @@ else:
     c3 = fam_f['DP_mother'] > min_DP - 1
     fam_f = fam_f[c1 & c2 & c3]
     fam_f.to_csv(os.path.join(output_dir, child_id), sep='\t', index=False)
+    myped.addTestFile(field='ind_id', file_pat=test_set_pat)
+    myped.ped.dropna(subset=['test'], inplace=True)
+    myped.ped.reset_index(inplace=True)
 
+    test_labels = numpy.array([], dtype=int)
+    pred_labels = numpy.array([], dtype=int)
+    test_var_id = numpy.array([], dtype=str)
+    test_alleles = numpy.array([], dtype=str)
+    pred_prob = numpy.array([], dtype=float)
+    dp_offspring = numpy.array([], dtype=int)
+    dp_father = numpy.array([], dtype=int)
+    p_mother = numpy.array([], dtype=int)
 
+    for i, row in myped.ped.iterrows():
+        if row['ind_id'] != child_id:
+            continue
+    #    print 'processing', i, row['ind_id']
+        #myped.ped.test.iat[i]
+        tst = train.TrainTest(row['test'],
+                              list_of_features,
+                              m_pkl['y_name'],
+                              m_pkl['extra_col_names'] + ['DP_offspring', 'DP_father', 'DP_mother'])
+        if is_keras:
+            tst.is_keras = True
+        tst.feature_list = list_of_features
+        tst.readDataSet()
+    #    print 'data_set shape is ', tst.data_set.shape
+        if tst.data_set.empty:
+            continue
+        tst.addLabels(level=lvl)
+    #    print 'data_set shape is ', tst.data_set.shape
+    #    print tst.data_set.label.value_counts()
+        tst.dropNA('label')
+    #    print 'data_set shape with non null labels is ', tst.data_set.shape
+        if tst.is_keras:
+            tst.model = model_from_json(m_pkl['model'])
+            tst.model.load_weights(m_pkl['weights_file'])
+        else:
+            tst.model = m_pkl['model']
+        tst.stdize = m_pkl['stdize']
+        tst.trshold = prob_cutoff
+        tst.train_set_var_id = m_pkl['train_var_id']
+        tst.data2Test()
+    #    print 'test_set_X shape is', tst.test_set_X.shape
+        tst.predictClass(tst.threshold)
+        #tst.getMetrics()
+        test_labels = numpy.concatenate((test_labels, tst.test_set_y))
+        pred_labels = numpy.concatenate((pred_labels, tst.pred_y))
+        pred_prob = numpy.concatenate((pred_prob, tst.pred_y_prob))
+        test_var_id = numpy.concatenate((test_var_id, tst.test_set_var_id))
+        test_alleles = numpy.concatenate((test_alleles, tst.test_set_alleles))
+        dp_offspring = numpy.concatenate((dp_offspring, tst.test_set_DP_offspring))
+        dp_father = numpy.concatenate((dp_father, tst.test_set_DP_father))
+        dp_mother = numpy.concatenate((dp_mother, tst.test_set_DP_mother))
+    res = pandas.DataFrame({'test_labels': test_labels, 'pred_labels': pred_labels,
+                            'pred_prob': pred_prob, 'test_var_id': test_var_id,
+                            'test_var_alleles': test_alleles,
+                            'DP_offspring': dp_offspring,
+                            'DP_father': dp_father,
+                            'DP_mother': dp_mother})
+    m_name = os.path.basename(model)
+    m_name = '.'.join(m_name.split('.')[:-1]) + '_tstlvl' + str(lvl)
+    res['method'] = m_name
+    res = res[~res.test_var_alleles.str.contains('nan')]
+    res['var_id'] = res['test_var_id']
+    res_u = res[~res.var_id.duplicated()]
+    res_u.reset_index(inplace=True)
+    res_u.ix[:, 'pred_labels'] = (res_u['pred_prob'] > prob_cutoff).astype(int)
+    res_u = res_u[res_u.pred_labels == 1]
+    res_u.reset_index(inplace=True)
+    res_u.to_csv(os.path.join(output_dir, child_id + '-class.csv'), index=False)
+    
 
-myped = ped.Ped(ped_file)
-myped.addTestFile(field='ind_id', file_pat=test_set_pat)
-myped.ped.dropna(subset=['test'], inplace=True)
-myped.ped.reset_index(inplace=True)
+    # outp_tsv = os.path.join(output_dir, m_name + '.tsv')
+    # outp_tsv = os.path.join(output_dir, child_id + '.tsv')
+    # func.writePredAsVcf(res_u, outp_tsv, min_DP=min_DP)
 
-test_labels = numpy.array([], dtype=int)
-pred_labels = numpy.array([], dtype=int)
-test_var_id = numpy.array([], dtype=str)
-test_alleles = numpy.array([], dtype=str)
-pred_prob = numpy.array([], dtype=float)
-dp_offspring = numpy.array([], dtype=int)
-dp_father = numpy.array([], dtype=int)
-dp_mother = numpy.array([], dtype=int)
+    # script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    #cmd = ' '.join([os.path.join(script_dir, 'vcf2table.sh'),
+    #               outp_tsv,
+    #               script_dir,
+    #               child_id])
+    # print(cmd)
+    # func.runInShell(cmd)
 
-for i, row in myped.ped.iterrows():
-    if row['ind_id'] != child_id:
-        continue
-#    print 'processing', i, row['ind_id']
-    #myped.ped.test.iat[i]
-    tst = train.TrainTest(row['test'],
-                          list_of_features,
-                          m_pkl['y_name'],
-                          m_pkl['extra_col_names'] + ['DP_offspring', 'DP_father', 'DP_mother'])
-    if is_keras:
-        tst.is_keras = True
-    tst.feature_list = list_of_features
-    tst.readDataSet()
-#    print 'data_set shape is ', tst.data_set.shape
-    if tst.data_set.empty:
-        continue
-    tst.addLabels(level=lvl)
-#    print 'data_set shape is ', tst.data_set.shape
-#    print tst.data_set.label.value_counts()
-    tst.dropNA('label')
-#    print 'data_set shape with non null labels is ', tst.data_set.shape
-    if tst.is_keras:
-        tst.model = model_from_json(m_pkl['model'])
-        tst.model.load_weights(m_pkl['weights_file'])
-    else:
-        tst.model = m_pkl['model']
-    tst.stdize = m_pkl['stdize']  # bool(int(sys.argv[6]))
-    tst.trshold = m_pkl['threshold']  # float(sys.argv[7])
-    tst.train_set_var_id = m_pkl['train_var_id']
-    tst.data2Test()
-#    print 'test_set_X shape is', tst.test_set_X.shape
-    tst.predictClass(tst.threshold)
-    #tst.getMetrics()
-    test_labels = numpy.concatenate((test_labels, tst.test_set_y))
-    pred_labels = numpy.concatenate((pred_labels, tst.pred_y))
-    pred_prob = numpy.concatenate((pred_prob, tst.pred_y_prob))
-    test_var_id = numpy.concatenate((test_var_id, tst.test_set_var_id))
-    test_alleles = numpy.concatenate((test_alleles, tst.test_set_alleles))
-    dp_offspring = numpy.concatenate((dp_offspring, tst.test_set_DP_offspring))
-    dp_father = numpy.concatenate((dp_father, tst.test_set_DP_father))
-    dp_mother = numpy.concatenate((dp_mother, tst.test_set_DP_mother))
-res = pandas.DataFrame({'test_labels': test_labels, 'pred_labels': pred_labels,
-                        'pred_prob': pred_prob, 'test_var_id': test_var_id,
-                        'test_var_alleles': test_alleles,
-                        'DP_offspring': dp_offspring,
-                        'DP_father': dp_father,
-                        'DP_mother': dp_mother})
-m_name = os.path.basename(model)
-m_name = '.'.join(m_name.split('.')[:-1]) + '_tstlvl' + str(lvl)
-res['method'] = m_name
-res = res[~res.test_var_alleles.str.contains('nan')]
-res.to_csv(os.path.join(output_dir, m_name + '.csv'), index=False)
-res['var_id'] = res['test_var_id']
-res_u = res[~res.var_id.duplicated()]
-res_u.reset_index(inplace=True)
-res_u.ix[:, 'pred_labels'] = (res_u['pred_prob'] > prob_cutoff).astype(int)
-#res_u = res_u[res_u.pred_labels == 1]
-#outp_tsv = os.path.join(output_dir, m_name + '.tsv')
-outp_tsv = os.path.join(output_dir, child_id + '.tsv')
-func.writePredAsVcf(res_u, outp_tsv, min_DP=min_DP)
-
-script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-cmd = ' '.join([os.path.join(script_dir, 'vcf2table.sh'),
-               outp_tsv,
-               script_dir,
-               child_id])
-print(cmd)
-func.runInShell(cmd)
-
-summarizeVariants.summarizeMutations(os.path.join(output_dir, child_id + '-ann-onePline.tsv'),
-                                                  os.path.join(output_dir, 'denovo'),
-                                                  config_file)
+    # summarizeVariants.summarizeMutations(os.path.join(output_dir, child_id + '-ann-onePline.tsv'),
+    #                                                  os.path.join(output_dir, 'denovo'),
+    #                                                  config_file)
 
 
 #cmd = ' '.join([os.path.join(script_dir, 'work', 'summarizeMutations.py'),
