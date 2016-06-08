@@ -60,7 +60,7 @@ bam_pat = cfg['bam_pattern']
 bai_pat = bam_pat + '.bai'
 ped_file = cfg['ped_file']
 bam_readcount = cfg['bam_readcount']
-genome_ref = cfg['gemome_ref']
+genome_ref = cfg['genome_ref']
 
 known_vars = None
 output_dir = cfg['output_directory']
