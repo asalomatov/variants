@@ -13,7 +13,7 @@ from keras.models import model_from_json
 import yaml
 import argparse
 from multiprocessing import Pool
-
+import pkg_resources
 
 # wrap a funtion for use with multiprocessing
 def multi_wrap_readBamReadcount(args):
@@ -67,12 +67,11 @@ output_dir = cfg['output_directory']
 test_set_pat = output_dir + '/%s'
 
 if not os.path.isfile(model):
-    script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-    print(script_dir)
-    model_dir = os.path.abspath(os.path.join(script_dir,
-                                             '..',
-                                             'denovo_classifier_model_' +
-                                             var_type.upper()))
+    # script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    # print(script_dir)
+    model_dir = pkg_resources.resource_filename('variants',
+                                                'denovo_classifier_model_' +
+                                                var_type.upper())
     mdl_files = os.listdir(model_dir)
     model = [i for i in mdl_files if '.pkl_' not in i]
     if len(model) != 1:
