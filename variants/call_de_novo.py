@@ -7,14 +7,52 @@ import pandas
 import ped
 import os
 from sklearn.externals import joblib
-from keras.models import model_from_json
+#from keras.models import model_from_json
 import yaml
+import argparse
 
+arg_parser = argparse.ArgumentParser(
+    description='Classify De Novo mutations.')
+arg_parser.add_argument('child_id',
+                        nargs='+',
+                        type=str,
+                        help='A string identifying the child in a trio, must be\
+                        present in the ped file, as well as in the corresponding\
+                        vcf file headers')
+arg_parser.add_argument('yaml_config_file',
+                        nargs='+',
+                        type=str,
+                        help='A config file, defining necessary variables.')
+arg_parser.add_argument('class_probability_threshold',
+                        nargs='+',
+                        type=float,
+                        help='Only mutations with scores higher than this\
+                        will be found in the output.')
+arg_parser.add_argument('--sklearn_model_pkl',
+                        nargs='+',
+                        type=str,
+                        default=' ',
+                        help='A pickle of a classifier. If not a file, an internal\
+                        model will be used.')
+
+args = arg_parser.parse_args()
+print(args)
+child_id = args.child_id[0]
+config_file = args.yaml_config_file[0]
+prob_cutoff = args.class_probability_threshold[0]
+print(prob_cutoff)
+
+model = args.sklearn_model_pkl[0]
+print(model)
+
+sys.exit(1)
+
+myped = ped.Ped(args.ped_file[0])
+myped.addBam(field='ind_id', file_pat=args.bam_pattern[0])
 
 
 
 child_id = sys.argv[1]
-config_file = sys.argv[2]
 model = sys.argv[3]
 lvl = int(sys.argv[4])
 is_keras = bool(int(sys.argv[5]))
@@ -53,7 +91,7 @@ dp_mother = numpy.array([], dtype=int)
 for i, row in myped.ped.iterrows():
     if row['ind_id'] != child_id:
         continue
-    print 'processing', i, row['ind_id']
+#    print 'processing', i, row['ind_id']
     #myped.ped.test.iat[i]
     tst = train.TrainTest(row['test'],
                           list_of_features,
@@ -63,14 +101,14 @@ for i, row in myped.ped.iterrows():
         tst.is_keras = True
     tst.feature_list = list_of_features
     tst.readDataSet()
-    print 'data_set shape is ', tst.data_set.shape
+#    print 'data_set shape is ', tst.data_set.shape
     if tst.data_set.empty:
         continue
     tst.addLabels(level=lvl)
-    print 'data_set shape is ', tst.data_set.shape
-    print tst.data_set.label.value_counts()
+#    print 'data_set shape is ', tst.data_set.shape
+#    print tst.data_set.label.value_counts()
     tst.dropNA('label')
-    print 'data_set shape with non null labels is ', tst.data_set.shape
+#    print 'data_set shape with non null labels is ', tst.data_set.shape
     if tst.is_keras:
         tst.model = model_from_json(m_pkl['model'])
         tst.model.load_weights(m_pkl['weights_file'])
@@ -80,7 +118,7 @@ for i, row in myped.ped.iterrows():
     tst.trshold = m_pkl['threshold']  # float(sys.argv[7])
     tst.train_set_var_id = m_pkl['train_var_id']
     tst.data2Test()
-    print 'test_set_X shape is', tst.test_set_X.shape
+#    print 'test_set_X shape is', tst.test_set_X.shape
     tst.predictClass(tst.threshold)
     #tst.getMetrics()
     test_labels = numpy.concatenate((test_labels, tst.test_set_y))
