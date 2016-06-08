@@ -235,8 +235,16 @@ else:
     res_u.ix[:, 'pred_labels'] = (res_u['pred_prob'] > prob_cutoff).astype(int)
     res_u = res_u[res_u.pred_labels == 1]
     res_u.reset_index(inplace=True)
-    res_u.to_csv(os.path.join(output_dir, child_id + '-class.csv'), index=False)
-    
+    res_u[['var_id',
+           'pred_prob',
+           'test_var_alleles',
+           'DP_offspring',
+           'DP_father',
+           'DP_mother']].to_csv(os.path.join(output_dir,
+                                             child_id +
+                                             '-' + var_type +
+                                             '-class.csv'),
+                                index=False)
 
     # outp_tsv = os.path.join(output_dir, m_name + '.tsv')
     # outp_tsv = os.path.join(output_dir, child_id + '.tsv')
