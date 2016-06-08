@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 from __future__ import print_function
 import sys
-import func
-import features
-import train
+from variants import func
+from variants import features
+from variants import train
 import numpy
 import pandas
-import ped
+from variants import ped
 import os
 from sklearn.externals import joblib
 from keras.models import model_from_json
