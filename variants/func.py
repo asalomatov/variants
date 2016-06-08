@@ -127,7 +127,7 @@ def runBamReadcountsRegions(regionsfile,
     cmd = ' '.join([brc, '-f', genome_ref, bamfile, '-l', regionsfile,
                     ' > ' + output_file])
     return runInShell(cmd)
-    
+   
 
 def readBamReadcount1(file_name, vartype):
     """Read bam-readcount output into pandas DF,

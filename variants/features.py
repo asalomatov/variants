@@ -106,7 +106,7 @@ class Features:
         sys.stdout.write('removing ' + tmpdir)
         func.runInShell('rm -rf ' + tmpdir)
 
-    def extractFeatures(self, n_cores=3):
+    def extractFeatures(self, genome_ref, bam_readcount, n_cores=3):
         """For the defined sample extract variant loci from the vcf file.
         """
         vrs = variants.Variants(self.sample_vcf, self.family_id)
@@ -158,9 +158,21 @@ class Features:
         sys.stdout.flush()
         pool = Pool(n_cores)
         results = pool.map(multi_wrap,
-                           [(reg_file, self.sample_bam, self.sample_features),
-                            (reg_file, self.father_bam, self.father_features),
-                            (reg_file, self.mother_bam, self.mother_features)])
+                           [(reg_file, 
+                             self.sample_bam,
+                             self.sample_features,
+                             genome_ref,
+                             bam_readcount),
+                            (reg_file,
+                             self.father_bam,
+                             self.father_features,
+                             genome_ref,
+                             bam_readcount),
+                            (reg_file,
+                             self.mother_bam,
+                             self.mother_features,
+                             genome_ref,
+                             bam_readcount)])
         print(results)
         if max(results) > 0:
             sys.stderr.write('Feature extraction failed')

@@ -59,6 +59,9 @@ vcf_pat = cfg['vcf_pattern']
 bam_pat = cfg['bam_pattern']
 bai_pat = bam_pat + '.bai'
 ped_file = cfg['ped_file']
+bam_readcount = cfg['bam_readcount']
+genome_ref = cfg['gemome_ref']
+
 known_vars = None
 output_dir = cfg['output_directory']
 test_set_pat = output_dir + '/%s'
@@ -112,7 +115,7 @@ if not f.initTrioFor(child_id):
 else:
     sys.stdout.write('\ninitialized trio for ' + child_id)
     sys.stdout.write('\n')
-    f.extractFeatures()
+    f.extractFeatures(genome_ref, bam_readcount)
     pool = Pool(3)
     fam_features = pool.map(multi_wrap_readBamReadcount,
                             [(f.sample_features,),
