@@ -333,7 +333,9 @@ class TrainTest:
                        'method': self.method,
                        'threshold': self.threshold,
                        'metrics': self.perf_mertics,
-                       'roc': self.roc}
+                       'roc': self.roc,
+                       'is_keras': 0}
+
         joblib.dump(model_descr, os.path.join(output_dir, self.method + '.pkl'))
 
     def saveKerasModel(self, output_dir='./'):
@@ -350,7 +352,8 @@ class TrainTest:
                        'extra_col_names': self.extra_column_names,
                        'method': self.method,
                        'threshold': self.threshold,
-                       'metrics': self.perf_mertics}
+                       'metrics': self.perf_mertics,
+                       'is_keras': 1}
         joblib.dump(model_descr, os.path.join(output_dir, self.method + '.pkl'))
 
     def predictClass(self, threshold=0.5):
