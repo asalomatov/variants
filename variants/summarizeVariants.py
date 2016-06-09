@@ -1,10 +1,11 @@
 # from __future__ import print_function
-import sys, os
-import pandas, numpy
-from variants import func
-from variants import ped
-from variants import train
-from variants import variants
+import sys
+import os
+import pandas
+import numpy
+import func
+import ped
+import train
 import yaml
 import datetime
 
