@@ -7,7 +7,7 @@ import func
 import ped
 import train
 import yaml
-import datetime
+# import datetime
 
 cols_to_output = [u'CHROM',
                   u'POS',
@@ -63,6 +63,8 @@ def calcMetr(vn_df, msg=' '):
                       '/mnt/xfs1/home/asalomatov/projects/variants/variants/ssc_wes_features_noINDEL_noDP.txt',
                       ['status'],
                       ['descr'])
+    if vn_df.empty:
+        return None
     vn_d = vn_df[~vn_df.var_id.duplicated()]
     tst.pred_y = numpy.array(vn_d['pred_labels'].astype(int))
     tst.test_set_y = tst.pred_y * 0
@@ -213,10 +215,12 @@ def summarizeMutations(infile,
     vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='allele_frac')])
 
     vn = vn.replace('ZZZ', '.')
+    if vn.empty:
+        print('No de novo mutation of interest')
+        return 0
+
     vn['FILTER'] = vn.apply(func.getFieldFromVCF, args=(myped,), axis=1)
     vn = vn[~vn.FILTER.isnull()]
-
-
 
     c_missense = vn['effect_cat'] == 'mis'
     c_lof = vn['effect_cat'] == 'lof'
@@ -308,19 +312,26 @@ def summarizeMutations(infile,
 
     cfg['predictions_file'] = infile
 
-    with open(os.path.join(outp_dir,'cfg' + outp_suffix + '.yml'), 'w') as f:
+    with open(os.path.join(outp_dir, 'cfg' + outp_suffix + '.yml'), 'w') as f:
         yaml.dump(cfg, f, default_flow_style=False)
     
 
 if __name__ == '__main__':
     infile = sys.argv[1]
-    outp_dir = sys.argv[2]
-    config_file = sys.argv[3]
+    pref = sys.argv[2]
+    outp_dir = sys.argv[3]
+    config_file = sys.argv[4]
     func.runInShell('mkdir -p ' + outp_dir)
     summarizeMutations(infile,
+                       pref,
                        outp_dir,
                        config_file)
 
+# summarizeMutations(infile,
+#                       prefix,
+#                       outp_dir,
+#                       config_file,
+#                      exac_anno='/mnt/scratch/asalomatov/data/ExAC/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt'):
 
 
 
