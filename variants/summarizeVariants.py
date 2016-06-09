@@ -156,7 +156,7 @@ def summarizeMutations(infile,
     print(vn.shape)
     vn_full = vn
     vn = vn.dropna(subset=['effect_cat'], axis=0)
-    print vn.shape
+    print(vn.shape)
     #vn = vn[vn['ANN[*].EFFECT'].str.contains(effects_of_interest)] 
 
     print('\neffects of interest vars, pred_labels value_counts:')
