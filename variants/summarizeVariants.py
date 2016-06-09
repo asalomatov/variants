@@ -284,20 +284,20 @@ def summarizeMutations(infile,
                                                          '.csv'])),
                                   index=False)
     
-    writeVariants(vn, cols_to_output[:-2], var_type, prefix + 'ALL',
+    writeVariants(vn, cols_to_output[:-2], var_type, prefix + '_ALL',
                   outp_suffix, outp_dir)
-    writeVariants(vn_FN, cols_to_output[:-2], var_type, prefix + 'FN',
+    writeVariants(vn_FN, cols_to_output[:-2], var_type, prefix + '_FN',
                   outp_suffix, outp_dir)
-    writeVariants(vn_TP, cols_to_output[:-2], var_type, prefix + 'TP',
+    writeVariants(vn_TP, cols_to_output[:-2], var_type, prefix + '_TP',
                   outp_suffix, outp_dir)
-    writeVariants(vn_mis, cols_to_output[:-2], var_type, prefix + 'MIS',
+    writeVariants(vn_mis, cols_to_output[:-2], var_type, prefix + '_MIS',
                   outp_suffix, outp_dir)
-    writeVariants(vn_lof, cols_to_output[:-2], var_type, prefix + 'LOF',
+    writeVariants(vn_lof, cols_to_output[:-2], var_type, prefix + '_LOF',
                   outp_suffix, outp_dir)
-    writeVariants(vn_syn, cols_to_output[:-2], var_type, prefix + 'SYN',
+    writeVariants(vn_syn, cols_to_output[:-2], var_type, prefix + '_SYN',
                   outp_suffix, outp_dir)
-    writeVariants(vn_diff, cols_to_output[:-2]+['step'], var_type, prefix + 'DIFF',
-                  outp_suffix, outp_dir)
+    writeVariants(vn_diff, cols_to_output[:-2]+['step'], var_type,
+                  prefix + '_DIFF', outp_suffix, outp_dir)
         
 #    vn_TP[cols_to_output[:-2]].to_csv(
 #        os.path.join(outp_dir, 'true_pos_snp' + outp_suffix + '.csv'), index=False)

@@ -5,11 +5,10 @@ from variants import func
 import pandas
 import os
 import yaml
-from variants import summarizeVariants
+import summarizeVariants
 import argparse
 import pkg_resources
 import tempfile
-
 
 print('command line:')
 print(sys.argv)
@@ -76,3 +75,5 @@ summarizeVariants.summarizeMutations(os.path.join(tmp_dir, input_file_bn +
                                      input_file_bn,
                                      output_dir,
                                      config_file)
+cmd = 'rm -rf %s' % tmp_dir
+func.runInShell(cmd)
