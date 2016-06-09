@@ -1,4 +1,4 @@
-# from __future__ import print_function
+from __future__ import print_function
 import sys
 import os
 import pandas
@@ -67,9 +67,7 @@ def calcMetr(vn_df, msg=' '):
     tst.pred_y = numpy.array(vn_d['pred_labels'].astype(int))
     tst.test_set_y = tst.pred_y * 0
     tst.test_set_y[numpy.array(vn_d.status.isin(['Y']))] = 1
-    print '\n\n HHHHHHHAAAAAAA'
-    print pandas.Series(tst.test_set_y).value_counts()
-    print msg
+    print(msg)
     tst.getMetrics()
 
 
@@ -84,13 +82,13 @@ def getDiff(df_full, df_new, msg, field='var_id'):
 
 
 def summarizeMutations(infile,
+                       prefix,
                        outp_dir,
                        config_file,
                        exac_anno='/mnt/scratch/asalomatov/data/ExAC/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt'):
     with open(config_file, 'r') as f:
         cfg = yaml.safe_load(f)
 
-#    ped_file = cfg['ped_file']
     myped = ped.Ped(cfg['ped_file'])
     myped.addVcf(file_pat=cfg['vcf_pattern'])
     myped.ped.dropna(subset=['vcf'], inplace=True)
@@ -104,13 +102,12 @@ def summarizeMutations(infile,
     exac = pandas.read_table(exac_anno)
     vn = pandas.read_table(infile)
     vn.columns = vn.columns.str.translate(None, '#')
-    print vn.shape
+    print(vn.shape)
     vn.ix[:, 'gene'] = vn['ANN[*].GENE']
     vn = vn.merge(
         exac[[u'syn_z', u'mis_z', u'lof_z', u'pLI', u'pRec', u'pNull', u'gene']],
         on='gene', how='left')
-    print vn.shape
-    #sys.exit(1)
+    print(vn.shape)
     vn['v_id'] = vn.ind_id + '_' +\
                  vn['CHROM'].astype(str) + '_' +\
                  vn.POS.astype(str) + '_' +\
@@ -129,10 +126,10 @@ def summarizeMutations(infile,
 
     vn = vn[~vn.v_id.duplicated()]
     # stats before any filtering
-    print '\ndeduped and annotated vars, pred_labels value_counts:'
-    print vn.pred_labels.value_counts()
-    print 'deduped and annotated vars, test_labels value_counts:'
-    print vn.status.value_counts()
+    print('\ndeduped and annotated vars, pred_labels value_counts:')
+    print(vn.pred_labels.value_counts())
+    print('deduped and annotated vars, test_labels value_counts:')
+    print(vn.status.value_counts())
     calcMetr(vn, msg='deduped metrics')
     vn_full = vn
 
@@ -140,10 +137,10 @@ def summarizeMutations(infile,
     var_freq = vn.groupby('chr_pos').apply(lambda x: len(x['ind_id'].unique()))
     var_freq_2 = var_freq[var_freq > cfg['max_cohort_freq']]
     vn = vn[~vn.chr_pos.isin(var_freq_2.index)]
-    print '\ncohort freq vars, pred_labels value_counts:'
-    print vn.pred_labels.value_counts()
-    print 'cohort freq vars, test_labels value_counts:'
-    print vn.status.value_counts()
+    print('\ncohort freq vars, pred_labels value_counts:')
+    print(vn.pred_labels.value_counts())
+    print('cohort freq vars, test_labels value_counts:')
+    print(vn.status.value_counts())
     calcMetr(vn, msg='cohort_freq')
     vn_diff =  getDiff(vn_full, vn, msg='cohort_freq')
 
@@ -156,16 +153,16 @@ def summarizeMutations(infile,
         '|'.join(cfg['snpeff']['effect_dmgmis'])), 'effect_cat'] = 'mis' 
     vn.ix[vn['ANN[*].EFFECT'].str.contains(
         '|'.join(cfg['snpeff']['effect_lof'])), 'effect_cat'] = 'lof' 
-    print vn.shape
+    print(vn.shape)
     vn_full = vn
     vn = vn.dropna(subset=['effect_cat'], axis=0)
     print vn.shape
     #vn = vn[vn['ANN[*].EFFECT'].str.contains(effects_of_interest)] 
 
-    print '\neffects of interest vars, pred_labels value_counts:'
-    print vn.pred_labels.value_counts()
-    print 'effects of interest vars, test_labels value_counts:'
-    print vn.status.value_counts()
+    print('\neffects of interest vars, pred_labels value_counts:')
+    print(vn.pred_labels.value_counts())
+    print('effects of interest vars, test_labels value_counts:')
+    print(vn.status.value_counts())
     calcMetr(vn, msg='effects metrics')
     vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='effects')])
 
@@ -187,20 +184,20 @@ def summarizeMutations(infile,
 
     vn = vn[(vn.dbNSFP_1000Gp3_AF < cfg['population_AF']) &
             (vn.dbNSFP_ExAC_AF < cfg['population_AF'])]
-    print '\nAF vars, pred_labels value_counts:'
-    print vn.pred_labels.value_counts()
-    print 'AF vars, test_labels value_counts:'
-    print vn.status.value_counts()
+    print('\nAF vars, pred_labels value_counts:')
+    print(vn.pred_labels.value_counts())
+    print('AF vars, test_labels value_counts:')
+    print(vn.status.value_counts())
     calcMetr(vn, msg='AF metrics')
     vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='pop_freq')])
 
     vn_full = vn
     vn = vn[vn['ANN[*].BIOTYPE'].str.contains('|'.join(cfg['snpeff']['biotype']))]
 
-    print '\nprotein coding vars, pred_labels value_counts:'
-    print vn.pred_labels.value_counts()
-    print 'protein coding vars, test_labels value_counts:'
-    print vn.status.value_counts()
+    print('\nprotein coding vars, pred_labels value_counts:')
+    print(vn.pred_labels.value_counts())
+    print('protein coding vars, test_labels value_counts:')
+    print(vn.status.value_counts())
     calcMetr(vn, msg='protein coding metrics')
     vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='protein')])
 
@@ -208,10 +205,10 @@ def summarizeMutations(infile,
     allele_frac = vn.alt_DP.astype(float)/vn.DP
     vn = vn[(allele_frac > cfg['alt_allele_frac_range'][0]) & (allele_frac < cfg['alt_allele_frac_range'][1])]
 
-    print '\nallele fraction, pred_labels value_counts:'
-    print vn.pred_labels.value_counts()
-    print 'allel fraction vars, test_labels value_counts:'
-    print vn.status.value_counts()
+    print('\nallele fraction, pred_labels value_counts:')
+    print(vn.pred_labels.value_counts())
+    print('allel fraction vars, test_labels value_counts:')
+    print(vn.status.value_counts())
     calcMetr(vn, msg='all fraction metrics')
     vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='allele_frac')])
 
@@ -259,7 +256,7 @@ def summarizeMutations(infile,
     vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn_lof, msg='impact_lof')])
 
     vn_syn = vn[c_syn]
-    print vn.shape
+    print(vn.shape)
 
     c_FN = (vn.pred_labels == 0) & vn.status.isin(['Y'])
     vn_FN = vn[cols_to_output][c_FN]
@@ -270,25 +267,33 @@ def summarizeMutations(infile,
     #vn_TP = vn_TP[~vn_TP.v_id.duplicated()]
     
     var_type = cfg['variant_type']
-    outp_suffix = '{:%Y-%m-%d_%H-%M-%S-%f}'.format(datetime.datetime.now())
+    outp_suffix = '' # '{:%Y-%m-%d_%H-%M-%S-%f}'.format(datetime.datetime.now())
 
     def writeVariants(df, cols_to_output, var_type, prefix, suffix, outp_dir):
         if df.empty:
             print('%s is empty' % prefix)
             return None
         df[cols_to_output].to_csv(os.path.join(outp_dir,
-                                                    '_'.join([prefix,
-                                                              var_type,
-                                                              suffix,
-                                                              '.csv'])), index=False)
+                                               '_'.join([prefix,
+                                                         var_type,
+                                                         suffix,
+                                                         '.csv'])),
+                                  index=False)
     
-    writeVariants(vn, cols_to_output[:-2], var_type, 'ALL', outp_suffix, outp_dir)
-    writeVariants(vn_FN, cols_to_output[:-2], var_type, 'FN', outp_suffix, outp_dir)
-    writeVariants(vn_TP, cols_to_output[:-2], var_type, 'TP', outp_suffix, outp_dir)
-    writeVariants(vn_mis, cols_to_output[:-2], var_type, 'MIS', outp_suffix, outp_dir)
-    writeVariants(vn_lof, cols_to_output[:-2], var_type, 'LOF', outp_suffix, outp_dir)
-    writeVariants(vn_syn, cols_to_output[:-2], var_type, 'SYN', outp_suffix, outp_dir)
-    writeVariants(vn_diff, cols_to_output[:-2]+['step'], var_type, 'DIFF', outp_suffix, outp_dir)
+    writeVariants(vn, cols_to_output[:-2], var_type, prefix + 'ALL',
+                  outp_suffix, outp_dir)
+    writeVariants(vn_FN, cols_to_output[:-2], var_type, prefix + 'FN',
+                  outp_suffix, outp_dir)
+    writeVariants(vn_TP, cols_to_output[:-2], var_type, prefix + 'TP',
+                  outp_suffix, outp_dir)
+    writeVariants(vn_mis, cols_to_output[:-2], var_type, prefix + 'MIS',
+                  outp_suffix, outp_dir)
+    writeVariants(vn_lof, cols_to_output[:-2], var_type, prefix + 'LOF',
+                  outp_suffix, outp_dir)
+    writeVariants(vn_syn, cols_to_output[:-2], var_type, prefix + 'SYN',
+                  outp_suffix, outp_dir)
+    writeVariants(vn_diff, cols_to_output[:-2]+['step'], var_type, prefix + 'DIFF',
+                  outp_suffix, outp_dir)
         
 #    vn_TP[cols_to_output[:-2]].to_csv(
 #        os.path.join(outp_dir, 'true_pos_snp' + outp_suffix + '.csv'), index=False)
