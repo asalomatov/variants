@@ -58,25 +58,23 @@ if dnvo.empty:
 
 tmp_dir = tempfile.mkdtemp()
 print(tmp_dir)
-input_file_bn = os.path.splitext(os.path.basename(input_file))
+input_file_bn = os.path.splitext(os.path.basename(input_file))[0]
 outp_tsv = os.path.join(tmp_dir, input_file_bn + '.tsv')
 print(outp_tsv)
 func.writePredAsVcf(dnvo, outp_tsv, min_DP=min_DP)
-
-sys.exit(1)
-
 # script_name = os.path.basename(os.path.realpath(sys.argv[0]))
-script_name = pkg_resources.resource_filename('variants', 'vcf2table.sh')
-print(script_name)
-
+script_name = os.path.abspath(pkg_resources.resource_filename('variants',
+                                                              'vcf2table.sh'))
 cmd = ' '.join([script_name,
                outp_tsv,
                os.path.dirname(script_name),
-               child_id])
+                input_file_bn])
 print(cmd)
 func.runInShell(cmd)
 
-summarizeVariants.summarizeMutations(os.path.join(output_dir, child_id + '-ann-onePline.tsv'),
+sys.exit(1)
+
+summarizeVariants.summarizeMutations(os.path.join(output_dir, input_file_bn + '-ann-onePline.tsv'),
                                                   os.path.join(output_dir, 'denovo'),
                                                   config_file)
 
