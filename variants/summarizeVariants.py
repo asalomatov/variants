@@ -1,8 +1,10 @@
 # from __future__ import print_function
 import sys, os
-sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/variants/variants')
 import pandas, numpy
-import func, ped, train, variants
+from variants import func
+from variants import ped
+from variants import train
+from variants import variants
 import yaml
 import datetime
 
@@ -79,6 +81,7 @@ def getDiff(df_full, df_new, msg, field='var_id'):
     if not res.empty: res.ix[:, 'step'] = msg
     return res
 
+
 def summarizeMutations(infile,
                        outp_dir,
                        config_file,
@@ -86,7 +89,7 @@ def summarizeMutations(infile,
     with open(config_file, 'r') as f:
         cfg = yaml.safe_load(f)
 
-    ped_file = cfg['ped_file']
+#    ped_file = cfg['ped_file']
     myped = ped.Ped(cfg['ped_file'])
     myped.addVcf(file_pat=cfg['vcf_pattern'])
     myped.ped.dropna(subset=['vcf'], inplace=True)
@@ -96,11 +99,7 @@ def summarizeMutations(infile,
     #kv_vcf = kv_vcf[['ind_id','CHROM', 'POS', 'REF_offspring', 'ALT_base_offspring', 'status', 'descr', 'DP_offspring', 'DP_father', 'DP_mother']]
     #kv_vcf = kv_vcf[kv_vcf.descr.isin(['after'])]
     #kv_vcf['var_id'] = kv_vcf.ind_id.astype(str)+'_'+kv_vcf.CHROM.astype(str)+'_'+kv_vcf.POS.astype(str)
-
-
     #effects_of_interest = effects_loss_of_func + '|' + effect_damaging_missense + '|' + effect_synon
-
-
     exac = pandas.read_table(exac_anno)
     vn = pandas.read_table(infile)
     vn.columns = vn.columns.str.translate(None, '#')
@@ -281,6 +280,7 @@ def summarizeMutations(infile,
                                                               var_type,
                                                               suffix,
                                                               '.csv'])), index=False)
+    
     writeVariants(vn, cols_to_output[:-2], var_type, 'ALL', outp_suffix, outp_dir)
     writeVariants(vn_FN, cols_to_output[:-2], var_type, 'FN', outp_suffix, outp_dir)
     writeVariants(vn_TP, cols_to_output[:-2], var_type, 'TP', outp_suffix, outp_dir)
