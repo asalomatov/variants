@@ -10,8 +10,9 @@ not limited to using gradient-boosting as a sole predictive model. Please see [s
 
 #### Inslallation
 
-Install [bam-readcount](https://github.com/genome/bam-readcount)
-Install **_variants_** from github 
+1. Install [bam-readcount](https://github.com/genome/bam-readcount).
+
+2. Install **_variants_** from github 
 ```
 pip install git+git://github.com/asalomatov/variants.git
 ```
@@ -22,7 +23,8 @@ Put together a yaml config file, see
 [example](https://github.com/asalomatov/variants/blob/master/variants/denovo_classifier_config/cfg.yml).
     
 You will need a PED file. A sample file:
-
+trio id | sample id | father's id (0 if missing) | mother's id (0 if missing) | sex 1-male 2-female | phenotype 1-unaffected 2-affected |
+------- | --------- | -------------------------- | -------------------------- | ------------------- | --------------------------------- |
 trio001 | trio001.fa_641964 |  0 |      0 |      1 |      1 |
 trio001 | trio001.mo_641942 |  0 |      0 |      2 |      1 |
 trio001 | trio001.p1_641943 |  trio001.fa_641964 |      trio001.mo_641942 |      1 |      2 |
@@ -40,7 +42,7 @@ A `bam_pattern` like `/path/to/%s-example.bam` will be transated to a
 
 #### Ready to run
 
-    - Issue in your terminal
+Issue in your terminal
 ```
 call_de_novo.py trio001.p1_641943 /path/to/config/cfg.yml 0.3 
 ```   
