@@ -52,7 +52,7 @@ To score all possible *de novo* variants decrease the class probability threasho
 
 #### Output
 
-     Sample output
+Sample output
 
 ```
 var_id,pred_prob,test_var_alleles,DP_offspring,DP_father,DP_mother
