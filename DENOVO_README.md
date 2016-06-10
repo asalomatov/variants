@@ -23,6 +23,7 @@ Put together a yaml config file, see
 [example](https://github.com/asalomatov/variants/blob/master/variants/denovo_classifier_config/cfg.yml).
     
 You will need a PED file. A sample file:
+
 trio id | sample id | father's id (0 if missing) | mother's id (0 if missing) | sex 1-male 2-female | phenotype 1-unaffected 2-affected |
 ------- | --------- | -------------------------- | -------------------------- | ------------------- | --------------------------------- |
 trio001 | trio001.fa_641964 |  0 |      0 |      1 |      1 |
