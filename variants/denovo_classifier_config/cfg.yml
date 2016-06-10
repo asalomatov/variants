@@ -1,5 +1,4 @@
 bam_pattern: /mnt/scratch/asalomatov/data/SPARK/bam/%s.bam
-known_variants:
 min_DP: 10
 output_directory: /mnt/xfs1/home/asalomatov/projects/spark/feature_sets/hc
 ped_file: /mnt/scratch/asalomatov/data/SPARK/spark.ped
