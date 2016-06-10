@@ -10,24 +10,28 @@ not limited to using gradient-boosting as a sole predictive model. Please see [s
 
 #### Inslallation
 
-    Install [bam-readcount](https://github.com/genome/bam-readcount)
-    Install **_variants_** from github `pip install git+git://github.com/asalomatov/variants.git`
+Install [bam-readcount](https://github.com/genome/bam-readcount)
+Install **_variants_** from github 
+```
+pip install git+git://github.com/asalomatov/variants.git
+```
     
 #### Configuration
 
-     Put together a yaml config file, see 
+Put together a yaml config file, see 
 [example](https://github.com/asalomatov/variants/blob/master/variants/denovo_classifier_config/cfg.yml).
     
-    You will need a PED file. A sample file:
+You will need a PED file. A sample file:
 
 trio001 | trio001.fa_641964 |  0 |      0 |      1 |      1 |
 trio001 | trio001.mo_641942 |  0 |      0 |      2 |      1 |
 trio001 | trio001.p1_641943 |  trio001.fa_641964 |      trio001.mo_641942 |      1 |      2 |
 
-    VCF file, and BAM files are specified via patterns to be used with python string substitution.
-    A `vcf_pattern` like `/path/to/%s-example.vcf.gz` will be transated to `/path/to/trio1-example.vcf.gz`,
-    this VCF file must have samples `trio001.fa_641964`, `trio001.mo_641942`, `trio001.p1_641943` in the header.
-    A `bam_pattern` like `/path/to/%s-example.bam` will be transated to a 
+A VCF file, and BAM files are specified via patterns to be used with python string substitution.
+A `vcf_pattern` like `/path/to/%s-example.vcf.gz` will be transated to `/path/to/trio1-example.vcf.gz`,
+this VCF file must have samples `trio001.fa_641964`, `trio001.mo_641942`, `trio001.p1_641943` in the header.
+A `bam_pattern` like `/path/to/%s-example.bam` will be transated to a 
+
 ```
 /path/to/trio001.fa_641964-example.bam
 /path/to/trio001.mo_641942-example.bam
