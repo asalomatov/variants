@@ -20,7 +20,7 @@ from sklearn.externals import joblib
 from sklearn.preprocessing import binarize
 from sklearn.preprocessing import scale
 from sklearn.decomposition import PCA
-from unbalanced_dataset import SMOTE
+#from unbalanced_dataset import SMOTE
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
@@ -252,29 +252,29 @@ class TrainTest:
         if self.stdize:
             self.train_set_X = scale(self.train_set_X)
             self.test_set_X = scale(self.test_set_X)
-        if over_sample is not '':
-            ratio = float(numpy.count_nonzero(self.train_set_y == 1)) /\
-                    float(numpy.count_nonzero(self.train_set_y == 0))
-            smote = None
-            verbose = True
-            if ratio < 1:
-                ratio = 1 / ratio
-            print('upsample ratio: %s' % ratio)
-            print('smote type: %s' % over_sample)
-            if over_sample == 'SMOT':
-                smote = SMOTE(ratio=ratio, verbose=verbose, kind='regular')
-            elif over_sample == 'SMOT_bl1':
-                smote = SMOTE(ratio=ratio, verbose=verbose, kind='boderline1')
-            elif over_sample == 'SMOT_bl2':
-                smote = SMOTE(ratio=ratio, verbose=verbose, kind='boderline2')
-            elif over_sample == 'SMOT_svm':
-                smote = SMOTE(ratio=ratio, verbose=verbose, kind='svm')
-            else:
-                print('unknown SMOTE type')
-            if smote is not None:
-                print('applying SMOTE...')
-                self.train_set_X, self.train_set_y = smote.fit_transform(self.train_set_X,
-                                                                         self.train_set_y)
+#        if over_sample is not '':
+#            ratio = float(numpy.count_nonzero(self.train_set_y == 1)) /\
+#                    float(numpy.count_nonzero(self.train_set_y == 0))
+#            smote = None
+#            verbose = True
+#            if ratio < 1:
+#                ratio = 1 / ratio
+#            print('upsample ratio: %s' % ratio)
+#            print('smote type: %s' % over_sample)
+#            if over_sample == 'SMOT':
+#                smote = SMOTE(ratio=ratio, verbose=verbose, kind='regular')
+#            elif over_sample == 'SMOT_bl1':
+#                smote = SMOTE(ratio=ratio, verbose=verbose, kind='boderline1')
+#            elif over_sample == 'SMOT_bl2':
+#                smote = SMOTE(ratio=ratio, verbose=verbose, kind='boderline2')
+#            elif over_sample == 'SMOT_svm':
+#                smote = SMOTE(ratio=ratio, verbose=verbose, kind='svm')
+#            else:
+#                print('unknown SMOTE type')
+#            if smote is not None:
+#                print('applying SMOTE...')
+#                self.train_set_X, self.train_set_y = smote.fit_transform(self.train_set_X,
+#                                                                         self.train_set_y)
 
     def data2Test(self):
         c1 = self.data_set.var_id.isin(self.train_set_var_id)
