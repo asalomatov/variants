@@ -21,9 +21,9 @@ from sklearn.preprocessing import binarize
 from sklearn.preprocessing import scale
 from sklearn.decomposition import PCA
 #from unbalanced_dataset import SMOTE
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import seaborn as sns
+#import matplotlib.pyplot as plt
+#from mpl_toolkits.mplot3d import Axes3D
+#import seaborn as sns
 from keras.models import Sequential, model_from_json
 from keras.layers.core import Dense, Activation, Dropout
 
