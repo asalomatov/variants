@@ -18,12 +18,13 @@ conda create --name test_env python=2
 source activate test_env
 ```
 4. Install prerequestives
+
 ```
 conda install scikit-learn
 conda install -c bioconda pysam
 ```
-
 5. Install **_variants_** from github 
+
 ```
 pip install git+git://github.com/asalomatov/variants.git
 ```
