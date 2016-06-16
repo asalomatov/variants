@@ -38,7 +38,7 @@ pip install git+git://github.com/asalomatov/variants.git
 Put together a yaml config file, see 
 [example](https://github.com/asalomatov/variants/blob/master/variants/denovo_classifier_config/cfg.yml).
     
-You will need a PED file. A sample file(tab delimeted and headerless:
+You will need a PED file. A sample file(tab delimeted and headerless):
 
 trio id | sample id | father's id (0 if missing) | mother's id (0 if missing) | sex 1-male 2-female | phenotype 1-unaffected 2-affected |
 ------- | --------- | -------------------------- | -------------------------- | ------------------- | --------------------------------- |
