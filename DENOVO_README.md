@@ -8,7 +8,7 @@ not limited to using gradient-boosting as a sole predictive model. Please see [s
 
 ### Getting Started
 
-#### Inslallation
+#### Installation
 
 Install [bam-readcount](https://github.com/genome/bam-readcount).
 
