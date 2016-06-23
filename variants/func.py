@@ -1,5 +1,5 @@
 import os
-import pysam
+#import pysam
 import subprocess
 import sys
 import tempfile
@@ -46,9 +46,9 @@ def run_once(f):
     return wrapper
 
 
-def refAtPos(chrom, pos, genref='/mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa'):
-    ref_allel = pysam.faidx(genref, str(chrom)+':'+str(pos)+'-'+str(pos))[1].strip()
-    return ref_allel
+#def refAtPos(chrom, pos, genref='/mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa'):
+#    ref_allel = pysam.faidx(genref, str(chrom)+':'+str(pos)+'-'+str(pos))[1].strip()
+#    return ref_allel
 
 
 def df2sklearn(mydf, col_to_keep):
