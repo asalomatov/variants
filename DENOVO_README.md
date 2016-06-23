@@ -12,7 +12,7 @@ not limited to using gradient-boosting as a sole predictive model. Please see [s
 
 Install [bam-readcount](https://github.com/genome/bam-readcount).
 
-If necessary install python 2.7: [miniconda](http://conda.pydata.org/miniconda.html)
+If necessary install [conda](http://conda.pydata.org/miniconda.html)
 
 Create, and activate an environment
 ```
@@ -23,8 +23,11 @@ source activate test_env
 Install prerequestives
 
 ```
+conda install matplotlib
+conda install numpy
+conda install scipy
+conda install pandas
 conda install scikit-learn
-conda install -c bioconda pysam
 ```
 
 Install **_variants_** from github 
