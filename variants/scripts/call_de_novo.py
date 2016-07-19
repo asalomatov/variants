@@ -99,9 +99,9 @@ if known_vars:
     func.runInShell('mkdir -p ' + output_dir_known)
 
 # populate ped DF
-if (not ped_file) and (not ped_file_extended):
+if ped_file and ped_file_extended:
     sys.exit('only one of ped_file, ped_file_extended may be non-empty')
-if not ped_file:
+if ped_file:
     myped = ped.Ped(ped_file)
     myped.addVcf(file_pat=vcf_pat)
     myped.ped.dropna(subset=['vcf'], inplace=True)
@@ -109,7 +109,7 @@ if not ped_file:
     myped.ped.dropna(subset=['bam'], inplace=True)
     myped.addBai(file_pat=bai_pat)
     myped.ped.dropna(subset=['bai'], inplace=True)
-elif not ped_file_extended:
+elif ped_file_extended:
     myped = ped.Ped(ped_file_extended, ['bam', 'vcf'])
 else:
     sys.exit('ped_file or ped_file_extended must be defined')
