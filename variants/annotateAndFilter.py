@@ -76,4 +76,4 @@ summarizeVariants.summarizeMutations(os.path.join(tmp_dir, input_file_bn +
                                      output_dir,
                                      config_file)
 cmd = 'rm -rf %s' % tmp_dir
-func.runInShell(cmd)
+#func.runInShell(cmd)

@@ -1,6 +1,5 @@
 #!/mnt/xfs1/home/asalomatov/miniconda2/bin/python
 import sys
-#sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/variants/variants')
 import func
 import train
 import numpy

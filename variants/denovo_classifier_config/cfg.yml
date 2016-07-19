@@ -2,6 +2,7 @@ bam_pattern: /mnt/scratch/asalomatov/data/SPARK/bam/%s.bam
 min_DP: 10
 output_directory: /mnt/xfs1/home/asalomatov/projects/spark/feature_sets/hc
 ped_file: /mnt/scratch/asalomatov/data/SPARK/spark.ped
+ped_file_extended: 
 variant_type: SNP
 vcf_pattern: /mnt/xfs1/home/asalomatov/projects/spark/%s/%s-JHC-vars.vcf.gz
 bam_readcount: /mnt/scratch/asalomatov/software/installs/bin/bam-readcount

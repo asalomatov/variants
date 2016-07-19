@@ -57,6 +57,16 @@ cols_to_output = [u'CHROM',
                   u'var_id',
                   u'v_id']
 
+extra_cols = ['c_cohort_freq',
+              'c_biotype',
+              'c_effect_cat',
+              'c_pop_freq',
+              'c_allele_frac',
+              'c_missense',
+              'c_lof',
+              'c_syn',
+              'c_dmg_miss',
+              'c_impact_lof']
 
 def calcMetr(vn_df, msg=' '):
     tst = train.TrainTest('x',
@@ -127,26 +137,26 @@ def summarizeMutations(infile,
     #print vn.shape
 
     vn = vn[~vn.v_id.duplicated()]
-    # stats before any filtering
-    print('\ndeduped and annotated vars, pred_labels value_counts:')
-    print(vn.pred_labels.value_counts())
-    print('deduped and annotated vars, test_labels value_counts:')
-    print(vn.status.value_counts())
-    calcMetr(vn, msg='deduped metrics')
-    vn_full = vn
-
+#    vn_all = vn
+# stats before any filtering
+#    print('\ndeduped and annotated vars, pred_labels value_counts:')
+#    print(vn.pred_labels.value_counts())
+#    print('deduped and annotated vars, test_labels value_counts:')
+#    print(vn.status.value_counts())
+#    calcMetr(vn, msg='deduped metrics')
+#    vn_full = vn
 
     var_freq = vn.groupby('chr_pos').apply(lambda x: len(x['ind_id'].unique()))
-    var_freq_2 = var_freq[var_freq > cfg['max_cohort_freq']]
-    vn = vn[~vn.chr_pos.isin(var_freq_2.index)]
-    print('\ncohort freq vars, pred_labels value_counts:')
-    print(vn.pred_labels.value_counts())
-    print('cohort freq vars, test_labels value_counts:')
-    print(vn.status.value_counts())
-    calcMetr(vn, msg='cohort_freq')
-    vn_diff =  getDiff(vn_full, vn, msg='cohort_freq')
-
-
+    c_cohort_freq = var_freq > cfg['max_cohort_freq']
+    var_freq_2 = var_freq[c_cohort_freq]
+    # vn = vn[~vn.chr_pos.isin(var_freq_2.index)]
+    vn['c_cohort_freq'] = ~vn.chr_pos.isin(var_freq_2.index)
+#    print('\ncohort freq vars, pred_labels value_counts:')
+#    print(vn.pred_labels.value_counts())
+#    print('cohort freq vars, test_labels value_counts:')
+#    print(vn.status.value_counts())
+#    calcMetr(vn, msg='cohort_freq')
+#    vn_diff =  getDiff(vn_full, vn, msg='cohort_freq')
 
     vn.ix[:, 'effect_cat'] = None
     vn.ix[vn['ANN[*].EFFECT'].str.contains(
@@ -154,20 +164,19 @@ def summarizeMutations(infile,
     vn.ix[vn['ANN[*].EFFECT'].str.contains(
         '|'.join(cfg['snpeff']['effect_dmgmis'])), 'effect_cat'] = 'mis' 
     vn.ix[vn['ANN[*].EFFECT'].str.contains(
-        '|'.join(cfg['snpeff']['effect_lof'])), 'effect_cat'] = 'lof' 
-    print(vn.shape)
-    vn_full = vn
-    vn = vn.dropna(subset=['effect_cat'], axis=0)
-    print(vn.shape)
-    #vn = vn[vn['ANN[*].EFFECT'].str.contains(effects_of_interest)] 
+        '|'.join(cfg['snpeff']['effect_lof'])), 'effect_cat'] = 'lof'
+    vn['c_effect_cat'] = ~vn.effect_cat.isnull()
+#    print(vn.shape)
+#    vn_full = vn
+#    vn = vn.dropna(subset=['effect_cat'], axis=0)
+#    print(vn.shape)
 
-    print('\neffects of interest vars, pred_labels value_counts:')
-    print(vn.pred_labels.value_counts())
-    print('effects of interest vars, test_labels value_counts:')
-    print(vn.status.value_counts())
-    calcMetr(vn, msg='effects metrics')
-    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='effects')])
-
+#    print('\neffects of interest vars, pred_labels value_counts:')
+#    print(vn.pred_labels.value_counts())
+#    print('effects of interest vars, test_labels value_counts:')
+#    print(vn.status.value_counts())
+#    calcMetr(vn, msg='effects metrics')
+#    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='effects')])
 
     vn.ix[vn.dbNSFP_1000Gp3_AF.isin(['.']), 'dbNSFP_1000Gp3_AF'] = '0'
     vn.ix[vn.dbNSFP_ExAC_AF.isin(['.']), 'dbNSFP_ExAC_AF'] = '0'
@@ -182,52 +191,63 @@ def summarizeMutations(infile,
     vn.ix[:, 'dbNSFP_1000Gp3_AF'] = vn.dbNSFP_1000Gp3_AF.astype(float)
     vn.ix[:, 'dbNSFP_ExAC_AF'] = vn.dbNSFP_ExAC_AF.astype(float)
 
-    vn_full = vn
+#    vn_full = vn
 
-    vn = vn[(vn.dbNSFP_1000Gp3_AF < cfg['population_AF']) &
-            (vn.dbNSFP_ExAC_AF < cfg['population_AF'])]
-    print('\nAF vars, pred_labels value_counts:')
-    print(vn.pred_labels.value_counts())
-    print('AF vars, test_labels value_counts:')
-    print(vn.status.value_counts())
-    calcMetr(vn, msg='AF metrics')
-    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='pop_freq')])
+    vn['c_pop_freq'] = (vn.dbNSFP_1000Gp3_AF < cfg['population_AF']) &\
+                       (vn.dbNSFP_ExAC_AF < cfg['population_AF'])
+#    vn = vn[(vn.dbNSFP_1000Gp3_AF < cfg['population_AF']) &
+#            (vn.dbNSFP_ExAC_AF < cfg['population_AF'])]
+#    print('\nAF vars, pred_labels value_counts:')
+#    print(vn.pred_labels.value_counts())
+#    print('AF vars, test_labels value_counts:')
+#    print(vn.status.value_counts())
+#    calcMetr(vn, msg='AF metrics')
+#    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='pop_freq')])
 
-    vn_full = vn
-    vn = vn[vn['ANN[*].BIOTYPE'].str.contains('|'.join(cfg['snpeff']['biotype']))]
+#    vn_full = vn
+    vn['c_biotype'] = vn['ANN[*].BIOTYPE'].str.contains(
+        '|'.join(cfg['snpeff']['biotype']))
+#    vn = vn[vn['ANN[*].BIOTYPE'].str.contains('|'.join(cfg['snpeff']['biotype']))]
 
-    print('\nprotein coding vars, pred_labels value_counts:')
-    print(vn.pred_labels.value_counts())
-    print('protein coding vars, test_labels value_counts:')
-    print(vn.status.value_counts())
-    calcMetr(vn, msg='protein coding metrics')
-    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='protein')])
+#    print('\nprotein coding vars, pred_labels value_counts:')
+#    print(vn.pred_labels.value_counts())
+#    print('protein coding vars, test_labels value_counts:')
+#    print(vn.status.value_counts())
+#    calcMetr(vn, msg='protein coding metrics')
+#    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='protein')])
 
-    vn_full = vn
+#    vn_full = vn
     allele_frac = vn.alt_DP.astype(float)/vn.DP
-    vn = vn[(allele_frac > cfg['alt_allele_frac_range'][0]) & (allele_frac < cfg['alt_allele_frac_range'][1])]
+    vn['c_allele_frac'] = (allele_frac > cfg['alt_allele_frac_range'][0]) & (allele_frac < cfg['alt_allele_frac_range'][1])
+#    vn = vn[(allele_frac > cfg['alt_allele_frac_range'][0]) & (allele_frac < cfg['alt_allele_frac_range'][1])]
 
-    print('\nallele fraction, pred_labels value_counts:')
-    print(vn.pred_labels.value_counts())
-    print('allel fraction vars, test_labels value_counts:')
-    print(vn.status.value_counts())
-    calcMetr(vn, msg='all fraction metrics')
-    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='allele_frac')])
+#    print('\nallele fraction, pred_labels value_counts:')
+#    print(vn.pred_labels.value_counts())
+#    print('allel fraction vars, test_labels value_counts:')
+#    print(vn.status.value_counts())
+#    calcMetr(vn, msg='all fraction metrics')
+#    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='allele_frac')])
 
     vn = vn.replace('ZZZ', '.')
-    if vn.empty:
-        print('No de novo mutation of interest')
-        return 0
-
+#    if vn.empty:
+#        print('No de novo mutation of interest')
+#        return 0
+    print('vn shape')
+    print(vn.shape)
     vn['FILTER'] = vn.apply(func.getFieldFromVCF, args=(myped,), axis=1)
     vn = vn[~vn.FILTER.isnull()]
+    print('vn shape in vcf')
+    print(vn.shape)
 
     c_missense = vn['effect_cat'] == 'mis'
     c_lof = vn['effect_cat'] == 'lof'
     c_syn = vn['effect_cat'] == 'syn'
+    vn['c_missense'] = c_missense
+    vn['c_lof'] = c_lof
+    vn['c_syn'] = c_syn
 
     c_metaSVM_D = vn.dbNSFP_MetaSVM_pred.str.contains('|'.join(cfg['db_nsfp']['metaSVM_pred']))
-    c_metaSVM_null = vn.dbNSFP_MetaSVM_pred.isin(['ZZZ', '.'])
+#    c_metaSVM_null = vn.dbNSFP_MetaSVM_pred.isin(['ZZZ', '.'])
 
     c_cadd_null = vn.dbNSFP_CADD_phred.isin(['ZZZ', '.'])
     c_cadd_D = vn.dbNSFP_CADD_phred[~c_cadd_null].apply(
@@ -235,32 +255,43 @@ def summarizeMutations(infile,
     c_cadd_15 = vn.dbNSFP_CADD_phred[~c_cadd_null].apply(
         lambda x: min(map(float, x.split(',')))) >= cfg['db_nsfp']['combined']['cadd_phred']
 
-    c_poly_HVAR_null = vn.dbNSFP_Polyphen2_HVAR_pred.isin(['ZZZ', '.'])
-    c_poly_HDIV_null = vn.dbNSFP_Polyphen2_HVAR_pred.isin(['ZZZ', '.'])
+#    c_poly_HVAR_null = vn.dbNSFP_Polyphen2_HVAR_pred.isin(['ZZZ', '.'])
+#    c_poly_HDIV_null = vn.dbNSFP_Polyphen2_HVAR_pred.isin(['ZZZ', '.'])
     c_poly_HVAR_D = vn.dbNSFP_Polyphen2_HVAR_pred.str.contains(
         '|'.join(cfg['db_nsfp']['combined']['polyphen2_pred']))
     c_poly_HDIV_D = vn.dbNSFP_Polyphen2_HVAR_pred.str.contains(
         '|'.join(cfg['db_nsfp']['combined']['polyphen2_pred']))
 
-    c_sift_null = vn.dbNSFP_SIFT_pred.isin(['ZZZ', '.'])
+#    c_sift_null = vn.dbNSFP_SIFT_pred.isin(['ZZZ', '.'])
     c_sift_D = vn.dbNSFP_SIFT_pred.str.contains(
         '|'.join(cfg['db_nsfp']['combined']['sift_pred']))
-    c_new = (vn.pred_labels == 1) & (~vn.status.isin(['Y']))
+ #   c_new = (vn.pred_labels == 1) & (~vn.status.isin(['Y']))
 
     c_dmg_miss = c_metaSVM_D | c_cadd_D | ((c_poly_HDIV_D | c_poly_HVAR_D) & c_sift_D & c_cadd_15)
-    vn_full = vn[c_missense]
-    vn_mis = vn[c_dmg_miss & c_missense]
-    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn_mis, msg='dmg_miss')])
+    vn['c_dmg_miss'] = c_dmg_miss
+#   vn_full = vn[c_missense]
+    c_prev = vn.c_cohort_freq &\
+             vn.c_effect_cat &\
+             vn.c_pop_freq &\
+             vn.c_biotype &\
+             vn.c_allele_frac
+    print('sum(c_prev)')
+    print(sum(c_prev))
+    vn_mis = vn[c_dmg_miss & c_missense & c_prev]
+    print('shape vn_mis')
+    print(vn_mis.shape)
+#    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn_mis, msg='dmg_miss')])
 
     c_impact_lof = vn['ANN[*].IMPACT'].str.contains(
         '|'.join(cfg['snpeff']['impact_lof']))
+    vn['c_impact_lof'] = c_impact_lof
 
-    vn_full = vn[c_lof]
-    vn_lof = vn[c_lof & c_impact_lof]
-    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn_lof, msg='impact_lof')])
+#    vn_full = vn[c_lof]
+    vn_lof = vn[c_lof & c_impact_lof & c_prev]
+#    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn_lof, msg='impact_lof')])
 
-    vn_syn = vn[c_syn]
-    print(vn.shape)
+    vn_syn = vn[c_syn & c_prev]
+#    print(vn.shape)
 
     c_FN = (vn.pred_labels == 0) & vn.status.isin(['Y'])
     vn_FN = vn[cols_to_output][c_FN]
@@ -284,8 +315,8 @@ def summarizeMutations(infile,
                                                          '.csv'])),
                                   index=False)
     
-    writeVariants(vn, cols_to_output[:-2], var_type, prefix + '_ALL',
-                  outp_suffix, outp_dir)
+    writeVariants(vn, cols_to_output[:-2] + extra_cols, var_type,
+                  prefix + '_ALL', outp_suffix, outp_dir)
     writeVariants(vn_FN, cols_to_output[:-2], var_type, prefix + '_FN',
                   outp_suffix, outp_dir)
     writeVariants(vn_TP, cols_to_output[:-2], var_type, prefix + '_TP',
@@ -296,8 +327,8 @@ def summarizeMutations(infile,
                   outp_suffix, outp_dir)
     writeVariants(vn_syn, cols_to_output[:-2], var_type, prefix + '_SYN',
                   outp_suffix, outp_dir)
-    writeVariants(vn_diff, cols_to_output[:-2]+['step'], var_type,
-                  prefix + '_DIFF', outp_suffix, outp_dir)
+#    writeVariants(vn_diff, cols_to_output[:-2]+['step'], var_type,
+#                  prefix + '_DIFF', outp_suffix, outp_dir)
         
 #    vn_TP[cols_to_output[:-2]].to_csv(
 #        os.path.join(outp_dir, 'true_pos_snp' + outp_suffix + '.csv'), index=False)

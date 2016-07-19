@@ -59,6 +59,7 @@ vcf_pat = cfg['vcf_pattern']
 bam_pat = cfg['bam_pattern']
 bai_pat = bam_pat + '.bai'
 ped_file = cfg['ped_file']
+ped_file_extended = cfg['ped_file_extended']
 bam_readcount = cfg['bam_readcount']
 genome_ref = cfg['genome_ref']
 
@@ -98,13 +99,20 @@ if known_vars:
     func.runInShell('mkdir -p ' + output_dir_known)
 
 # populate ped DF
-myped = ped.Ped(ped_file)
-myped.addVcf(file_pat=vcf_pat)
-myped.ped.dropna(subset=['vcf'], inplace=True)
-myped.addBam(file_pat=bam_pat)
-myped.ped.dropna(subset=['bam'], inplace=True)
-myped.addBai(file_pat=bai_pat)
-myped.ped.dropna(subset=['bai'], inplace=True)
+if (not ped_file) and (not ped_file_extended):
+    sys.exit('only one of ped_file, ped_file_extended may be non-empty')
+if not ped_file:
+    myped = ped.Ped(ped_file)
+    myped.addVcf(file_pat=vcf_pat)
+    myped.ped.dropna(subset=['vcf'], inplace=True)
+    myped.addBam(file_pat=bam_pat)
+    myped.ped.dropna(subset=['bam'], inplace=True)
+    myped.addBai(file_pat=bai_pat)
+    myped.ped.dropna(subset=['bai'], inplace=True)
+elif not ped_file_extended:
+    myped = ped.Ped(ped_file_extended, ['bam', 'vcf'])
+else:
+    sys.exit('ped_file or ped_file_extended must be defined')
 
 f = features.Features(myped, known_vars)
 
