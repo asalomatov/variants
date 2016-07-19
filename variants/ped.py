@@ -19,7 +19,8 @@ class Ped:
         self.ped = pd.read_table(self.fname, usecols=range(6+len(extra_column_names)), header=None, dtype=str)
         self.ped.columns = ['fam_id', 'ind_id', 'fa_id', 'mo_id', 'sex', 'pheno'] + extra_column_names
         self.ped.replace(['.', '0', 0, -9, '-9'], [None]*5, inplace=True)
-        self.ped['fam_id'] = self.ped['fam_id'].astype(str) 
+        self.ped['sex'] = self.ped.sex.astype(int)
+        self.ped['pheno'] = self.ped.pheno.astype(int)
 
     def addVcf(self, field='fam_id', file_pat='/mnt/ceph/asalomatov/SSC_Eichler/rerun/ssc%s/%s-JHC-vars.vcf.gz'):
         num_subst = len(re.findall('\%s', file_pat))
