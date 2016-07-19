@@ -161,7 +161,7 @@ class TrainTest:
         self.data_set = self.data_set[~self.data_set[field].isnull()]
 
     def addVarID(self, df):
-        df['var_id'] = df.ind_id +\
+        df['var_id'] = df.ind_id.astype(str) +\
                                  '_' +\
                                  df.CHROM.astype(str) +\
                                  '_' +\
