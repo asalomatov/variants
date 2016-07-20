@@ -289,20 +289,25 @@ def summarizeMutations(infile,
              vn.c_allele_frac
     print('sum(c_prev)')
     print(sum(c_prev))
+    c_genes = vn['ANN[*].GENE'].str.contains(
+        '|'.join(cfg['snpeff']['genes']))
+
     vn_mis = vn[c_dmg_miss & c_missense & c_prev]
+    vn_mis_clinical = vn[c_dmg_miss & c_missense & c_prev & c_genes]
     print('shape vn_mis')
     print(vn_mis.shape)
 #    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn_mis, msg='dmg_miss')])
-
     c_impact_lof = vn['ANN[*].IMPACT'].str.contains(
         '|'.join(cfg['snpeff']['impact_lof']))
     vn['c_impact_lof'] = c_impact_lof
 
 #    vn_full = vn[c_lof]
     vn_lof = vn[c_lof & c_impact_lof & c_prev]
+    vn_lof_clinical = vn[c_lof & c_impact_lof & c_prev & c_genes]
 #    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn_lof, msg='impact_lof')])
 
     vn_syn = vn[c_syn & c_prev]
+    vn_syn_clinical = vn[c_syn & c_prev & c_genes]
 #    print(vn.shape)
 
     c_FN = (vn.pred_labels == 0) & vn.status.isin(['Y'])
@@ -315,7 +320,7 @@ def summarizeMutations(infile,
     
     var_type = cfg['variant_type']
     outp_suffix = '' # '{:%Y-%m-%d_%H-%M-%S-%f}'.format(datetime.datetime.now())
-
+    
     def writeVariants(df, cols_to_output, var_type, prefix, suffix, outp_dir):
         if df.empty:
             print('%s is empty' % prefix)
@@ -339,6 +344,12 @@ def summarizeMutations(infile,
                   outp_suffix, outp_dir)
     writeVariants(vn_syn, cols_to_output[:-2], var_type, prefix + '_SYN',
                   outp_suffix, outp_dir)
+    writeVariants(vn_mis_clinical, cols_to_output[:-2], var_type, prefix + '_MIS',
+                  'clinical', outp_dir)
+    writeVariants(vn_lof_clinical, cols_to_output[:-2], var_type, prefix + '_LOF',
+                  'clinical', outp_dir)
+    writeVariants(vn_syn_clinical, cols_to_output[:-2], var_type, prefix + '_SYN',
+                  'clinical', outp_dir)
 #    writeVariants(vn_diff, cols_to_output[:-2]+['step'], var_type,
 #                  prefix + '_DIFF', outp_suffix, outp_dir)
         
