@@ -68,6 +68,7 @@ extra_cols = ['c_cohort_freq',
               'c_dmg_miss',
               'c_impact_lof']
 
+
 def calcMetr(vn_df, msg=' '):
     tst = train.TrainTest('x',
                       '/mnt/xfs1/home/asalomatov/projects/variants/variants/ssc_wes_features_noINDEL_noDP.txt',
@@ -101,10 +102,21 @@ def summarizeMutations(infile,
     with open(config_file, 'r') as f:
         cfg = yaml.safe_load(f)
 
-    myped = ped.Ped(cfg['ped_file'])
-    myped.addVcf(file_pat=cfg['vcf_pattern'])
-    myped.ped.dropna(subset=['vcf'], inplace=True)
-    myped.ped.reset_index(inplace=True)
+    ped_file = cfg['ped_file']
+    ped_file_extended = cfg['ped_file_extended']
+    # populate ped DF
+    if ped_file and ped_file_extended:
+        sys.exit('only one of ped_file, ped_file_extended may be non-empty')
+    if ped_file:
+        myped = ped.Ped(ped_file)
+        myped.addVcf(file_pat=cfg['vcf_pattern'])
+        myped.ped.dropna(subset=['vcf'], inplace=True)
+        myped.ped.reset_index(inplace=True)
+    elif ped_file_extended:
+        myped = ped.Ped(ped_file_extended, ['bam', 'vcf'])
+    else:
+        sys.exit('ped_file or ped_file_extended must be defined')
+
 
     #kv_vcf = pandas.read_csv('/mnt/scratch/asalomatov/data/columbia/feature_sets/known/all_known.txt', sep='\t')
     #kv_vcf = kv_vcf[['ind_id','CHROM', 'POS', 'REF_offspring', 'ALT_base_offspring', 'status', 'descr', 'DP_offspring', 'DP_father', 'DP_mother']]
