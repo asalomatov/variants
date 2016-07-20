@@ -348,9 +348,7 @@ def writePredAsVcf(pred_df, outp_file, min_DP=0):
 
 
 def getFieldFromVCF(row, ped_obj, field=6):
-    print ped_obj.ped.dtypes
-    ind_id = row['ind_id']
-    print ind_id, type(ind_id)
+    ind_id = str(row['ind_id'])
     vcf = ped_obj.getIndivVCF(ind_id)
     cat = 'bcftools view'
 #    if os.path.splitext(vcf)[1] == '.gz':
