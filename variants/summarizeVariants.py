@@ -132,13 +132,13 @@ def summarizeMutations(infile,
         exac[[u'syn_z', u'mis_z', u'lof_z', u'pLI', u'pRec', u'pNull', u'gene']],
         on='gene', how='left')
     print(vn.shape)
-    vn['v_id'] = vn.ind_id + '_' +\
+    vn['v_id'] = vn.ind_id.astype(str) + '_' +\
                  vn['CHROM'].astype(str) + '_' +\
                  vn.POS.astype(str) + '_' +\
                  vn['ANN[*].GENE'] + '_' +\
                  vn['ANN[*].EFFECT'] + '_' +\
                  vn['ANN[*].IMPACT']
-    vn['var_id'] = vn.ind_id + '_' +\
+    vn['var_id'] = vn.ind_id.astype(str) + '_' +\
                  vn['CHROM'].astype(str) + '_' +\
                  vn.POS.astype(str)
     vn['chr_pos'] = vn['CHROM'].astype(str) + '_' +\
