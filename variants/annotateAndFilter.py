@@ -45,6 +45,7 @@ min_DP = cfg['min_DP']
 var_type = cfg['variant_type']
 vcf_pat = cfg['vcf_pattern']
 ped_file = cfg['ped_file']
+ped_file_extended = cfg['ped_file_extended']
 known_vars = cfg['known_variants']
 output_dir = cfg['output_directory']
 
