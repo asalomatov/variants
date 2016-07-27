@@ -294,8 +294,8 @@ def summarizeMutations(infile,
     c_prev = vn.c_cohort_freq &\
              vn.c_effect_cat &\
              vn.c_pop_freq &\
-#             vn.c_biotype &\
              vn.c_allele_frac
+#             vn.c_biotype &\
     print('sum(c_prev)')
     print(sum(c_prev))
     c_genes = vn['ANN[*].GENE'].str.contains(
