@@ -30,12 +30,18 @@ arg_parser.add_argument('class_probability_threshold',
                         help='Only mutations with scores higher than this\
                         will be found in the output.')
 
+arg_parser.add_argument('--remove_tempfiles',
+                        nargs='+',
+                        type=str,
+                        default='Yes',
+                        help='Yes/No, the intermidiary files deleted or not')
+
 args = arg_parser.parse_args()
 print(args)
 input_file = args.input_file[0]
 config_file = args.yaml_config_file[0]
 prob_cutoff = args.class_probability_threshold[0]
-
+rm_tmp = args.remove_tempfiles[0].lower()
 
 
 # get parameters from yaml config file
@@ -76,5 +82,6 @@ summarizeVariants.summarizeMutations(os.path.join(tmp_dir, input_file_bn +
                                      input_file_bn,
                                      output_dir,
                                      config_file)
-cmd = 'rm -rf %s' % tmp_dir
-#func.runInShell(cmd)
+if rm_tmp == 'yes':
+    cmd = 'rm -rf %s' % tmp_dir
+    func.runInShell(cmd)

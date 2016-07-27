@@ -58,7 +58,7 @@ cols_to_output = [u'CHROM',
                   u'v_id']
 
 extra_cols = ['c_cohort_freq',
-              'c_biotype',
+#              'c_biotype',
               'c_effect_cat',
               'c_pop_freq',
               'c_allele_frac',
@@ -136,19 +136,23 @@ def summarizeMutations(infile,
                  vn['CHROM'].astype(str) + '_' +\
                  vn.POS.astype(str) + '_' +\
                  vn['ANN[*].GENE'] + '_' +\
-                 vn['ANN[*].EFFECT'] + '_' +\
-                 vn['ANN[*].IMPACT']
+                 vn['ANN[*].FEATUREID']
+                 # vn['ANN[*].EFFECT'] + '_' +\
+                 # vn['ANN[*].IMPACT']
     vn['var_id'] = vn.ind_id.astype(str) + '_' +\
                  vn['CHROM'].astype(str) + '_' +\
                  vn.POS.astype(str)
     vn['chr_pos'] = vn['CHROM'].astype(str) + '_' +\
                  vn.POS.astype(str)
 
-
     #vn = vn.merge(kv_vcf[['var_id', 'status']], on='var_id', how='left')
-    #print vn.shape
+    print('before dedup')
+    print(vn.shape)
 
     vn = vn[~vn.v_id.duplicated()]
+    print('after dedup')
+    print(vn.shape)
+    
 #    vn_all = vn
 # stats before any filtering
 #    print('\ndeduped and annotated vars, pred_labels value_counts:')
@@ -217,6 +221,7 @@ def summarizeMutations(infile,
 #    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='pop_freq')])
 
 #    vn_full = vn
+
     vn['c_biotype'] = vn['ANN[*].BIOTYPE'].str.contains(
         '|'.join(cfg['snpeff']['biotype']))
 #    vn = vn[vn['ANN[*].BIOTYPE'].str.contains('|'.join(cfg['snpeff']['biotype']))]
@@ -282,6 +287,9 @@ def summarizeMutations(infile,
     c_dmg_miss = c_metaSVM_D | c_cadd_D | ((c_poly_HDIV_D | c_poly_HVAR_D) & c_sift_D & c_cadd_15)
     vn['c_dmg_miss'] = c_dmg_miss
 #   vn_full = vn[c_missense]
+    c_all_denovo = vn.c_cohort_freq &\
+                   vn.c_pop_freq &\
+                   vn.c_allele_frac
     c_prev = vn.c_cohort_freq &\
              vn.c_effect_cat &\
              vn.c_pop_freq &\
@@ -332,8 +340,10 @@ def summarizeMutations(infile,
                                                          '.csv'])),
                                   index=False)
     
-    writeVariants(vn, cols_to_output[:-2] + extra_cols, var_type,
-                  prefix + '_ALL', outp_suffix, outp_dir)
+    writeVariants(vn[c_all_denovo], cols_to_output[:-2] + extra_cols, var_type,
+                  prefix + '_ALL_DENOVO', outp_suffix, outp_dir)
+    writeVariants(vn[vn.c_biotype], cols_to_output[:-2] + extra_cols, var_type,
+                  prefix + '_ALL_BIO', outp_suffix, outp_dir)
     writeVariants(vn_FN, cols_to_output[:-2], var_type, prefix + '_FN',
                   outp_suffix, outp_dir)
     writeVariants(vn_TP, cols_to_output[:-2], var_type, prefix + '_TP',
