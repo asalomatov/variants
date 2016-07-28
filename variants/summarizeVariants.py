@@ -55,6 +55,7 @@ cols_to_output = [u'CHROM',
                   u'spidex_cds_type',
                   u'spidex_ss_dist',
                   u'FILTER',
+                  u'pred_prob',
                   u'var_id',
                   u'v_id']
 
@@ -182,7 +183,7 @@ def summarizeMutations(infile,
         '|'.join(cfg['snpeff']['effect_dmgmis'])), 'effect_cat'] = 'mis' 
     vn.ix[vn['ANN[*].EFFECT'].str.contains(
         '|'.join(cfg['snpeff']['effect_lof'])), 'effect_cat'] = 'lof'
-    # vn['c_effect_cat'] = ~vn.effect_cat.isnull()
+    vn['c_effect_cat'] = ~vn.effect_cat.isnull()
 #    print(vn.shape)
 #    vn_full = vn
 #    vn = vn.dropna(subset=['effect_cat'], axis=0)
@@ -292,7 +293,7 @@ def summarizeMutations(infile,
                    vn.c_pop_freq &\
                    vn.c_allele_frac
     c_prev = vn.c_cohort_freq &\
-             vn.c_effect_cat &\
+             # vn.c_effect_cat &\
              vn.c_pop_freq &\
              vn.c_allele_frac
 #             vn.c_biotype &\
@@ -311,6 +312,7 @@ def summarizeMutations(infile,
     vn['c_impact_lof'] = c_impact_lof
 
 #    vn_full = vn[c_lof]
+    c_lof = ~c_missense & ~c_syn
     vn_lof = vn[c_lof & c_impact_lof & c_prev]
     vn_lof_clinical = vn[c_lof & c_impact_lof & c_prev & c_genes]
 #    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn_lof, msg='impact_lof')])
