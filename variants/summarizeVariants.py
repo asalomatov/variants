@@ -137,8 +137,8 @@ def summarizeMutations(infile,
     vn['v_id'] = vn.ind_id.astype(str) + '_' +\
                  vn['CHROM'].astype(str) + '_' +\
                  vn.POS.astype(str) + '_' +\
-                 vn['ANN[*].GENE']
-                 # vn['ANN[*].FEATUREID']
+                 vn['ANN[*].GENE'] + '_' +\
+                 vn['ANN[*].FEATUREID']
                  # vn['ANN[*].EFFECT'] + '_' +\
                  # vn['ANN[*].IMPACT']
     vn['var_id'] = vn.ind_id.astype(str) + '_' +\
