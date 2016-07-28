@@ -182,7 +182,7 @@ def summarizeMutations(infile,
         '|'.join(cfg['snpeff']['effect_dmgmis'])), 'effect_cat'] = 'mis' 
     vn.ix[vn['ANN[*].EFFECT'].str.contains(
         '|'.join(cfg['snpeff']['effect_lof'])), 'effect_cat'] = 'lof'
-    vn['c_effect_cat'] = ~vn.effect_cat.isnull()
+    # vn['c_effect_cat'] = ~vn.effect_cat.isnull()
 #    print(vn.shape)
 #    vn_full = vn
 #    vn = vn.dropna(subset=['effect_cat'], axis=0)
@@ -342,9 +342,9 @@ def summarizeMutations(infile,
                                   index=False)
     
     writeVariants(vn[c_all_denovo], cols_to_output[:-2] + extra_cols, var_type,
-                  prefix + '_ALL_DENOVO', outp_suffix, outp_dir)
+                  prefix, 'ALL_DENOVO', outp_dir)
     writeVariants(vn[vn.c_biotype], cols_to_output[:-2] + extra_cols, var_type,
-                  prefix + '_ALL_BIO', outp_suffix, outp_dir)
+                  prefix, 'ALL_DENOVO_CODING', outp_dir)
     writeVariants(vn_FN, cols_to_output[:-2], var_type, prefix + '_FN',
                   outp_suffix, outp_dir)
     writeVariants(vn_TP, cols_to_output[:-2], var_type, prefix + '_TP',

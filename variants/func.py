@@ -356,7 +356,7 @@ def getFieldFromVCF(row, ped_obj, field=6):
     chrom = str(row['CHROM'])
     pos = str(row['POS'])
     cmd = ' '.join([cat, vcf, ':'.join([chrom, pos]), '| grep -v ^# | grep ', str(pos)])
-    print cmd
+    # print cmd
     res = runInShell(cmd, return_output=1)
     if type(res) == int:
         return None
