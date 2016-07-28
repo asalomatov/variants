@@ -381,7 +381,7 @@ def summarizeMutations(infile,
 
     with open(os.path.join(outp_dir, 'cfg' + outp_suffix + '.yml'), 'w') as f:
         yaml.dump(cfg, f, default_flow_style=False)
-    return vn
+    return vn[c_all_denovo]
 
 if __name__ == '__main__':
     infile = sys.argv[1]
