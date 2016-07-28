@@ -77,7 +77,7 @@ cmd = ' '.join([script_name,
                 input_file_bn])
 print(cmd)
 func.runInShell(cmd)
-summarizeVariants.summarizeMutations(os.path.join(tmp_dir, input_file_bn +
+vn = summarizeVariants.summarizeMutations(os.path.join(tmp_dir, input_file_bn +
                                                   '-ann-onePline.tsv'),
                                      input_file_bn,
                                      output_dir,

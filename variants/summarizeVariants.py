@@ -381,7 +381,7 @@ def summarizeMutations(infile,
 
     with open(os.path.join(outp_dir, 'cfg' + outp_suffix + '.yml'), 'w') as f:
         yaml.dump(cfg, f, default_flow_style=False)
-    
+    return vn
 
 if __name__ == '__main__':
     infile = sys.argv[1]
@@ -393,6 +393,8 @@ if __name__ == '__main__':
                        pref,
                        outp_dir,
                        config_file)
+
+
 
 # summarizeMutations(infile,
 #                       prefix,
