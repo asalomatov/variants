@@ -54,6 +54,7 @@ ped_file = cfg['ped_file']
 ped_file_extended = cfg['ped_file_extended']
 known_vars = cfg['known_variants']
 output_dir = cfg['output_directory']
+targ_bed = cfg['target_bed']
 
 dnvo = pandas.read_csv(input_file)
 dnvo.ix[:, 'pred_labels'] = (dnvo['pred_prob'] > prob_cutoff).astype(int)
@@ -72,16 +73,19 @@ func.writePredAsVcf(dnvo, outp_tsv, min_DP=min_DP)
 script_name = os.path.abspath(pkg_resources.resource_filename('variants',
                                                               'vcf2table.sh'))
 cmd = ' '.join([script_name,
-               outp_tsv,
-               os.path.dirname(script_name),
-                input_file_bn])
+                outp_tsv,
+                os.path.dirname(script_name),
+                input_file_bn,
+                targ_bed])
 print(cmd)
 func.runInShell(cmd)
-vn = summarizeVariants.summarizeMutations(os.path.join(tmp_dir, input_file_bn +
-                                                  '-ann-onePline.tsv'),
-                                     input_file_bn,
-                                     output_dir,
-                                     config_file)
+vn = summarizeVariants.summarizeMutations(
+    os.path.join(tmp_dir,
+                 input_file_bn +
+                 '-ann-onePline.tsv'),
+    input_file_bn,
+    output_dir,
+    config_file)
 if rm_tmp == 'yes':
     cmd = 'rm -rf %s' % tmp_dir
     func.runInShell(cmd)

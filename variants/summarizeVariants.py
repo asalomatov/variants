@@ -22,6 +22,7 @@ cols_to_output = [u'CHROM',
                   u'ref_DP',
                   u'alt_DP',
                   u'DP',
+                  u'allele_frac',
                   u'DP_offspring',
                   u'DP_father',
                   u'DP_mother',
@@ -137,8 +138,8 @@ def summarizeMutations(infile,
     vn['v_id'] = vn.ind_id.astype(str) + '_' +\
                  vn['CHROM'].astype(str) + '_' +\
                  vn.POS.astype(str) + '_' +\
-                 vn['ANN[*].GENE'] + '_' +\
-                 vn['ANN[*].FEATUREID']
+                 vn['ANN[*].GENE'] # + '_' +\
+                 # vn['ANN[*].FEATUREID']
                  # vn['ANN[*].EFFECT'] + '_' +\
                  # vn['ANN[*].IMPACT']
     vn['var_id'] = vn.ind_id.astype(str) + '_' +\
@@ -176,14 +177,14 @@ def summarizeMutations(infile,
 #    calcMetr(vn, msg='cohort_freq')
 #    vn_diff =  getDiff(vn_full, vn, msg='cohort_freq')
 
-    vn.ix[:, 'effect_cat'] = None
+    vn.ix[:, 'effect_cat'] = 'other'
     vn.ix[vn['ANN[*].EFFECT'].str.contains(
         '|'.join(cfg['snpeff']['effect_synon'])), 'effect_cat'] = 'syn' 
     vn.ix[vn['ANN[*].EFFECT'].str.contains(
         '|'.join(cfg['snpeff']['effect_dmgmis'])), 'effect_cat'] = 'mis' 
     vn.ix[vn['ANN[*].EFFECT'].str.contains(
         '|'.join(cfg['snpeff']['effect_lof'])), 'effect_cat'] = 'lof'
-    vn['c_effect_cat'] = ~vn.effect_cat.isnull()
+    vn['c_effect_cat'] = ~vn.effect_cat.isin(['other'])
 #    print(vn.shape)
 #    vn_full = vn
 #    vn = vn.dropna(subset=['effect_cat'], axis=0)
@@ -261,6 +262,7 @@ def summarizeMutations(infile,
     c_missense = vn['effect_cat'] == 'mis'
     c_lof = vn['effect_cat'] == 'lof'
     c_syn = vn['effect_cat'] == 'syn'
+    c_other = vn['effect_cat'] == 'other'
     vn['c_missense'] = c_missense
     vn['c_lof'] = c_lof
     vn['c_syn'] = c_syn
@@ -319,6 +321,9 @@ def summarizeMutations(infile,
 
     vn_syn = vn[c_syn & c_prev]
     vn_syn_clinical = vn[c_syn & c_prev & c_genes]
+
+    vn_other = vn[c_other & c_prev]
+    vn_other_clinical = vn[c_other & c_prev & c_genes]
 #    print(vn.shape)
 
     c_FN = (vn.pred_labels == 0) & vn.status.isin(['Y'])
@@ -347,22 +352,28 @@ def summarizeMutations(infile,
                   prefix, 'ALL_DENOVO', outp_dir)
     writeVariants(vn[vn.c_biotype], cols_to_output[:-2] + extra_cols, var_type,
                   prefix, 'ALL_DENOVO_CODING', outp_dir)
-    writeVariants(vn_FN, cols_to_output[:-2], var_type, prefix + '_FN',
-                  outp_suffix, outp_dir)
-    writeVariants(vn_TP, cols_to_output[:-2], var_type, prefix + '_TP',
-                  outp_suffix, outp_dir)
-    writeVariants(vn_mis, cols_to_output[:-2], var_type, prefix + '_MIS',
-                  outp_suffix, outp_dir)
-    writeVariants(vn_lof, cols_to_output[:-2], var_type, prefix + '_LOF',
-                  outp_suffix, outp_dir)
-    writeVariants(vn_syn, cols_to_output[:-2], var_type, prefix + '_SYN',
-                  outp_suffix, outp_dir)
+    writeVariants(vn_FN, cols_to_output[:-2], var_type, prefix,
+                  'FN', outp_dir)
+    writeVariants(vn_TP, cols_to_output[:-2], var_type, prefix,
+                  'TP', outp_dir)
+    writeVariants(vn_mis, cols_to_output[:-2], var_type, prefix,
+                  'MIS', outp_dir)
+    writeVariants(vn_lof, cols_to_output[:-2], var_type, prefix,
+                  'LOF', outp_dir)
+    writeVariants(vn_syn, cols_to_output[:-2], var_type, prefix,
+                  'SYN', outp_dir)
+    writeVariants(vn_other, cols_to_output[:-2], var_type, prefix,
+                  'OTHER', outp_dir)
     writeVariants(vn_mis_clinical, cols_to_output[:-2], var_type, prefix + '_MIS',
                   'clinical', outp_dir)
     writeVariants(vn_lof_clinical, cols_to_output[:-2], var_type, prefix + '_LOF',
                   'clinical', outp_dir)
     writeVariants(vn_syn_clinical, cols_to_output[:-2], var_type, prefix + '_SYN',
                   'clinical', outp_dir)
+    writeVariants(vn_other_clinical, cols_to_output[:-2], var_type, prefix + '_OTHER',
+                  'clinical', outp_dir)
+
+
 #    writeVariants(vn_diff, cols_to_output[:-2]+['step'], var_type,
 #                  prefix + '_DIFF', outp_suffix, outp_dir)
         
