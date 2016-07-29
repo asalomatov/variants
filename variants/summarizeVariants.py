@@ -344,8 +344,7 @@ def summarizeMutations(infile,
         df[cols_to_output].to_csv(os.path.join(outp_dir,
                                                '_'.join([prefix,
                                                          var_type,
-                                                         suffix,
-                                                         '.csv'])),
+                                                         suffix]) + '.csv'),
                                   index=False)
     
     writeVariants(vn[c_all_denovo], cols_to_output[:-2] + extra_cols, var_type,
