@@ -237,8 +237,9 @@ def summarizeMutations(infile,
 #    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn, msg='protein')])
 
 #    vn_full = vn
-    allele_frac = vn.alt_DP.astype(float)/vn.DP
-    vn['c_allele_frac'] = (allele_frac > cfg['alt_allele_frac_range'][0]) & (allele_frac < cfg['alt_allele_frac_range'][1])
+    vn['allele_frac'] = vn.alt_DP.astype(float)/vn.DP
+    vn['c_allele_frac'] = (vn.allele_frac > cfg['alt_allele_frac_range'][0]) &\
+                          (vn.allele_frac < cfg['alt_allele_frac_range'][1])
 #    vn = vn[(allele_frac > cfg['alt_allele_frac_range'][0]) & (allele_frac < cfg['alt_allele_frac_range'][1])]
 
 #    print('\nallele fraction, pred_labels value_counts:')
