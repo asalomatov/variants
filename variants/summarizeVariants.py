@@ -315,7 +315,6 @@ def summarizeMutations(infile,
     vn['c_impact_lof'] = c_impact_lof
 
 #    vn_full = vn[c_lof]
-    c_lof = ~c_missense & ~c_syn
     vn_lof = vn[c_lof & c_impact_lof & c_prev]
     vn_lof_clinical = vn[c_lof & c_impact_lof & c_prev & c_genes]
 #    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn_lof, msg='impact_lof')])
