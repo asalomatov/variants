@@ -55,6 +55,7 @@ child_id = args.child_id[0]
 config_file = args.yaml_config_file[0]
 prob_cutoff = args.class_probability_threshold[0]
 model = args.sklearn_model_pkl[0]
+rm_tmp = args.remove_tempfiles[0]
 
 # get parameters from yaml config file
 with open(config_file, 'r') as f:
@@ -134,7 +135,8 @@ else:
                             [(f.sample_features,),
                              (f.father_features,),
                              (f.mother_features,)])
-    f.removeTmpDir()
+    if rm_tmp:
+        f.removeTmpDir()
     fam_features[0].columns = ['CHROM', 'POS'] + func.addSuffix(fam_features[0].columns[2:], '_offspring')
     fam_features[1].columns = ['CHROM', 'POS'] + func.addSuffix(fam_features[1].columns[2:], '_father')
     fam_features[2].columns = ['CHROM', 'POS'] + func.addSuffix(fam_features[2].columns[2:], '_mother')
