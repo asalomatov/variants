@@ -45,9 +45,9 @@ arg_parser.add_argument('--sklearn_model_pkl',
 
 arg_parser.add_argument('--remove_tempfiles',
                         nargs='+',
-                        type=bool,
-                        default=True,
-                        help='')
+                        type=str,
+                        default='yes',
+                        help='yes/no')
 
 args = arg_parser.parse_args()
 print(args)
@@ -55,7 +55,7 @@ child_id = args.child_id[0]
 config_file = args.yaml_config_file[0]
 prob_cutoff = args.class_probability_threshold[0]
 model = args.sklearn_model_pkl[0]
-rm_tmp = args.remove_tempfiles[0]
+rm_tmp = (args.remove_tempfiles[0].lower() == 'yes')
 
 # get parameters from yaml config file
 with open(config_file, 'r') as f:
