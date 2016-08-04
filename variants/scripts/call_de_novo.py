@@ -43,6 +43,12 @@ arg_parser.add_argument('--sklearn_model_pkl',
                         help='A pickle of a classifier. If not a file, an internal\
                         model will be used.')
 
+arg_parser.add_argument('--remove_tempfiles',
+                        nargs='+',
+                        type=bool,
+                        default=True,
+                        help='')
+
 args = arg_parser.parse_args()
 print(args)
 child_id = args.child_id[0]
