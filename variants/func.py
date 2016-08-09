@@ -137,22 +137,22 @@ def readBamReadcount1(file_name, vartype):
     tmp_file = file_name + '.' + vartype    
     if vartype == 'SNP':    
         cmd1 = 'cat ' + file_name + \
-        " | grep -v + | grep -v - >" + tmp_file
+               " | grep -v + | grep -v - >" + tmp_file
     elif vartype == 'INS':    
         cmd1 = 'cat ' + file_name + \
-        " | grep + >" + tmp_file
+               " | grep + >" + tmp_file
     elif vartype == 'DEL':    
         cmd1 = 'cat ' + file_name + \
-        " | grep - >" + tmp_file
+               " | grep - >" + tmp_file
     elif vartype == 'INDEL':    
         cmd1 = 'cat ' + file_name + \
-        " | grep -e '-\|+' >" + tmp_file
+               " | grep -e '-\|+' >" + tmp_file
     else:
         sys.exit('unknown vartype...')
     runInShell(cmd1)
     if vartype == 'SNP':
         clm_names = ['CHROM', 'POS',
-                'REF', 'DP', 'A', 'C', 'G', 'T']
+                     'REF', 'DP', 'A', 'C', 'G', 'T']
         clm_dtypes = collections.OrderedDict()
         for i in clm_names:
             clm_dtypes[i] = str
@@ -164,14 +164,16 @@ def readBamReadcount1(file_name, vartype):
             usecols=[0,1,2,3,5,6,7,8],
             sep='\t')
         res = reader.apply(parseBamReadcount, axis=1)
-        return reader[['CHROM', 'POS', 'REF', 'DP']].merge(res, left_index=True, right_index=True)
+        return reader[['CHROM', 'POS', 'REF', 'DP']].merge(res,
+                                                           left_index=True,
+                                                           right_index=True)
 
 
-def readBamReadcount(file_name, n_clmns_per_allele=14):
+def readBamReadcount(file_name, vartype='snp', n_clmns_per_allele=14):
     """Read bam-readcount output into pandas DF.
     """
-    clm_names = ['CHROM', 'POS',
-                 'REF', 'DP', 'ZERO', 'A', 'C', 'G', 'T', 'N', 'INDEL']
+    clm_names = ['CHROM', 'POS', 'REF', 'DP', 'ZERO', 'A', 'C', 'G', 'T',
+                 'N', 'INDEL', 'INDEL1', 'INDEL2']
     clm_dtypes = collections.OrderedDict()
     for i in clm_names:
         clm_dtypes[i] = str
@@ -184,23 +186,29 @@ def readBamReadcount(file_name, n_clmns_per_allele=14):
         sep='\t')
     reader['INDEL'][reader.INDEL.isnull()] = ':'.join(['0'] *
                                                       n_clmns_per_allele)
+    reader['INDEL1'][reader.INDEL1.isnull()] = ':'.join(['0'] *
+                                                        n_clmns_per_allele)
+    reader['INDEL2'][reader.INDEL2.isnull()] = ':'.join(['0'] *
+                                                        n_clmns_per_allele)
     reader.drop('ZERO', axis=1, inplace=True)
     # return reader
-    res = reader.apply(parseBamReadcountIndel, axis=1)
+    if vartype.lower() == 'snp':
+        res = reader.apply(parseBamReadcountSNP, axis=1)
+    elif vartype.lower() == 'indel':
+        res = reader.apply(parseBamReadcountIndel, axis=1)
+    else:
+        sys.exit('vartype unrecognized, must be SNP or INDEL')
     return reader[['CHROM', 'POS', 'REF', 'DP']].merge(res, left_index=True,
                                                        right_index=True)
 
 
-def parseBamReadcount(row):
+def parseBamReadcountIndel(row):
+    """Parsing indels only"""
     # first split ref data
     ref_split = row[row['REF']].split(':')
     ref_split = ref_split[:1] + [float(x) for x in ref_split[1:]]
     # now arrgegate information for alt allels
-    possib_alt = []
-    if row['REF'] == 'A': possib_alt = ['C', 'G', 'T']
-    if row['REF'] == 'C': possib_alt = ['A', 'G', 'T']
-    if row['REF'] == 'G': possib_alt = ['A', 'C', 'T']
-    if row['REF'] == 'T': possib_alt = ['A', 'C', 'G']
+    possib_alt = ['INDEL', 'INDEL1', 'INDEL2']
     num_allels = 0
     alt_read_count = 0
     cum_array = numpy.zeros(12)
@@ -217,27 +225,28 @@ def parseBamReadcount(row):
         cum_array = cum_array / alt_read_count
 
     clmns_detail = ['base',
-            'count',
-            'avg_mapping_quality',
-            'avg_base_quality',
-            'avg_se_mapping_quality',
-            'num_plus_strand',
-            'num_minus_strand',
-            'avg_pos_as_fraction',
-            'avg_num_mismatches_as_fraction',
-            'avg_sum_mismatch_qualities',
-            'num_q2_containing_reads',
-            'avg_dist_to_q2_start_in_q2_reads',
-            'avg_clipped_length',
-            'avg_dist_to_effective_3p_end']        
+                    'count',
+                    'avg_mapping_quality',
+                    'avg_base_quality',
+                    'avg_se_mapping_quality',
+                    'num_plus_strand',
+                    'num_minus_strand',
+                    'avg_pos_as_fraction',
+                    'avg_num_mismatches_as_fraction',
+                    'avg_sum_mismatch_qualities',
+                    'num_q2_containing_reads',
+                    'avg_dist_to_q2_start_in_q2_reads',
+                    'avg_clipped_length',
+                    'avg_dist_to_effective_3p_end']
     res = pandas.Series(ref_split + [num_allels, '_'.join(alts), alt_read_count] +
-            cum_array.tolist(),
-            ['REF_'+ x for x in clmns_detail] + ['num_allels'] +
-           ['ALT_'+ x for x in clmns_detail] )
+                        cum_array.tolist(),
+                        ['REF_'+ x for x in clmns_detail] + ['num_allels'] +
+                        ['ALT_'+ x for x in clmns_detail])
     return res
 
 
-def parseBamReadcountIndel(row):
+def parseBamReadcountSNP(row):
+    """Parsing SNPs only"""
     # first split ref data
     ref_split = row[row['REF']].split(':')
     ref_split = ref_split[:1] + [float(x) for x in ref_split[1:]]
@@ -292,6 +301,7 @@ def parseBamReadcountIndel(row):
 
 def addSuffix(x, sfx):
     return [i + sfx for i in x]
+
 
 def splitVarId(x):
     x_spl = x.split('_')

@@ -100,13 +100,13 @@ class Features:
             sys.stderr.write('no phenotype for ' + self.sample_id + '\n')
             return False
         return True
-    
+   
     def removeTmpDir(self):
         tmpdir = os.path.dirname(self.sample_features)
         sys.stdout.write('removing ' + tmpdir)
         func.runInShell('rm -rf ' + tmpdir)
 
-    def extractFeatures(self, genome_ref, bam_readcount, n_cores=3):
+    def extractFeatures(self, genome_ref, bam_readcount, vartype='SNP', n_cores=3):
         """For the defined sample extract variant loci from the vcf file.
         """
         vrs = variants.Variants(self.sample_vcf, self.family_id)
@@ -145,7 +145,7 @@ class Features:
                                    '.region')
         print(reg_file)
         sys.stdout.flush()        
-        vrs.vcfDF2regions(reg_file)
+        vrs.vcfDF2regions(reg_file, vartype)
         self.sample_features = os.path.join(temp_dir,
                                             self.sample_id + '.features')
         print(self.sample_features)

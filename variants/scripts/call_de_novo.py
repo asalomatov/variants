@@ -15,6 +15,7 @@ import argparse
 from multiprocessing import Pool
 import pkg_resources
 
+
 # wrap a funtion for use with multiprocessing
 def multi_wrap_readBamReadcount(args):
     return func.readBamReadcount(*args)
@@ -129,7 +130,7 @@ if not f.initTrioFor(child_id):
 else:
     sys.stdout.write('\ninitialized trio for ' + child_id)
     sys.stdout.write('\n')
-    f.extractFeatures(genome_ref, bam_readcount)
+    f.extractFeatures(genome_ref, bam_readcount, var_type)
     pool = Pool(3)
     fam_features = pool.map(multi_wrap_readBamReadcount,
                             [(f.sample_features,),

@@ -235,7 +235,7 @@ class Variants:
         """ Create regions file to supply to bam-readcount.
         CHROM\tSTART\tEND, 1-based
         """
-        if vartype == 'SNP':
+        if vartype.lower() == 'snp':
             ref_len = self.variants.REF.apply(len)
             alt_len_min = self.variants.ALT.apply(lambda x: min(map(len, x.split(','))))
             alt_len_max = self.variants.ALT.apply(lambda x: max(map(len, x.split(','))))
