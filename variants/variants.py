@@ -237,8 +237,10 @@ class Variants:
         """
         if vartype.lower() == 'snp':
             ref_len = self.variants.REF.apply(len)
-            alt_len_min = self.variants.ALT.apply(lambda x: min(map(len, x.split(','))))
-            alt_len_max = self.variants.ALT.apply(lambda x: max(map(len, x.split(','))))
+            alt_len_min = self.variants.ALT.apply(lambda x:
+                                                  min(map(len, x.split(','))))
+            alt_len_max = self.variants.ALT.apply(lambda x:
+                                                  max(map(len, x.split(','))))
             # following conditions to capture SNPs and MNPs
             c1 = ref_len == alt_len_min
             c2 = ref_len == alt_len_max
@@ -247,8 +249,22 @@ class Variants:
             self.variants['pos_end'] = self.variants['POS'] + ref_len - 1
             self.variants[['CHROM', 'POS', 'pos_end']][c1 | c2].to_csv(
                 reg_file_name, sep="\t", header=False, index=False)
+        elif vartype.lower() == 'indel':
+            ref_len = self.variants.REF.apply(len)
+            alt_len_min = self.variants.ALT.apply(lambda x:
+                                                  min(map(len, x.split(','))))
+            alt_len_max = self.variants.ALT.apply(lambda x:
+                                                  max(map(len, x.split(','))))
+            # following conditions to capture INDELS
+            c1 = (ref_len > 1) & (alt_len_min == 1)  # deletion
+            c2 = (ref_len == 1) & (alt_len_max > 1)  # insertion
+            print('number of DELETIONS = %s' % sum(c1))
+            print('number of INSERTIONS = %s' % sum(c2))
+            self.variants['pos_end'] = self.variants['POS']
+            self.variants[['CHROM', 'POS', 'pos_end']][c1 | c2].to_csv(
+                reg_file_name, sep="\t", header=False, index=False)
         else:
-            sys.exit('Only SNPs are currently implemented')
+            sys.exit('vcfDF2regions: Only SNPs or INDELs are supported')
 
     def removeHomRef(self, sample_name):
         """Remove non variant loci. Remove loci with missing genotype from
