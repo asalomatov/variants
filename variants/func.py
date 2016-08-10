@@ -193,8 +193,10 @@ def readBamReadcount(file_name, vartype='snp', n_clmns_per_allele=14):
     reader.drop('ZERO', axis=1, inplace=True)
     # return reader
     if vartype.lower() == 'snp':
+        print('parsing %s' % vartype)
         res = reader.apply(parseBamReadcountSNP, axis=1)
     elif vartype.lower() == 'indel':
+        print('parsing %s' % vartype)
         res = reader.apply(parseBamReadcountIndel, axis=1)
     else:
         sys.exit('vartype unrecognized, must be SNP or INDEL')
