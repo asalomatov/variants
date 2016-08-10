@@ -216,16 +216,15 @@ def parseBamReadcountIndel(row):
     cum_array = numpy.zeros(12)
     alts = []
     for i in possib_alt:
-        if int(row[i][2]) > 0:
+        row_list = row[i].split(':')
+        if int(row_list[1]) > 0:
             num_allels += 1
-            row_list = row[i].split(':')
             allel_count = float(row_list[1])
             alt_read_count += allel_count
             alts += row_list[:2]
             cum_array += allel_count * numpy.array(row_list[2:], dtype=float)
     if alt_read_count > 0:
         cum_array = cum_array / alt_read_count
-
     clmns_detail = ['base',
                     'count',
                     'avg_mapping_quality',
@@ -266,16 +265,15 @@ def parseBamReadcountSNP(row):
     cum_array = numpy.zeros(12)
     alts = []
     for i in possib_alt:
-        if int(row[i][2]) > 0:
+        row_list = row[i].split(':')
+        if int(row_list[1]) > 0:
             num_allels += 1
-            row_list = row[i].split(':')
             allel_count = float(row_list[1])
             alt_read_count += allel_count
             alts += row_list[:2]
             cum_array += allel_count * numpy.array(row_list[2:], dtype=float)
     if alt_read_count > 0:
         cum_array = cum_array / alt_read_count
-
     clmns_detail = ['base',
                     'count',
                     'avg_mapping_quality',
