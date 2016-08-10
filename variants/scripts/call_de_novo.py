@@ -55,8 +55,9 @@ print(args)
 child_id = args.child_id[0]
 config_file = args.yaml_config_file[0]
 prob_cutoff = args.class_probability_threshold[0]
-model = args.sklearn_model_pkl[0]
-rm_tmp = (args.remove_tempfiles[0].lower() == 'yes')
+model = args.sklearn_model_pkl
+rm_tmp = (args.remove_tempfiles.lower() == 'yes')
+print('remove_tempfiles is set to %s' % str(rm_tmp))
 
 # get parameters from yaml config file
 with open(config_file, 'r') as f:
