@@ -23,38 +23,37 @@ def multi_wrap_readBamReadcount(args):
 arg_parser = argparse.ArgumentParser(
     description='Classify De Novo mutations.')
 arg_parser.add_argument('child_id',
-                        nargs='+',
+#                        nargs='+',
                         type=str,
                         help='A string identifying the child in a trio, must be\
                         present in the ped file, as well as in the corresponding\
                         vcf file headers')
 arg_parser.add_argument('yaml_config_file',
-                        nargs='+',
+#                        nargs='+',
                         type=str,
                         help='A config file, defining necessary variables.')
 arg_parser.add_argument('class_probability_threshold',
-                        nargs='+',
+#                        nargs='+',
                         type=float,
                         help='Only mutations with scores higher than this\
                         will be found in the output.')
 arg_parser.add_argument('--sklearn_model_pkl',
-                        nargs='+',
+#                        nargs='+',
                         type=str,
                         default=' ',
                         help='A pickle of a classifier. If not a file, an internal\
                         model will be used.')
 
 arg_parser.add_argument('--remove_tempfiles',
-                        nargs='+',
                         type=str,
                         default='yes',
                         help='yes/no')
 
 args = arg_parser.parse_args()
 print(args)
-child_id = args.child_id[0]
-config_file = args.yaml_config_file[0]
-prob_cutoff = args.class_probability_threshold[0]
+child_id = args.child_id
+config_file = args.yaml_config_file
+prob_cutoff = args.class_probability_threshold
 model = args.sklearn_model_pkl
 rm_tmp = (args.remove_tempfiles.lower() == 'yes')
 print('remove_tempfiles is set to %s' % str(rm_tmp))
