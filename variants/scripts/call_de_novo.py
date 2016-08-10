@@ -144,6 +144,7 @@ else:
     fam_f = fam_features[0]
     fam_f = fam_f.merge(fam_features[1], how='inner', on=['CHROM', 'POS'])
     fam_f = fam_f.merge(fam_features[2], how='inner', on=['CHROM', 'POS'])
+    fam_f = fam_f[fam_f.ALT_count_offspring.astype(int) != 0]  # remove not-variant loci
     fam_f['ind_id'] = child_id
     # mark verified if information is available
     if known_vars:
