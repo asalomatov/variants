@@ -167,7 +167,7 @@ else:
                      'INDEL_base_offspring',
                      'INDEL_base_father',
                      'INDEL_base_mother']
-    fam_f.drop(clmns_to_drop, axis=1, inplace=True)
+#    fam_f.drop(clmns_to_drop, axis=1, inplace=True)
     fam_f['DP_offspring'] = fam_f['REF_count_offspring'] + fam_f['ALT_count_offspring']
     fam_f['DP_father'] = fam_f['REF_count_father'] + fam_f['ALT_count_father']
     fam_f['DP_mother'] = fam_f['REF_count_mother'] + fam_f['ALT_count_mother']
