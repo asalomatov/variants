@@ -133,9 +133,9 @@ else:
     f.extractFeatures(genome_ref, bam_readcount, var_type)
     pool = Pool(3)
     fam_features = pool.map(multi_wrap_readBamReadcount,
-                            [(f.sample_features, var_type,),
-                             (f.father_features, var_type,),
-                             (f.mother_features, var_type,)])
+                            [(f.sample_features, var_type),
+                             (f.father_features, var_type),
+                             (f.mother_features, var_type)])
     if rm_tmp:
         f.removeTmpDir()
     fam_features[0].columns = ['CHROM', 'POS'] + func.addSuffix(fam_features[0].columns[2:], '_offspring')
