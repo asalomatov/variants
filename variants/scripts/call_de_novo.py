@@ -148,7 +148,12 @@ else:
     fam_f['ind_id'] = child_id
     # mark verified if information is available
     if known_vars:
-        f.verified_variants.columns = ['ind_id', 'CHROM', 'POS', 'ref', 'alt', 'status',  'descr']
+        f.verified_variants.columns = ['ind_id', 'CHROM', 'POS',
+                                       'ref', 'alt','status',  'descr']
+        # deletions should have POS + 1
+        c1 = f.verified_variants.ref.apply(len) > 1  # deletion 1
+        c2 = f.verified_variants.alt.apply(len) == 1  # deletion 2
+        f.verified_variants.ix[c1 & c2, 'POS'] = f.verified_variants.POS[c1 & c2] + 1
         f.verified_variants['POS'] = f.verified_variants['POS'].astype(str)
         fam_f = fam_f.merge(f.verified_variants[['ind_id', 'CHROM', 'POS', 'status', 'descr']],
                             how='left', on=['ind_id', 'CHROM', 'POS'])
