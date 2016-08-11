@@ -260,7 +260,9 @@ class Variants:
             c2 = (ref_len == 1) & (alt_len_max > 1)  # insertion
             print('number of DELETIONS = %s' % sum(c1))
             print('number of INSERTIONS = %s' % sum(c2))
-            self.variants['pos_end'] = self.variants['POS']
+            # deletions should have POS + 1
+            self.variants.ix[c1, 'POS'] = self.variants.POS[c1] + 1
+            self.variants.ix[:, 'pos_end'] = self.variants.POS
             self.variants[['CHROM', 'POS', 'pos_end']][c1 | c2].to_csv(
                 reg_file_name, sep="\t", header=False, index=False)
         else:
