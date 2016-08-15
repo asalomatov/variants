@@ -153,6 +153,7 @@ else:
         # deletions should have POS + 1
         c1 = f.verified_variants.ref.apply(len) > 1  # deletion 1
         c2 = f.verified_variants.alt.apply(len) == 1  # deletion 2
+        f.verified_variants.ix[:, 'POS'] = f.verified_variants.POS.astype(int)
         f.verified_variants.ix[c1 & c2, 'POS'] = f.verified_variants.POS[c1 & c2] + 1
         f.verified_variants['POS'] = f.verified_variants['POS'].astype(str)
         fam_f = fam_f.merge(f.verified_variants[['ind_id', 'CHROM', 'POS', 'status', 'descr']],

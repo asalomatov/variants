@@ -26,6 +26,8 @@ from sklearn.decomposition import PCA
 #import seaborn as sns
 from keras.models import Sequential, model_from_json
 from keras.layers.core import Dense, Activation, Dropout
+import yaml
+import argparse
 
 # %matplotlib qt
 # sns.set()
@@ -304,19 +306,22 @@ class TrainTest:
             self.feature_importance = pandas.DataFrame({
                 'contrib': self.model.feature_importances_,
                 'name': self.feature_list})
-            self.feature_importance.sort_values(['contrib'], ascending=[False], inplace=True)
-            self.feature_importance.to_csv(self.method + '_feature_contrib.csv',
+            self.feature_importance.sort_values(['contrib'],
+                                                ascending=[False],
+                                                inplace=True)
+            self.feature_importance.to_csv(self.method +
+                                           '_feature_contrib.csv',
                                            index=False)
-        model_descr = {'model': self.model,
-                       'train_var_id': self.train_set_var_id,
-                       'stdize': self.stdize,
-                       'features': self.feature_list,
-                       'feature_importance': self.feature_importance,
-                       'y_name': self.y_name,
-                       'extra_col_names': self.extra_column_names,
-                       'method': self.method,
-                       'threshold': self.threshold}
-        joblib.dump(model_descr, self.method + '.pkl')
+        #model_descr = {'model': self.model,
+        #               'train_var_id': self.train_set_var_id,
+        #               'stdize': self.stdize,
+        #               'features': self.feature_list,
+        #               'feature_importance': self.feature_importance,
+        #               'y_name': self.y_name,
+        #               'extra_col_names': self.extra_column_names,
+        #               'method': self.method,
+        #               'threshold': self.threshold}
+        #joblib.dump(model_descr, self.method + '.pkl')
 
     def fitClassifierOneClass(self):
         # fit estimator
@@ -333,6 +338,7 @@ class TrainTest:
                                            sep='\t')
 
     def pklModel(self, output_dir='./'):
+        func.runInShell('mkdir -p ' + output_dir)
         model_descr = {'model': self.model,
                        'train_var_id': self.train_set_var_id,
                        'stdize': self.stdize,
@@ -345,7 +351,6 @@ class TrainTest:
                        'metrics': self.perf_mertics,
                        'roc': self.roc,
                        'is_keras': 0}
-
         joblib.dump(model_descr, os.path.join(output_dir, self.method + '.pkl'))
 
     def saveKerasModel(self, output_dir='./'):
@@ -433,6 +438,7 @@ if __name__ == '__main__':
     trn_tst_splt = float(sys.argv[8])
     trshold = float(sys.argv[9])
     smote_type = sys.argv[10]
+    model_dir = sys.argv[11]
 
     known_vars = os.path.join(feature_set_dir, 'fb/known_SNP/fb_known_snp.tsv')
     extra_vars = os.path.join(feature_set_dir, 'fb/all_SNP/fb_all_snp.tsv')
