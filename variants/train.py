@@ -439,11 +439,10 @@ if __name__ == '__main__':
     trshold = float(sys.argv[9])
     smote_type = sys.argv[10]
     model_dir = sys.argv[11]
-
-    known_vars = os.path.join(feature_set_dir, 'fb/known_SNP/fb_known_snp.tsv')
-    extra_vars = os.path.join(feature_set_dir, 'fb/all_SNP/fb_all_snp.tsv')
-    myped = ped.Ped(infile_ped, ['collection'])
-    myped.addTestFile(field='ind_id', file_pat=os.path.join(feature_set_dir, 'fb/all_SNP/%s'))
+    known_vars = sys.argv[12]
+    extra_vars = sys.argv[13]
+    myped = ped.Ped(infile_ped)
+    myped.addTestFile(field='ind_id', file_pat=os.path.join(feature_set_dir, '%s'))
     myped.ped.dropna(subset=['test'], inplace=True)
     myped.ped.reset_index(inplace=True)
     print('ped shape:')
