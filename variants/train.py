@@ -553,4 +553,4 @@ if __name__ == '__main__':
     else:
         sys.exit('Unknown classifier!')
     trn.getMetrics()
-    trn.pklModel()
+    trn.pklModel(model_dir)

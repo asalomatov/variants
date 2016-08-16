@@ -69,7 +69,8 @@ myplot = ggplot(tst.roc, aes(x='fpr', y='tpr')) +\
 myplot1 = ggplot(tst.roc, aes('threshold')) +\
     geom_line(aes(y='tpr')) +\
     geom_line(aes(y='fpr'))
-
+ggsave(plot=myplot, filename='roc_curve_1.png')
+ggsave(plot=myplot1, filename='roc_curve_2.png')
 
 
 #m_name = os.path.basename(m)
