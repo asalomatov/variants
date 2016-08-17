@@ -262,7 +262,7 @@ else:
     lls = res_u.test_var_alleles.apply(func.splitAlleles)
     res_u = res_u.merge(varid, left_index=True, right_index=True)
     res_u = res_u.merge(lls, left_index=True, right_index=True)
-
+    res_u.ix[: 'POS'] = res_u.POS.astype(int)
     if var_type.lower() == 'indel':
         c_ins = res_u.ALT.str.contains('+', regex=False)
         c_del = res_u.ALT.str.contains('-', regex=False)
@@ -276,6 +276,7 @@ else:
                                      axis=1)
         res_u.ix[c_del, 'REF'] = ref_pos + res_u.ix[c_del, 'REF']
         res_u.ix[c_del, 'ALT'] = ref_pos
+
     res_u[['ind_id',
            'CHROM',
            'POS',
