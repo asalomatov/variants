@@ -9,7 +9,7 @@ import pandas
 import numpy
 import collections
 import train
-
+import pysam
 
 def makeDir(path):
     try:
@@ -46,9 +46,9 @@ def run_once(f):
     return wrapper
 
 
-#def refAtPos(chrom, pos, genref='/mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa'):
-#    ref_allel = pysam.faidx(genref, str(chrom)+':'+str(pos)+'-'+str(pos))[1].strip()
-#    return ref_allel
+def refAtPos(chrom, pos, genref='/mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa'):
+    ref_allel = pysam.faidx(genref, str(chrom)+':'+str(pos)+'-'+str(pos))[1].strip()
+    return ref_allel
 
 
 def df2sklearn(mydf, col_to_keep):
@@ -310,7 +310,7 @@ def splitVarId(x):
     return pandas.Series(x_spl, ['ind_id', 'CHROM', 'POS'])
 
 
-def splitAlleles(x):
+def splitAlleles(x, n_allels=1):
     res = x.split('_')
     col_names = ['REF', 'ref_DP', 'ALT', 'alt_DP']
     if len(res) > 4:
@@ -320,7 +320,7 @@ def splitAlleles(x):
     DP = sum(map(int, res[1::2]))
     res += [DP]
     col_names += ['DP']
-    return pandas.Series(res, col_names)
+    return pandas.Series(res[:(n_allels + 1) * 2], col_names[:(n_allels + 1) * 2])
 
 
 def mergeClmnsToInfo(df, clmn_list=[]):

@@ -258,16 +258,38 @@ else:
     res_u.ix[:, 'pred_labels'] = (res_u['pred_prob'] > prob_cutoff).astype(int)
     res_u = res_u[res_u.pred_labels == 1]
     res_u.reset_index(inplace=True)
-    res_u[['var_id',
+    varid = res_u.var_id.apply(func.splitVarId)
+    lls = res_u.test_var_alleles.apply(func.splitAlleles)
+    res_u = res_u.merge(varid, left_index=True, right_index=True)
+    res_u = res_u.merge(lls, left_index=True, right_index=True)
+
+    if var_type.lower() == 'indel':
+        c_ins = res_u.ALT.str.contains('+')
+        c_del = res_u.ALT.str.contains('-')
+        res_u.ix[:, 'ALT'] = res_u.ALT.apply(lambda x: x.strip('+'))
+        res_u.ix[:, 'ALT'] = res_u.ALT.apply(lambda x: x.strip('-'))
+        res_u.ix[c_del, 'ALT'] = res_u.REF[c_del] + res_u.ALT[c_del]
+        res_u.ix[c_del, 'POS'] -= 1
+        res_u.ix[c_del, 'REF'] = res_u[c_del].apply(lambda row:
+                                                    func.refAtPos(row['CHROM'],
+                                                                  row['POS']),
+                                                    axis=1)
+
+    res_u[['ind_id',
+           'CHROM',
+           'POS',
+           'REF',
+           'ALT',
            'pred_prob',
-           'test_var_alleles',
            'DP_offspring',
            'DP_father',
-           'DP_mother']].to_csv(os.path.join(output_dir,
-                                             child_id +
-                                             '-' + var_type +
-                                             '-class.csv'),
-                                index=False)
+           'DP_mother',
+           'var_id',
+           'test_var_alleles']].to_csv(os.path.join(output_dir,
+                                                    child_id +
+                                                    '-' + var_type +
+                                                    '-class.csv'),
+                                       index=False)
 
     # outp_tsv = os.path.join(output_dir, m_name + '.tsv')
     # outp_tsv = os.path.join(output_dir, child_id + '.tsv')
