@@ -264,17 +264,18 @@ else:
     res_u = res_u.merge(lls, left_index=True, right_index=True)
 
     if var_type.lower() == 'indel':
-        c_ins = res_u.ALT.str.contains('+')
-        c_del = res_u.ALT.str.contains('-')
+        c_ins = res_u.ALT.str.contains('+', regex=False)
+        c_del = res_u.ALT.str.contains('-', regex=False)
         res_u.ix[:, 'ALT'] = res_u.ALT.apply(lambda x: x.strip('+'))
         res_u.ix[:, 'ALT'] = res_u.ALT.apply(lambda x: x.strip('-'))
-        res_u.ix[c_del, 'ALT'] = res_u.REF[c_del] + res_u.ALT[c_del]
+        res_u.ix[c_del, 'REF'] = res_u.REF[c_del] + res_u.ALT[c_del]
         res_u.ix[c_del, 'POS'] -= 1
-        res_u.ix[c_del, 'REF'] = res_u[c_del].apply(lambda row:
-                                                    func.refAtPos(row['CHROM'],
-                                                                  row['POS']),
-                                                    axis=1)
-
+        ref_pos = res_u[c_del].apply(lambda row:
+                                     func.refAtPos(row['CHROM'],
+                                                   row['POS']),
+                                     axis=1)
+        res_u.ix[c_del, 'REF'] = ref_pos + res_u.ix[c_del, 'REF']
+        res_u.ix[c_del, 'ALT'] = ref_pos
     res_u[['ind_id',
            'CHROM',
            'POS',
