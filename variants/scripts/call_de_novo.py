@@ -268,7 +268,8 @@ else:
         c_del = res_u.ALT.str.contains('-', regex=False)
         res_u.ix[:, 'ALT'] = res_u.ALT.apply(lambda x: x.strip('+'))
         res_u.ix[:, 'ALT'] = res_u.ALT.apply(lambda x: x.strip('-'))
-        res_u.ix[c_del, 'REF'] = res_u.REF[c_del] + res_u.ALT[c_del]
+        res_u.ix[c_ins, 'ALT'] = res_u.REF[c_ins] + res_u.ALT[c_ins]
+        res_u.ix[c_del, 'REF'] = res_u.ALT[c_del]
         res_u.ix[c_del, 'POS'] -= 1
         ref_pos = res_u[c_del].apply(lambda row:
                                      func.refAtPos(row['CHROM'],
