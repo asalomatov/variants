@@ -262,7 +262,7 @@ else:
     lls = res_u.test_var_alleles.apply(func.splitAlleles)
     res_u = res_u.merge(varid, left_index=True, right_index=True)
     res_u = res_u.merge(lls, left_index=True, right_index=True)
-    res_u.ix[: 'POS'] = res_u.POS.astype(int)
+    res_u['POS'] = res_u.POS.astype(int)
     if var_type.lower() == 'indel':
         c_ins = res_u.ALT.str.contains('+', regex=False)
         c_del = res_u.ALT.str.contains('-', regex=False)
