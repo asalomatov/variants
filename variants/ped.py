@@ -118,6 +118,24 @@ class Ped:
         assert len(res) == 1
         return res.iloc[0]
 
+    def getMoBam(self, family_id):
+        res = self.ped['bam'][(self.ped['fam_id'] == family_id) &
+                              (self.ped['sex'] == 2) &
+                              self.ped['fa_id'].isnull() &
+                              self.ped['mo_id'].isnull()]
+        if len(res.index) == 0: return None
+        assert len(res) == 1
+        return res.iloc[0]
+
+    def getFaBam(self, family_id):
+        res = self.ped['bam'][(self.ped['fam_id'] == family_id) &
+                              (self.ped['sex'] == 1) &
+                              self.ped['fa_id'].isnull() &
+                              self.ped['mo_id'].isnull()]
+        if len(res.index) == 0: return None
+        assert len(res) == 1
+        return res.iloc[0]
+
     def getFamily(self, individial_id):
         res = self.ped['fam_id'][(self.ped['ind_id'] == individial_id)]
         if len(res.index) == 0: return None
