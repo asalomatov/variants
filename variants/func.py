@@ -10,6 +10,14 @@ import numpy
 import collections
 import train
 import pysam
+import yaml
+
+
+def readYml(path):
+    with open(path, 'r') as f:
+        res = yaml.safe_load(f)
+    return res
+
 
 def makeDir(path):
     try:
