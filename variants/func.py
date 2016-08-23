@@ -328,7 +328,8 @@ def splitAlleles(x, n_allels=1):
     DP = sum(map(int, res[1::2]))
     res += [DP]
     col_names += ['DP']
-    return pandas.Series(res[:(n_allels + 1) * 2], col_names[:(n_allels + 1) * 2])
+    return pandas.Series(res[:(n_allels + 1) * 2] + res[-1:],
+                         col_names[:(n_allels + 1) * 2] + col_names[-1:])
 
 
 def mergeClmnsToInfo(df, clmn_list=[]):
@@ -347,13 +348,14 @@ def mergeClmnsToInfo(df, clmn_list=[]):
 def writePredAsVcf(pred_df, outp_file, min_DP=0):
     pred_df.reset_index(inplace=True, drop=True)
     # res1 = pred_df.var_id.apply(splitVarId)
-    # res2 = pred_df.test_var_alleles.apply(splitAlleles)
+    res2 = pred_df.test_var_alleles.apply(splitAlleles)
+    res2 = res2[['ref_DP', 'alt_DP', 'DP']]
     # x = pred_df.merge(res1, left_index=True, right_index=True)
-    # x = x.merge(res2, left_index=True, right_index=True)
+    x = pred_df.merge(res2, left_index=True, right_index=True)
     print 'shape all DP:', pred_df.shape
-    x = pred_df[(pred_df['DP_offspring'] >= min_DP) &
-                (pred_df['DP_father'] >= min_DP) &
-                (pred_df['DP_mother'] >= min_DP)]
+    x = x[(x['DP_offspring'] >= min_DP) &
+          (x['DP_father'] >= min_DP) &
+          (x['DP_mother'] >= min_DP)]
     print 'shape DP >= ', min_DP
     print x.shape
     required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER']
