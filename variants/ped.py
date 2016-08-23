@@ -58,7 +58,6 @@ class Ped:
         else:
             self.ped['test'] = file_pat
 
-
     def getAllMembers(self, family_id):
         return self.ped['ind_id'][self.ped['fam_id'] == family_id].tolist()
 

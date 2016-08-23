@@ -87,20 +87,20 @@ class Features:
         if self.sample_bam is None:
             sys.stderr.write('no bam file for ' + self.sample_id + '\n')
             return False
-        self.father_bam = self.ped.getIndivBAM(self.father_id)       
+        self.father_bam = self.ped.getFaBam(self.father_id, self.family_id)
         if self.father_bam is None:
             sys.stderr.write('no bam file for ' + self.father_id + '\n')
             return False
-        self.mother_bam = self.ped.getIndivBAM(self.mother_id)       
+        self.mother_bam = self.ped.getMoBam(self.mother_id, self.family_id)
         if self.mother_bam is None:
             sys.stderr.write('no bam file for ' + self.mother_id + '\n')
             return False
-        self.is_affected = self.ped.isAffected(self.sample_id)       
+        self.is_affected = self.ped.isAffected(self.sample_id)
         if self.is_affected is None:
             sys.stderr.write('no phenotype for ' + self.sample_id + '\n')
             return False
         return True
-   
+
     def removeTmpDir(self):
         tmpdir = os.path.dirname(self.sample_features)
         sys.stdout.write('removing ' + tmpdir)

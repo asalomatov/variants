@@ -336,7 +336,7 @@ class Variants:
         fam_var = []
         for next_var in myvars.vcf_reader:
             alt_allel = []
-            for nucl_alt in next_var.ALT: 
+            for nucl_alt in next_var.ALT:
                 alt_allel.append(nucl_alt.sequence)
             for v in alt_allel:
                 fam_var.append('_'.join([fam_id, next_var.CHROM, str(next_var.POS), next_var.REF, v]))
@@ -346,14 +346,15 @@ class Variants:
         """child != 0/0 and both parents == 0/0"""
         gt_ch = self.variants[smpl_ch].apply(lambda i: i.split(':')[0].strip())
         #gt = [i.strip() for i in gt]
-        self.variants[smpl_ch + '_gt'] = gt_ch        
+        self.variants[smpl_ch + '_gt'] = gt_ch
         gt_fa = self.variants[smpl_fa].apply(lambda i: i.split(':')[0].strip())
         #gt = [i.strip() for i in gt]
-        self.variants[smpl_fa + '_gt'] = gt_fa        
+        self.variants[smpl_fa + '_gt'] = gt_fa
         gt_mo = self.variants[smpl_mo].apply(lambda i: i.split(':')[0].strip())
         #gt = [i.strip() for i in gt]
-        self.variants[smpl_mo + '_gt'] = gt_mo        
-        c1 = self.variants[smpl_ch + '_gt'].isin(['1/1', '0/1', '0/2', '1|1', '0|1', '0|2'])
+        self.variants[smpl_mo + '_gt'] = gt_mo
+        c1 = self.variants[smpl_ch + '_gt'].isin(['1/1', '0/1', '0/2',
+                                                  '1|1', '0|1', '0|2'])
         c2 = self.variants[smpl_fa + '_gt'].isin(['0/0', '0|0'])
         c3 = self.variants[smpl_mo + '_gt'].isin(['0/0', '0|0'])
         self.variants = self.variants[c1 & c2 & c3]
