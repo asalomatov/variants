@@ -348,12 +348,13 @@ def summarizeMutations(infile,
         if df.empty:
             print('%s is empty' % prefix)
             return None
+        df = df[cols_to_output]
         df.columns = df.columns.str.replace('c_', '')
-        df[cols_to_output].to_csv(os.path.join(outp_dir,
-                                               '_'.join([prefix,
-                                                         var_type,
-                                                         suffix]) + '.csv'),
-                                  index=False)
+        df.to_csv(os.path.join(outp_dir,
+                               '_'.join([prefix,
+                                         var_type,
+                                         suffix]) + '.csv'),
+                  index=False)
     
     writeVariants(vn[c_all_denovo], cols_to_output[:-2] + extra_cols, var_type,
                   prefix, 'ALL_DENOVO', outp_dir)
