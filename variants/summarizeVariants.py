@@ -56,7 +56,6 @@ cols_to_output = [u'CHROM',
                   u'spidex_cds_type',
                   u'spidex_ss_dist',
                   u'FILTER',
-                  u'pred_prob',
                   u'var_id',
                   u'v_id']
 
@@ -321,7 +320,6 @@ def summarizeMutations(infile,
     c_impact_lof = vn['ANN[*].IMPACT'].str.contains(
         '|'.join(cfg['snpeff']['impact_lof']))
     vn['c_impact_lof'] = c_impact_lof
-
 #    vn_full = vn[c_lof]
     vn_lof = vn[c_lof & c_impact_lof & c_prev]
     vn_lof_clinical = vn[c_lof & c_impact_lof & c_prev & c_genes]
@@ -349,6 +347,7 @@ def summarizeMutations(infile,
         if df.empty:
             print('%s is empty' % prefix)
             return None
+        df.columns = df.columns.str.replace('c_', '')
         df[cols_to_output].to_csv(os.path.join(outp_dir,
                                                '_'.join([prefix,
                                                          var_type,
