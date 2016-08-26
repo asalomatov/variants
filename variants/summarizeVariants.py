@@ -60,7 +60,7 @@ cols_to_output = [u'CHROM',
                   u'var_id',
                   u'v_id']
 
-extra_cols = ['c_gene',
+extra_cols = ['c_spark_genes',
               'c_cohort_freq',
 #              'c_biotype',
               'c_effect_cat',
@@ -309,11 +309,11 @@ def summarizeMutations(infile,
 #             vn.c_biotype &\
     print('sum(c_prev)')
     print(sum(c_prev))
-    c_genes = vn['ANN[*].GENE'].str.contains(
+    c_spark_genes = vn['ANN[*].GENE'].str.contains(
         '|'.join(cfg['snpeff']['genes']))
-    vn['c_genes'] = c_genes
+    vn['c_spark_genes'] = c_spark_genes
     vn_mis = vn[c_dmg_miss & c_missense & c_prev]
-    vn_mis_clinical = vn[c_dmg_miss & c_missense & c_prev & c_genes]
+    vn_mis_clinical = vn[c_dmg_miss & c_missense & c_prev & c_spark_genes]
     print('shape vn_mis')
     print(vn_mis.shape)
 #    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn_mis, msg='dmg_miss')])
@@ -323,14 +323,14 @@ def summarizeMutations(infile,
 
 #    vn_full = vn[c_lof]
     vn_lof = vn[c_lof & c_impact_lof & c_prev]
-    vn_lof_clinical = vn[c_lof & c_impact_lof & c_prev & c_genes]
+    vn_lof_clinical = vn[c_lof & c_impact_lof & c_prev & c_spark_genes]
 #    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn_lof, msg='impact_lof')])
 
     vn_syn = vn[c_syn & c_prev]
-    vn_syn_clinical = vn[c_syn & c_prev & c_genes]
+    vn_syn_clinical = vn[c_syn & c_prev & c_spark_genes]
 
     vn_other = vn[c_other & c_prev]
-    vn_other_clinical = vn[c_other & c_prev & c_genes]
+    vn_other_clinical = vn[c_other & c_prev & c_spark_genes]
 #    print(vn.shape)
 
     c_FN = (vn.pred_labels == 0) & vn.status.isin(['Y'])
