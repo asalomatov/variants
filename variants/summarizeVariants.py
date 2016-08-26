@@ -60,7 +60,8 @@ cols_to_output = [u'CHROM',
                   u'var_id',
                   u'v_id']
 
-extra_cols = ['c_cohort_freq',
+extra_cols = ['c_genes',
+              'c_cohort_freq',
 #              'c_biotype',
               'c_effect_cat',
               'c_pop_freq',
@@ -259,6 +260,14 @@ def summarizeMutations(infile,
     vn = vn[~vn.FILTER.isnull()]
     print('vn shape in vcf')
     print(vn.shape)
+    
+    non_coding_vars = ['intron_variant', 'downstream_gene_variant',
+                       'upstream_gene_variant', 'sequence_feature',
+                       '5_prime_UTR_variant', '3_prime_UTR_variant']
+    vn['coding_var'] = True
+    for i in non_coding_vars:
+        vn.ix[vn['ANN[*].EFFECT'] == i, 'coding_var'] = False
+
 
     c_missense = vn['effect_cat'] == 'mis'
     c_lof = vn['effect_cat'] == 'lof'
@@ -292,8 +301,7 @@ def summarizeMutations(infile,
     c_dmg_miss = c_metaSVM_D | c_cadd_D | ((c_poly_HDIV_D | c_poly_HVAR_D) & c_sift_D & c_cadd_15)
     vn['c_dmg_miss'] = c_dmg_miss
 #   vn_full = vn[c_missense]
-    c_all_denovo = vn.c_cohort_freq &\
-                   vn.c_pop_freq &\
+    c_all_denovo = vn.c_cohort_freq & vn.c_pop_freq &\
                    vn.c_allele_frac
     c_prev = vn.c_cohort_freq &\
              vn.c_pop_freq &\
@@ -304,7 +312,7 @@ def summarizeMutations(infile,
     print(sum(c_prev))
     c_genes = vn['ANN[*].GENE'].str.contains(
         '|'.join(cfg['snpeff']['genes']))
-
+    vn['c_genes'] = c_genes
     vn_mis = vn[c_dmg_miss & c_missense & c_prev]
     vn_mis_clinical = vn[c_dmg_miss & c_missense & c_prev & c_genes]
     print('shape vn_mis')

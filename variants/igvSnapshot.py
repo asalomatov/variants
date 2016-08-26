@@ -31,7 +31,7 @@ input_file = args.input_file
 output_dir = args.output_dir
 
 
-igv_inp = pandas.read_csv(input_file, usecols=range(6), dtype=str)
+igv_inp = pandas.read_csv(input_file, dtype=str)
 myped = ped.Ped(args.ped_file, ['bam', 'vcf'])
 
 
@@ -74,14 +74,16 @@ for i, row in igv_inp.iterrows():
                         '-'.join([str(int(row['POS']) - 25),
                                   str(int(row['POS']) + 25)])])
     sample_snapshot_name = '_'.join([row['ind_id'],
+                                     row['lab_id'],
                                      row['CHROM'],
                                      row['POS'],
-                                     row['descr']]) + '.png'
+                                     row['ANN[*].GENE']]) + '.png'
     print sample_bam, father_bam, mother_bam, chr_pos, sample_snapshot_name
     snapshot_list.append(tmpl3 % locals())
 
 igv_scr = '\n'.join(snapshot_list)
 
+func.runInShell('mkdir -p ' + output_dir)
 input_file_bn = os.path.basename(input_file)
 script_out = os.path.join(output_dir, input_file_bn + '.igv')
 with open(script_out, 'w') as f:
