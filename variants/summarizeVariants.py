@@ -56,7 +56,6 @@ cols_to_output = [u'CHROM',
                   u'spidex_cds_type',
                   u'spidex_ss_dist',
                   u'FILTER',
-                  u'pred_prob',
                   u'var_id',
                   u'v_id']
 
@@ -360,26 +359,26 @@ def summarizeMutations(infile,
                   prefix, 'ALL_DENOVO', outp_dir)
     writeVariants(vn[vn.c_biotype], cols_to_output[:-2] + extra_cols, var_type,
                   prefix, 'ALL_DENOVO_CODING', outp_dir)
-    writeVariants(vn_FN, cols_to_output[:-2], var_type, prefix,
+    writeVariants(vn_FN, cols_to_output[:-2] + extra_cols, var_type, prefix,
                   'FN', outp_dir)
-    writeVariants(vn_TP, cols_to_output[:-2], var_type, prefix,
+    writeVariants(vn_TP, cols_to_output[:-2] + extra_cols, var_type, prefix,
                   'TP', outp_dir)
-    writeVariants(vn_mis, cols_to_output[:-2], var_type, prefix,
+    writeVariants(vn_mis, cols_to_output[:-2] + extra_cols, var_type, prefix,
                   'MIS', outp_dir)
-    writeVariants(vn_lof, cols_to_output[:-2], var_type, prefix,
+    writeVariants(vn_lof, cols_to_output[:-2] + extra_cols, var_type, prefix,
                   'LOF', outp_dir)
-    writeVariants(vn_syn, cols_to_output[:-2], var_type, prefix,
+    writeVariants(vn_syn, cols_to_output[:-2] + extra_cols, var_type, prefix,
                   'SYN', outp_dir)
-    writeVariants(vn_other, cols_to_output[:-2], var_type, prefix,
+    writeVariants(vn_other, cols_to_output[:-2] + extra_cols, var_type, prefix,
                   'OTHER', outp_dir)
-    writeVariants(vn_mis_clinical, cols_to_output[:-2], var_type, prefix + '_MIS',
-                  'clinical', outp_dir)
-    writeVariants(vn_lof_clinical, cols_to_output[:-2], var_type, prefix + '_LOF',
-                  'clinical', outp_dir)
-    writeVariants(vn_syn_clinical, cols_to_output[:-2], var_type, prefix + '_SYN',
-                  'clinical', outp_dir)
-    writeVariants(vn_other_clinical, cols_to_output[:-2], var_type, prefix + '_OTHER',
-                  'clinical', outp_dir)
+    writeVariants(vn_mis_clinical, cols_to_output[:-2] + extra_cols, var_type,
+                  prefix + '_MIS', 'clinical', outp_dir)
+    writeVariants(vn_lof_clinical, cols_to_output[:-2] + extra_cols, var_type,
+                  prefix + '_LOF', 'clinical', outp_dir)
+    writeVariants(vn_syn_clinical, cols_to_output[:-2] + extra_cols, var_type,
+                  prefix + '_SYN', 'clinical', outp_dir)
+    writeVariants(vn_other_clinical, cols_to_output[:-2] + extra_cols,
+                  var_type, prefix + '_OTHER', 'clinical', outp_dir)
 
 
 #    writeVariants(vn_diff, cols_to_output[:-2]+['step'], var_type,
