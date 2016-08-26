@@ -61,7 +61,7 @@ cols_to_output = [u'CHROM',
 
 extra_cols = ['c_spark_genes',
               'c_cohort_freq',
-#              'c_biotype',
+              'coding_var',
               'c_effect_cat',
               'c_pop_freq',
               'c_allele_frac',
