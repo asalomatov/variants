@@ -56,10 +56,11 @@ cols_to_output = [u'CHROM',
                   u'spidex_cds_type',
                   u'spidex_ss_dist',
                   u'FILTER',
+                  u'pred_prob',
                   u'var_id',
                   u'v_id']
 
-extra_cols = ['c_genes',
+extra_cols = ['c_gene',
               'c_cohort_freq',
 #              'c_biotype',
               'c_effect_cat',
@@ -267,7 +268,6 @@ def summarizeMutations(infile,
     for i in non_coding_vars:
         vn.ix[vn['ANN[*].EFFECT'] == i, 'coding_var'] = False
 
-
     c_missense = vn['effect_cat'] == 'mis'
     c_lof = vn['effect_cat'] == 'lof'
     c_syn = vn['effect_cat'] == 'syn'
@@ -320,6 +320,7 @@ def summarizeMutations(infile,
     c_impact_lof = vn['ANN[*].IMPACT'].str.contains(
         '|'.join(cfg['snpeff']['impact_lof']))
     vn['c_impact_lof'] = c_impact_lof
+
 #    vn_full = vn[c_lof]
     vn_lof = vn[c_lof & c_impact_lof & c_prev]
     vn_lof_clinical = vn[c_lof & c_impact_lof & c_prev & c_genes]
