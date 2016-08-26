@@ -299,6 +299,10 @@ def summarizeMutations(infile,
     c_dmg_miss = c_metaSVM_D | c_cadd_D | ((c_poly_HDIV_D | c_poly_HVAR_D) & c_sift_D & c_cadd_15)
     vn['c_dmg_miss'] = c_dmg_miss
 #   vn_full = vn[c_missense]
+    c_impact_lof = vn['ANN[*].IMPACT'].str.contains(
+        '|'.join(cfg['snpeff']['impact_lof']))
+    vn['c_impact_lof'] = c_impact_lof
+
     c_all_denovo = vn.c_cohort_freq & vn.c_pop_freq &\
                    vn.c_allele_frac
     c_prev = vn.c_cohort_freq &\
@@ -316,10 +320,6 @@ def summarizeMutations(infile,
     print('shape vn_mis')
     print(vn_mis.shape)
 #    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn_mis, msg='dmg_miss')])
-    c_impact_lof = vn['ANN[*].IMPACT'].str.contains(
-        '|'.join(cfg['snpeff']['impact_lof']))
-    vn['c_impact_lof'] = c_impact_lof
-
 #    vn_full = vn[c_lof]
     vn_lof = vn[c_lof & c_impact_lof & c_prev]
     vn_lof_clinical = vn[c_lof & c_impact_lof & c_prev & c_spark_genes]
