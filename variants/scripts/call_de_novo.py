@@ -258,6 +258,9 @@ else:
     res_u.ix[:, 'pred_labels'] = (res_u['pred_prob'] > prob_cutoff).astype(int)
     res_u = res_u[res_u.pred_labels == 1]
     res_u.reset_index(inplace=True)
+    print('found de novo')
+    print(res_u.shape)
+    sys.exit(0)
     varid = res_u.var_id.apply(func.splitVarId)
     lls = res_u.test_var_alleles.apply(func.splitAlleles)
     res_u = res_u.merge(varid, left_index=True, right_index=True)
