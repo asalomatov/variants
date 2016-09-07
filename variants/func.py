@@ -181,7 +181,7 @@ def readBamReadcount(file_name, vartype='snp', n_clmns_per_allele=14):
     """Read bam-readcount output into pandas DF.
     """
     clm_names = ['CHROM', 'POS', 'REF', 'DP', 'ZERO', 'A', 'C', 'G', 'T',
-                 'N', 'INDEL', 'INDEL1', 'INDEL2', 'INDEL3']
+                 'N', 'INDEL', 'INDEL1', 'INDEL2', 'INDEL3'] + list('12345')
     clm_dtypes = collections.OrderedDict()
     for i in clm_names:
         clm_dtypes[i] = str
@@ -201,6 +201,7 @@ def readBamReadcount(file_name, vartype='snp', n_clmns_per_allele=14):
     reader['INDEL3'][reader.INDEL3.isnull()] = ':'.join(['0'] *
                                                         n_clmns_per_allele)
     reader.drop('ZERO', axis=1, inplace=True)
+    reader.drop(list('12345'), axis=1, inplace=True)
     # return reader
     if vartype.lower() == 'snp':
         print('parsing %s' % vartype)
