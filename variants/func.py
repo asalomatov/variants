@@ -190,7 +190,7 @@ def readBamReadcount(file_name, vartype='snp', n_clmns_per_allele=14):
         header=None,
         dtype=clm_dtypes,
         names=list(clm_names),
-        usecols=range(len(clm_names)),
+#        usecols=range(len(clm_names)),
         sep='\t')
     reader['INDEL'][reader.INDEL.isnull()] = ':'.join(['0'] *
                                                       n_clmns_per_allele)
