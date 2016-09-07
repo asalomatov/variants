@@ -181,7 +181,7 @@ def readBamReadcount(file_name, vartype='snp', n_clmns_per_allele=14):
     """Read bam-readcount output into pandas DF.
     """
     clm_names = ['CHROM', 'POS', 'REF', 'DP', 'ZERO', 'A', 'C', 'G', 'T',
-                 'N', 'INDEL', 'INDEL1', 'INDEL2']
+                 'N', 'INDEL', 'INDEL1', 'INDEL2', 'INDEL3']
     clm_dtypes = collections.OrderedDict()
     for i in clm_names:
         clm_dtypes[i] = str
@@ -190,13 +190,15 @@ def readBamReadcount(file_name, vartype='snp', n_clmns_per_allele=14):
         header=None,
         dtype=clm_dtypes,
         names=list(clm_names),
-        # usecols=[0, 1, 2, 3, 5, 6, 7, 8, 9, 10],
+        usecols=range(len(clm_names)),
         sep='\t')
     reader['INDEL'][reader.INDEL.isnull()] = ':'.join(['0'] *
                                                       n_clmns_per_allele)
     reader['INDEL1'][reader.INDEL1.isnull()] = ':'.join(['0'] *
                                                         n_clmns_per_allele)
     reader['INDEL2'][reader.INDEL2.isnull()] = ':'.join(['0'] *
+                                                        n_clmns_per_allele)
+    reader['INDEL3'][reader.INDEL3.isnull()] = ':'.join(['0'] *
                                                         n_clmns_per_allele)
     reader.drop('ZERO', axis=1, inplace=True)
     # return reader
@@ -218,7 +220,7 @@ def parseBamReadcountIndel(row):
     ref_split = row[row['REF']].split(':')
     ref_split = ref_split[:1] + [float(x) for x in ref_split[1:]]
     # now arrgegate information for alt allels
-    possib_alt = ['INDEL', 'INDEL1', 'INDEL2']
+    possib_alt = ['INDEL', 'INDEL1', 'INDEL2', 'INDEL3']
     num_allels = 0
     alt_read_count = 0
     cum_array = numpy.zeros(12)
