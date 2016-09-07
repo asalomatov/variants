@@ -260,7 +260,9 @@ else:
     res_u.reset_index(inplace=True)
     print('found de novo')
     print(res_u.shape)
-    sys.exit(0)
+    if res_u.empty:
+        print('found no de novo')
+        sys.exit(0)
     varid = res_u.var_id.apply(func.splitVarId)
     lls = res_u.test_var_alleles.apply(func.splitAlleles)
     res_u = res_u.merge(varid, left_index=True, right_index=True)
