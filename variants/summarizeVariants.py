@@ -46,6 +46,7 @@ cols_to_output = [u'CHROM',
                   u'pLI',
                   u'pRec',
                   u'pNull',
+                  u'SFARIscore',
                   u'spidex_dpsi_max_tissue',
                   u'spidex_dpsi_zscore',
                   u'spidex_gene',
@@ -101,7 +102,8 @@ def summarizeMutations(infile,
                        prefix,
                        outp_dir,
                        config_file,
-                       exac_anno='/mnt/scratch/asalomatov/data/ExAC/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt'):
+                       exac_anno='/mnt/scratch/asalomatov/data/ExAC/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt',
+                       sfari_scores='/mnt/scratch/asalomatov/data/SFARI/gene-score-only.csv'):
     with open(config_file, 'r') as f:
         cfg = yaml.safe_load(f)
 
@@ -127,12 +129,16 @@ def summarizeMutations(infile,
     #kv_vcf['var_id'] = kv_vcf.ind_id.astype(str)+'_'+kv_vcf.CHROM.astype(str)+'_'+kv_vcf.POS.astype(str)
     #effects_of_interest = effects_loss_of_func + '|' + effect_damaging_missense + '|' + effect_synon
     exac = pandas.read_table(exac_anno)
+    sfari_scores_df = pandas.read_csv(sfari_scores)
     vn = pandas.read_table(infile)
     vn.columns = vn.columns.str.translate(None, '#')
     print(vn.shape)
     vn.ix[:, 'gene'] = vn['ANN[*].GENE']
     vn = vn.merge(
         exac[[u'syn_z', u'mis_z', u'lof_z', u'pLI', u'pRec', u'pNull', u'gene']],
+        on='gene', how='left')
+    vn = vn.merge(
+        sfari_scores_df,
         on='gene', how='left')
     print(vn.shape)
     vn['v_id'] = vn.ind_id.astype(str) + '_' +\
