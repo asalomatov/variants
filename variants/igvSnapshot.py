@@ -64,7 +64,7 @@ snapshot %(sample_snapshot_name)s
 snapshot_list = []
 
 for i, row in igv_inp.iterrows():
-    smpl_id = row['ind_id']
+    smpl_id = row['SP_id']
     trio_id = myped.getFamily(smpl_id)
     print trio_id
     sample_bam = myped.getIndivBAM(smpl_id)
@@ -73,7 +73,7 @@ for i, row in igv_inp.iterrows():
     chr_pos = ':'.join([row['CHROM'],
                         '-'.join([str(int(row['POS']) - 25),
                                   str(int(row['POS']) + 25)])])
-    sample_snapshot_name = '_'.join([row['ind_id'],
+    sample_snapshot_name = '_'.join([row['SP_id'],
                                      row['lab_id'],
                                      row['CHROM'],
                                      row['POS'],

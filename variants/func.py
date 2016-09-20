@@ -19,6 +19,11 @@ def readYml(path):
     return res
 
 
+def dumpYml(path, x):
+    with open(path, 'w') as f:
+        yaml.dump(x, f, default_flow_style=False)
+
+
 def makeDir(path):
     try:
         os.mkdir(path)
@@ -372,7 +377,25 @@ def writePredAsVcf(pred_df, outp_file, min_DP=0):
     return 0
 
 
+def writeTableAsVcf(df, outp_file):
+    """write a pandas data frame containing
+    CHROM, POS, ID, REF, ALT
+    to a vcf file. Remaining columns will preserved in INFO column
+    """
+    df.reset_index(inplace=True, drop=True)
+    required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER']
+    for i in required_fields:
+        if i not in df.columns:
+            df[i] = '.'
+    info_col = [i for i in df.columns if i not in required_fields]
+    df['INFO'] = mergeClmnsToInfo(df, info_col)
+    df[required_fields + ['INFO']].to_csv(outp_file, sep='\t', index=False,
+                                          header=False)
+    return 0
+
+
 def getFieldFromVCF(row, ped_obj, field=6):
+#    print row
     ind_id = str(row['ind_id'])
     vcf = ped_obj.getIndivVCF(ind_id)
     cat = 'bcftools view'
@@ -380,6 +403,7 @@ def getFieldFromVCF(row, ped_obj, field=6):
 #        cat = 'zcat '
     chrom = str(row['CHROM'])
     pos = str(row['POS'])
+#    print ind_id, vcf, cat, chrom, pos
     cmd = ' '.join([cat, vcf, ':'.join([chrom, pos]), '| grep -v ^# | grep ', str(pos)])
     # print cmd
     res = runInShell(cmd, return_output=1)
