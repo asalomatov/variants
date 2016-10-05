@@ -9,7 +9,7 @@ work_dir="$(dirname $input_tsv)"
 
 cp ${script_dir}/header_extra.txt ${work_dir}/${prefix}.vcf
 cat $input_tsv | sort -V -k1,1 -k2,2 >> ${work_dir}/${prefix}.vcf
-vcfintersect -b $target_bed ${work_dir}/${prefix}.vcf > ${work_dir}/${prefix}-targ.vcf
+vcfintersect -b $target_bed ${work_dir}/${prefix}.vcf > ${work_dir}/targ-${prefix}.vcf
 make -f ${script_dir}/annSnpEff.mk PREFIX=${prefix} SUFFIX=.vcf INDIR=$work_dir OUTDIR=$work_dir
 cat ${work_dir}/${prefix}-ann.vcf | \
     /bioinfo/software/installs/bcbio_nextgen/150607/Cellar/snpeff/4.1g/share/scripts/vcfEffOnePerLine.pl > \

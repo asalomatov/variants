@@ -12,7 +12,13 @@ java -jar /mnt/xfs1/bioinfo/software/installs/bcbio_nextgen/150607/Cellar/snpeff
     "dbNSFP_GERP_RS"  "dbNSFP_genename"  \
     "dbNSFP_GERP_NR" "dbNSFP_Ensembl_transcriptid"  \
     "dbNSFP_Polyphen2_HVAR_score"  "dbNSFP_MutationAssessor_score" \
-    "dbNSFP_Ensembl_proteinid" "dbNSFP_rs_dbSNP142" \
+    "dbNSFP_Ensembl_proteinid" "dbNSFP_rs_dbSNP146" \
+    "dbNSFP_aapos" \
+    "dbNSFP_aaref" \
+    "dbNSFP_aaalt" \
+    "dbNSFP_Uniprot_acc_Polyphen2" \
+    "dbNSFP_Uniprot_id_Polyphen2" \
+    "dbNSFP_Uniprot_aapos_Polyphen2" \
     "dbNSFP_Ensembl_geneid" "dbNSFP_CADD_raw" \
     "dbNSFP_GERP_RS_rankscore" \
     "dbNSFP_SIFT_score" \

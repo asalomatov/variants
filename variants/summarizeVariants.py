@@ -32,7 +32,13 @@ cols_to_output = [u'CHROM',
                   u'ANN[*].GENEID',
                   u'ANN[*].FEATUREID',
                   u'ANN[*].BIOTYPE',
-                  u'dbNSFP_rs_dbSNP142',
+                  u'dbNSFP_rs_dbSNP146',
+                  u'dbNSFP_aapos',
+                  u'dbNSFP_aaref',
+                  u'dbNSFP_aaalt',
+                  u'dbNSFP_Uniprot_acc_Polyphen2',
+                  u'dbNSFP_Uniprot_id_Polyphen2',
+                  u'dbNSFP_Uniprot_aapos_Polyphen2',
                   u'dbNSFP_1000Gp3_AF',
                   u'dbNSFP_ExAC_AF',
                   u'dbNSFP_Polyphen2_HVAR_pred',
@@ -103,6 +109,8 @@ def summarizeMutations(infile,
                        outp_dir,
                        config_file,
                        exac_anno='/mnt/scratch/asalomatov/data/ExAC/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt',
+                       asd_gene_prob_anno='/mnt/scratch/asalomatov/data/gene-scores/asd_gene_prediction_olga.csv',
+                       ios_anno='/mnt/scratch/asalomatov/data/gene-scores/ioss_lgd_rvis.scores.csv',
                        sfari_scores='/mnt/scratch/asalomatov/data/SFARI/gene-score-only.csv'):
     with open(config_file, 'r') as f:
         cfg = yaml.safe_load(f)
@@ -121,14 +129,9 @@ def summarizeMutations(infile,
         myped = ped.Ped(ped_file_extended, ['bam', 'vcf'])
     else:
         sys.exit('ped_file or ped_file_extended must be defined')
-
-
-    #kv_vcf = pandas.read_csv('/mnt/scratch/asalomatov/data/columbia/feature_sets/known/all_known.txt', sep='\t')
-    #kv_vcf = kv_vcf[['ind_id','CHROM', 'POS', 'REF_offspring', 'ALT_base_offspring', 'status', 'descr', 'DP_offspring', 'DP_father', 'DP_mother']]
-    #kv_vcf = kv_vcf[kv_vcf.descr.isin(['after'])]
-    #kv_vcf['var_id'] = kv_vcf.ind_id.astype(str)+'_'+kv_vcf.CHROM.astype(str)+'_'+kv_vcf.POS.astype(str)
-    #effects_of_interest = effects_loss_of_func + '|' + effect_damaging_missense + '|' + effect_synon
     exac = pandas.read_table(exac_anno)
+#    asd_gene_prob_df = pandas.read_csv(asd_gene_prob_anno)
+#    ios_anno_df = pandas.read_csv(ios_anno)
     sfari_scores_df = pandas.read_csv(sfari_scores)
     vn = pandas.read_table(infile)
     vn.columns = vn.columns.str.translate(None, '#')
