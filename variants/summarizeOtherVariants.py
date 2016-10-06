@@ -32,7 +32,13 @@ cols_to_output = [u'CHROM',
                   u'ANN[*].GENEID',
                   u'ANN[*].FEATUREID',
                   u'ANN[*].BIOTYPE',
-                  u'dbNSFP_rs_dbSNP142',
+                  u'dbNSFP_rs_dbSNP146',
+                  u'dbNSFP_aapos',
+                  u'dbNSFP_aaref',
+                  u'dbNSFP_aaalt',
+                  u'dbNSFP_Uniprot_acc_Polyphen2',
+                  u'dbNSFP_Uniprot_id_Polyphen2',
+                  u'dbNSFP_Uniprot_aapos_Polyphen2',
                   u'dbNSFP_1000Gp3_AF',
                   u'dbNSFP_ExAC_AF',
                   u'dbNSFP_Polyphen2_HVAR_pred',
@@ -285,10 +291,19 @@ def summarizeMutations(infile,
 #    c_metaSVM_null = vn.dbNSFP_MetaSVM_pred.isin(['ZZZ', '.'])
 
     c_cadd_null = vn.dbNSFP_CADD_phred.isin(['ZZZ', '.'])
-    c_cadd_D = vn.dbNSFP_CADD_phred[~c_cadd_null].apply(
+    vn.ix[c_cadd_null, 'dbNSFP_CADD_phred'] == 0
+    vn.dbNSFP_CADD_phred.str.replace(',\.', ',0').value_counts()
+    vn.dbNSFP_CADD_phred.str.replace('\.,', '0,').value_counts()
+    c_cadd_D = vn.dbNSFP_CADD_phred.apply(
         lambda x: min(map(float, x.split(',')))) >= cfg['db_nsfp']['cadd_phred']
     c_cadd_15 = vn.dbNSFP_CADD_phred[~c_cadd_null].apply(
         lambda x: min(map(float, x.split(',')))) >= cfg['db_nsfp']['combined']['cadd_phred']
+
+#    c_cadd_null = vn.dbNSFP_CADD_phred.isin(['ZZZ', '.'])
+#    c_cadd_D = vn.dbNSFP_CADD_phred[~c_cadd_null].apply(
+#        lambda x: min(map(float, x.split(',')))) >= cfg['db_nsfp']['cadd_phred']
+#    c_cadd_15 = vn.dbNSFP_CADD_phred[~c_cadd_null].apply(
+#        lambda x: min(map(float, x.split(',')))) >= cfg['db_nsfp']['combined']['cadd_phred']
 
 #    c_poly_HVAR_null = vn.dbNSFP_Polyphen2_HVAR_pred.isin(['ZZZ', '.'])
 #    c_poly_HDIV_null = vn.dbNSFP_Polyphen2_HVAR_pred.isin(['ZZZ', '.'])

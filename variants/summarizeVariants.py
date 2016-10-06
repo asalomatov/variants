@@ -288,26 +288,24 @@ def summarizeMutations(infile,
 #    c_metaSVM_null = vn.dbNSFP_MetaSVM_pred.isin(['ZZZ', '.'])
 
     c_cadd_null = vn.dbNSFP_CADD_phred.isin(['ZZZ', '.'])
-    c_cadd_D = vn.dbNSFP_CADD_phred[~c_cadd_null].apply(
+    vn.ix[c_cadd_null, 'dbNSFP_CADD_phred'] == 0
+    vn.dbNSFP_CADD_phred.str.replace(',\.', ',0').value_counts()
+    vn.dbNSFP_CADD_phred.str.replace('\.,', '0,').value_counts()
+    c_cadd_D = vn.dbNSFP_CADD_phred.apply(
         lambda x: min(map(float, x.split(',')))) >= cfg['db_nsfp']['cadd_phred']
     c_cadd_15 = vn.dbNSFP_CADD_phred[~c_cadd_null].apply(
         lambda x: min(map(float, x.split(',')))) >= cfg['db_nsfp']['combined']['cadd_phred']
 
-#    c_poly_HVAR_null = vn.dbNSFP_Polyphen2_HVAR_pred.isin(['ZZZ', '.'])
-#    c_poly_HDIV_null = vn.dbNSFP_Polyphen2_HVAR_pred.isin(['ZZZ', '.'])
     c_poly_HVAR_D = vn.dbNSFP_Polyphen2_HVAR_pred.str.contains(
         '|'.join(cfg['db_nsfp']['combined']['polyphen2_pred']))
     c_poly_HDIV_D = vn.dbNSFP_Polyphen2_HVAR_pred.str.contains(
         '|'.join(cfg['db_nsfp']['combined']['polyphen2_pred']))
 
-#    c_sift_null = vn.dbNSFP_SIFT_pred.isin(['ZZZ', '.'])
     c_sift_D = vn.dbNSFP_SIFT_pred.str.contains(
         '|'.join(cfg['db_nsfp']['combined']['sift_pred']))
- #   c_new = (vn.pred_labels == 1) & (~vn.status.isin(['Y']))
-
-    c_dmg_miss = c_metaSVM_D | c_cadd_D | ((c_poly_HDIV_D | c_poly_HVAR_D) & c_sift_D & c_cadd_15)
+    c_dmg_miss = c_metaSVM_D | c_cadd_D |\
+                 ((c_poly_HDIV_D | c_poly_HVAR_D) & c_sift_D & c_cadd_15)
     vn['c_dmg_miss'] = c_dmg_miss
-#   vn_full = vn[c_missense]
     c_impact_lof = vn['ANN[*].IMPACT'].str.contains(
         '|'.join(cfg['snpeff']['impact_lof']))
     vn['c_impact_lof'] = c_impact_lof
