@@ -289,11 +289,11 @@ def summarizeMutations(infile,
 
     print(vn.dbNSFP_CADD_phred.value_counts())
     c_cadd_null = vn.dbNSFP_CADD_phred.isin(['ZZZ', '.'])
-    vn.ix[c_cadd_null, 'dbNSFP_CADD_phred'] == 0
+    vn.ix[c_cadd_null, 'dbNSFP_CADD_phred'] = 0
     print(vn.dbNSFP_CADD_phred.value_counts())
-    vn.ix[:, 'dbNSFP_CADD_phred'] == vn.dbNSFP_CADD_phred.str.replace(',\.', ',0')
+    vn.ix[:, 'dbNSFP_CADD_phred'] = vn.dbNSFP_CADD_phred.str.replace(',\.', ',0')
     print(vn.dbNSFP_CADD_phred.value_counts())
-    vn.ix[:, 'dbNSFP_CADD_phred'] == vn.dbNSFP_CADD_phred.str.replace('\.,', '0,')
+    vn.ix[:, 'dbNSFP_CADD_phred'] = vn.dbNSFP_CADD_phred.str.replace('\.,', '0,')
     print(vn.dbNSFP_CADD_phred.value_counts())
     c_cadd_D = vn.dbNSFP_CADD_phred.apply(
         lambda x: max(map(float, x.split(',')))) >= cfg['db_nsfp']['cadd_phred']
