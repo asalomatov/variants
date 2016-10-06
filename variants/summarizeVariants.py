@@ -285,16 +285,20 @@ def summarizeMutations(infile,
     vn['c_syn'] = c_syn
 
     c_metaSVM_D = vn.dbNSFP_MetaSVM_pred.str.contains('|'.join(cfg['db_nsfp']['metaSVM_pred']))
-#    c_metaSVM_null = vn.dbNSFP_MetaSVM_pred.isin(['ZZZ', '.'])
+    #    c_metaSVM_null = vn.dbNSFP_MetaSVM_pred.isin(['ZZZ', '.'])
 
+    print(vn.dbNSFP_CADD_phred.value_counts())
     c_cadd_null = vn.dbNSFP_CADD_phred.isin(['ZZZ', '.'])
     vn.ix[c_cadd_null, 'dbNSFP_CADD_phred'] == 0
-    vn.dbNSFP_CADD_phred.str.replace(',\.', ',0').value_counts()
-    vn.dbNSFP_CADD_phred.str.replace('\.,', '0,').value_counts()
+    print(vn.dbNSFP_CADD_phred.value_counts())
+    vn.ix[:, 'dbNSFP_CADD_phred'] == vn.dbNSFP_CADD_phred.str.replace(',\.', ',0')
+    print(vn.dbNSFP_CADD_phred.value_counts())
+    vn.ix[:, 'dbNSFP_CADD_phred'] == vn.dbNSFP_CADD_phred.str.replace('\.,', '0,')
+    print(vn.dbNSFP_CADD_phred.value_counts())
     c_cadd_D = vn.dbNSFP_CADD_phred.apply(
-        lambda x: min(map(float, x.split(',')))) >= cfg['db_nsfp']['cadd_phred']
-    c_cadd_15 = vn.dbNSFP_CADD_phred[~c_cadd_null].apply(
-        lambda x: min(map(float, x.split(',')))) >= cfg['db_nsfp']['combined']['cadd_phred']
+        lambda x: max(map(float, x.split(',')))) >= cfg['db_nsfp']['cadd_phred']
+    c_cadd_15 = vn.dbNSFP_CADD_phred.apply(
+        lambda x: max(map(float, x.split(',')))) >= cfg['db_nsfp']['combined']['cadd_phred']
 
     c_poly_HVAR_D = vn.dbNSFP_Polyphen2_HVAR_pred.str.contains(
         '|'.join(cfg['db_nsfp']['combined']['polyphen2_pred']))
