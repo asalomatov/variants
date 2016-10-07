@@ -284,27 +284,28 @@ def summarizeMutations(infile,
     vn['c_lof'] = c_lof
     vn['c_syn'] = c_syn
 
-    c_metaSVM_D = vn.dbNSFP_MetaSVM_pred.str.contains('|'.join(cfg['db_nsfp']['metaSVM_pred']))
-    #    c_metaSVM_null = vn.dbNSFP_MetaSVM_pred.isin(['ZZZ', '.'])
-
+    c_metaSVM_D = vn.dbNSFP_MetaSVM_pred.str.contains(
+        '|'.join(cfg['db_nsfp']['metaSVM_pred']))
     print(vn.dbNSFP_CADD_phred.value_counts())
     c_cadd_null = vn.dbNSFP_CADD_phred.isin(['ZZZ', '.'])
     vn.ix[c_cadd_null, 'dbNSFP_CADD_phred'] = 0
     print(vn.dbNSFP_CADD_phred.value_counts())
-    vn.ix[:, 'dbNSFP_CADD_phred'] = vn.dbNSFP_CADD_phred.str.replace(',\.', ',0')
+    vn.ix[:, 'dbNSFP_CADD_phred'] = vn.dbNSFP_CADD_phred.astype(
+        str).str.replace(',\.', ',0')
     print(vn.dbNSFP_CADD_phred.value_counts())
-    vn.ix[:, 'dbNSFP_CADD_phred'] = vn.dbNSFP_CADD_phred.str.replace('\.,', '0,')
+    vn.ix[:, 'dbNSFP_CADD_phred'] = vn.dbNSFP_CADD_phred.astype(
+        str).str.replace('\.,', '0,')
     print(vn.dbNSFP_CADD_phred.value_counts())
     c_cadd_D = vn.dbNSFP_CADD_phred.astype(str).apply(
-        lambda x: max(map(float, x.split(',')))) >= cfg['db_nsfp']['cadd_phred']
+        lambda x: max(map(float, x.split(',')))) >=\
+        cfg['db_nsfp']['cadd_phred']
     c_cadd_15 = vn.dbNSFP_CADD_phred.astype(str).apply(
-        lambda x: max(map(float, x.split(',')))) >= cfg['db_nsfp']['combined']['cadd_phred']
-
+        lambda x: max(map(float, x.split(',')))) >=\
+        cfg['db_nsfp']['combined']['cadd_phred']
     c_poly_HVAR_D = vn.dbNSFP_Polyphen2_HVAR_pred.str.contains(
         '|'.join(cfg['db_nsfp']['combined']['polyphen2_pred']))
     c_poly_HDIV_D = vn.dbNSFP_Polyphen2_HVAR_pred.str.contains(
         '|'.join(cfg['db_nsfp']['combined']['polyphen2_pred']))
-
     c_sift_D = vn.dbNSFP_SIFT_pred.str.contains(
         '|'.join(cfg['db_nsfp']['combined']['sift_pred']))
     c_dmg_miss = c_metaSVM_D | c_cadd_D |\
@@ -313,7 +314,6 @@ def summarizeMutations(infile,
     c_impact_lof = vn['ANN[*].IMPACT'].str.contains(
         '|'.join(cfg['snpeff']['impact_lof']))
     vn['c_impact_lof'] = c_impact_lof
-
     c_all_denovo = vn.c_cohort_freq & vn.c_pop_freq &\
                    vn.c_allele_frac
     c_prev = vn.c_cohort_freq &\
