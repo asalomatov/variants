@@ -295,9 +295,9 @@ def summarizeMutations(infile,
     vn.ix[:, 'dbNSFP_CADD_phred'] = vn.dbNSFP_CADD_phred.str.replace(',\.', ',0')
     vn.ix[:, 'dbNSFP_CADD_phred'] = vn.dbNSFP_CADD_phred.str.replace('\.,', '0,')
     c_cadd_D = vn.dbNSFP_CADD_phred.astype(str).apply(
-        lambda x: max(map(float, str(x).split(',')))) >= cfg['db_nsfp']['cadd_phred']
+        lambda x: max(map(float, x.split(',')))) >= cfg['db_nsfp']['cadd_phred']
     c_cadd_15 = vn.dbNSFP_CADD_phred.astype(str).apply(
-        lambda x: max(map(float, str(x).split(',')))) >= cfg['db_nsfp']['combined']['cadd_phred']
+        lambda x: max(map(float, x.split(',')))) >= cfg['db_nsfp']['combined']['cadd_phred']
 
 #    c_cadd_null = vn.dbNSFP_CADD_phred.isin(['ZZZ', '.'])
 #    c_cadd_D = vn.dbNSFP_CADD_phred[~c_cadd_null].apply(
