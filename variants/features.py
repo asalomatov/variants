@@ -67,7 +67,7 @@ class Features:
     def __trioChecked(self):
         """Check if all members, and their files are defined in ped.
         """
-        self.family_id = self.ped.getFamily(self.sample_id)       
+        self.family_id = self.ped.getChildsFamily(self.sample_id)       
         if self.family_id is None:
             sys.stderr.write('no family for ' + self.sample_id + '\n')
             return False
