@@ -214,7 +214,7 @@ class Variants:
         cat = 'cat'
         if compression is not None:
             cat = 'zcat'
-        cmd = ' '.join([cat, path, '| grep ^# | grep -v ^##'])
+        cmd = ' '.join([cat, path, '| head -10000 | grep ^# | grep -v ^##'])
         vcf_clmns = func.runInShell(cmd, True).split('\t')
         vcf_clmns = [x.strip() for x in vcf_clmns]        
         vcf_clmns = [x.strip('#') for x in vcf_clmns]        
