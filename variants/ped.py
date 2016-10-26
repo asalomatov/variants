@@ -142,8 +142,8 @@ class Ped:
         return res.iloc[0]
 
     def getChildsFamily(self, individial_id):
-        myped_children = self.ped[(self.ped.fa_id != '0') &
-                                  self.ped.mo_id != '0']
+        myped_children = self.ped[(~self.ped.fa_id.isnull()) &
+                                  (~self.ped.mo_id.isnull())]
         res = myped_children['fam_id'][(myped_children['ind_id'] ==
                                         individial_id)]
         if len(res.index) == 0:
