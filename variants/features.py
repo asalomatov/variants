@@ -71,6 +71,8 @@ class Features:
         if self.family_id is None:
             sys.stderr.write('no family for ' + self.sample_id + '\n')
             return False
+        # remove all other families from ped file
+        self.ped = self.ped[self.ped.fam_id == self.family_id]
         self.father_id = self.ped.getFather(self.family_id)       
         if self.father_id is None:
             sys.stderr.write('no father in family ' + self.family_id + '\n')
