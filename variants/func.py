@@ -13,6 +13,36 @@ import pysam
 import yaml
 
 
+def readVcfToDF(fname, chunk_size=None):
+    """read vcf or file into pandas DF without parsing,
+    also works for reading VEP output files"""
+    # after github/hammerlab/varcode/vcf but keeping sample information
+    compression = None
+    if fname.endswith(".gz"):
+        compression = "gzip"
+    elif fname.endswith(".bz2"):
+        compression = "bz2"
+    cat = 'cat'
+    if compression is not None:
+        cat = 'zcat'
+    cmd = ' '.join([cat, fname, '| grep ^# | grep -v ^##'])
+    vcf_clmns = runInShell(cmd, True).split('\t')
+    vcf_clmns = [x.strip() for x in vcf_clmns]
+    vcf_clmns = [x.strip('#') for x in vcf_clmns]        
+    vcf_field_types = collections.OrderedDict()
+    for i in vcf_clmns:
+        vcf_field_types[i] = str
+    reader = pandas.read_table(
+        fname,
+        compression=compression,
+        comment="#",
+        chunksize=chunk_size,
+        dtype=vcf_field_types,
+        names=list(vcf_field_types),
+        usecols=range(len(vcf_field_types)))
+    return reader
+
+
 def readYml(path):
     with open(path, 'r') as f:
         res = yaml.safe_load(f)
