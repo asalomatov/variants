@@ -141,6 +141,16 @@ class Ped:
         assert len(res) == 1
         return res.iloc[0]
 
+    def getChildsFamily(self, individial_id):
+        myped_children = self.ped[(self.ped.fa_id != '0') &
+                                  self.ped.mo_id != '0']
+        res = myped_children['fam_id'][(myped_children['ind_id'] ==
+                                        individial_id)]
+        if len(res.index) == 0:
+            return None
+        assert len(res) == 1
+        return res.iloc[0]
+
     def getFamilyVCF(self, family_id):
         res = self.ped['vcf'][(self.ped['fam_id'] == family_id)]
         res = res.unique()
