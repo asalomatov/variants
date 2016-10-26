@@ -112,7 +112,8 @@ class Features:
         """For the defined sample extract variant loci from the vcf file.
         """
         vrs = variants.Variants(self.sample_vcf, self.family_id)
-        vrs.readVcfToDF()
+        vrs.readVcfToDF(
+            sample_list=[self.sample_id, self.father_id, self.mother_id])
         print('all variants')
         print(vrs.variants.shape)
         vrs.removeNaN(self.sample_id)
