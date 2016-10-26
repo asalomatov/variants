@@ -19,7 +19,8 @@ class Variants:
         self.chrom = chrom
         self.start = start
         self.end = end
-        self.required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER']
+        self.required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
+                                'QUAL', 'FILTER']
 
     def initReader(self):
         self.vcf_reader = vcf.Reader(open(self.fname, 'r'))
@@ -199,11 +200,12 @@ class Variants:
             self.variants['family_id'] = self.family_id
             #self.variants[1:] = self.variants[1:].convert_objects(convert_numeric=True)
             print("%s multiallelic sites skipped" % num_multiallelic)
-    
-    def readVcfToDF(self, chunk_size=None):
-        """read vcf file into pandas DF without parsing"""
+
+    def readVcfToDF(self, sample_list=None, chunk_size=None):
+        """read vcf file into pandas DF without parsing.
+        If sample_list is None, it'll read all of the samples"""
         # after github/hammerlab/varcode/vcf but keeping sample information
-        path = self.fname        
+        path = self.fname
         compression = None
         if path.endswith(".gz"):
             compression = "gzip"
@@ -216,18 +218,34 @@ class Variants:
         vcf_clmns = func.runInShell(cmd, True).split('\t')
         vcf_clmns = [x.strip() for x in vcf_clmns]        
         vcf_clmns = [x.strip('#') for x in vcf_clmns]        
-        vcf_field_types = collections.OrderedDict()
-        for i in vcf_clmns:
-            vcf_field_types[i] = str
-        vcf_field_types['POS'] = int
+        df_cols = []
+        df_cols_ind = []
+        if sample_list is None:
+            df_cols = vcf_clmns
+            df_cols_ind = range(len(df_cols))
+        else:
+            df_cols = self.required_fields
+            df_cols_ind = range(len(df_cols))
+            smp_indexes = []
+            for smp in sample_list:
+                smp_ind = vcf_clmns.index(smp)
+                smp_indexes.append(smp_ind)
+            smp_indexes.sort()
+            for i in smp_indexes:
+                df_cols.append(vcf_clmns[i])
+                df_cols_ind.append(i)
+        df_field_types = collections.OrderedDict()
+        for i in df_cols:
+            df_field_types[i] = str
+        df_field_types['POS'] = int
         reader = pd.read_table(
             path,
             compression=compression,
             comment="#",
             chunksize=chunk_size,
-            dtype=vcf_field_types,
-            names=list(vcf_field_types),
-            usecols=range(len(vcf_field_types)))
+            dtype=df_field_types,
+            names=df_cols,
+            usecols=df_cols_ind)
         self.variants = reader
         return 0
 
