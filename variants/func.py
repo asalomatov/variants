@@ -427,7 +427,12 @@ def writeTableAsVcf(df, outp_file):
 def getFieldFromVCF(row, ped_obj, field=6):
 #    print row
     ind_id = str(row['ind_id'])
-    vcf = ped_obj.getIndivVCF(ind_id)
+    # restrict to one family
+    fam_id = str(row['fam_id'])
+    print(fam_id)
+    ped = ped_obj
+    ped.ped = ped.ped[ped.ped.fam_id == fam_id]
+    vcf = ped.getIndivVCF(ind_id)
     cat = 'bcftools view'
 #    if os.path.splitext(vcf)[1] == '.gz':
 #        cat = 'zcat '
