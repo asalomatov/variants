@@ -37,7 +37,6 @@ myped = ped.Ped(args.ped_file, ['bam', 'vcf'])
 
 tmpl1 = """
 
-igv
 new
 genome hg19
 snapshotDirectory %(output_dir)s
@@ -49,7 +48,6 @@ snapshot %(sample_snapshot_name)s
 
 tmpl3 = """
 
-igv
 new
 genome hg19
 snapshotDirectory %(output_dir)s
@@ -77,7 +75,7 @@ for i, row in igv_inp.iterrows():
                                      row['lab_id'],
                                      row['CHROM'],
                                      row['POS'],
-                                     row['ANN[*].GENE']]) + '.png'
+                                     row['GENE']]) + '.png'
     print sample_bam, father_bam, mother_bam, chr_pos, sample_snapshot_name
     snapshot_list.append(tmpl3 % locals())
 

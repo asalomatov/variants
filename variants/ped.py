@@ -111,6 +111,14 @@ class Ped:
         assert len(res) == 1
         return res.iloc[0]
 
+    def getChildsVCF(self, individial_id):
+        res = self.ped['vcf'][(self.ped['ind_id'] == individial_id) &
+                              (~self.ped.mo_id.isnull()) &
+                              (~self.ped.fa_id.isnull())]
+        if len(res.index) == 0: return None
+        assert len(res) == 1
+        return res.iloc[0]
+
     def getIndivBAM(self, individial_id):
         res = self.ped['bam'][(self.ped['ind_id'] == individial_id)]
         if len(res.index) == 0: return None
