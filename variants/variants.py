@@ -317,8 +317,8 @@ class Variants:
     def removeNoGT(self, sample_name):
         """Keep only ['0/0', '0/1', '1/1'] from self.variants DF
         """
-        c1 = self.variants[sample_name].str.contains('\d/\d')
-        c2 = self.variants[sample_name].str.contains('\d|\d')
+        c1 = self.variants[sample_name].str.contains('\d\/\d')
+        c2 = self.variants[sample_name].str.contains('\d\|\d')
         self.variants = self.variants[c1 | c2]
         return 0
 

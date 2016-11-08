@@ -13,6 +13,60 @@ import pysam
 import yaml
 
 
+vcf_required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
+                                'QUAL', 'FILTER']
+
+
+def readVcfToDF1(fname, sample_list=None, chunk_size=None):
+    """read vcf file into pandas DF without parsing.
+    If sample_list is None, it'll read all of the samples"""
+    # after github/hammerlab/varcode/vcf but keeping sample information
+    path = fname
+    compression = None
+    if path.endswith(".gz"):
+        compression = "gzip"
+    elif path.endswith(".bz2"):
+        compression = "bz2"
+    cat = 'cat'
+    if compression is not None:
+        cat = 'zcat'
+    cmd = ' '.join([cat, path, '| head -10000 | grep ^# | grep -v ^##'])
+    vcf_clmns = runInShell(cmd, True).split('\t')
+    vcf_clmns = [x.strip() for x in vcf_clmns]        
+    vcf_clmns = [x.strip('#') for x in vcf_clmns]        
+    df_cols = []
+    df_cols_ind = []
+    if sample_list is None:
+        df_cols = vcf_clmns
+        df_cols_ind = range(len(df_cols))
+    else:
+        df_cols = vcf_required_fields
+        df_cols_ind = range(len(df_cols))
+        smp_indexes = []
+        for smp in sample_list:
+            smp_ind = vcf_clmns.index(smp)
+            smp_indexes.append(smp_ind)
+        smp_indexes.sort()
+        for i in smp_indexes:
+            df_cols.append(vcf_clmns[i])
+            df_cols_ind.append(i)
+    df_field_types = collections.OrderedDict()
+    for i in df_cols:
+        df_field_types[i] = str
+    df_field_types['POS'] = int
+    print('reading columns')
+    print(df_cols)
+    reader = pandas.read_table(
+        path,
+        compression=compression,
+        comment="#",
+        chunksize=chunk_size,
+        dtype=df_field_types,
+        names=df_cols,
+        usecols=df_cols_ind)
+    return reader
+
+
 def readVcfToDF(fname, chunk_size=None):
     """read vcf or file into pandas DF without parsing,
     also works for reading VEP output files"""
