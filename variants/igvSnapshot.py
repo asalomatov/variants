@@ -29,7 +29,7 @@ args = arg_parser.parse_args()
 print args
 input_file = args.input_file
 output_dir = args.output_dir
-
+func.runInShell('mkdir -p ' + output_dir)
 
 igv_inp = pandas.read_csv(input_file, dtype=str)
 myped = ped.Ped(args.ped_file, ['bam', 'vcf'])
@@ -69,8 +69,8 @@ for i, row in igv_inp.iterrows():
     father_bam = myped.getFaBam(trio_id)
     mother_bam = myped.getMoBam(trio_id)
     chr_pos = ':'.join([row['CHROM'],
-                        '-'.join([str(int(row['POS']) - 25),
-                                  str(int(row['POS']) + 25)])])
+                        '-'.join([str(int(row['POS']) - 50),
+                                  str(int(row['POS']) + 50)])])
     sample_snapshot_name = '_'.join([row['SP_id'],
                                      row['lab_id'],
                                      row['CHROM'],
@@ -89,7 +89,7 @@ with open(script_out, 'w') as f:
 
 cmd = ' '.join([args.igv, '-b', script_out])
 print cmd
-func.runInShell(cmd)
+#func.runInShell(cmd)
 
 sys.exit(1)
 

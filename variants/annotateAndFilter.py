@@ -55,6 +55,13 @@ ped_file_extended = cfg['ped_file_extended']
 known_vars = cfg['known_variants']
 output_dir = cfg['output_directory']
 targ_bed = cfg['target_bed']
+genome_build = int(cfg['genome_build'])
+if genome_build == 19 or genome_build == 37:
+    incl_make = '/mnt/xfs1/home/asalomatov/projects/pipeline/ppln/include.mk'
+elif int(genome_build) == 38:
+    incl_make = '/mnt/xfs1/home/asalomatov/projects/pipeline/ppln/include_hg38.mk'
+else:
+    sys.exit('Only builds 19, 37, 38 are supported')
 
 dnvo = pandas.read_csv(input_file)
 dnvo.ix[:, 'pred_labels'] = (dnvo['pred_prob'] > prob_cutoff).astype(int)
@@ -76,7 +83,8 @@ cmd = ' '.join([script_name,
                 outp_tsv,
                 os.path.dirname(script_name),
                 input_file_bn,
-                targ_bed])
+                targ_bed,
+                incl_make])
 print(cmd)
 func.runInShell(cmd)
 vn = summarizeVariants.summarizeMutations(

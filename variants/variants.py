@@ -5,6 +5,7 @@ import sys, os, re
 import func
 import collections
 
+
 class Variants:
     """Class describing a vcf file. Consists of pandas data frame, and metadata found in the vcf header.
        Start, end coordinates are zero-based, half-open """
@@ -332,6 +333,14 @@ class Variants:
         c2 = self.variants[sample_name+'_gt'].apply(lambda i: '.' in i)        
         c3 = self.variants[sample_name+'_gt'].apply(lambda i: '0' in i)        
         self.variants = self.variants[(~c1) & (~c2) & c3]         
+        return 0
+
+    def extractGtCall(self, sample_name):
+        """Separate GT for the sample into the column
+        named $sample_list_gt"""
+        gt = self.variants[sample_name].apply(lambda i: i.split(':')[0])
+        gt = [i.strip() for i in gt]
+        self.variants[sample_name+'_gt'] = gt
         return 0
 
     def getFieldFromVCF(row, ped_obj, field=6):
