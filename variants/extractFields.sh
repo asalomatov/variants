@@ -12,7 +12,7 @@ java -jar /mnt/xfs1/bioinfo/software/installs/bcbio_nextgen/150607/Cellar/snpeff
     "dbNSFP_GERP_RS"  "dbNSFP_genename"  \
     "dbNSFP_GERP_NR" "dbNSFP_Ensembl_transcriptid"  \
     "dbNSFP_Polyphen2_HVAR_score"  "dbNSFP_MutationAssessor_score" \
-    "dbNSFP_Ensembl_proteinid" "dbNSFP_rs_dbSNP146" \
+    "dbNSFP_Ensembl_proteinid" "dbNSFP_rs_dbSNP147" \
     "dbNSFP_aapos" \
     "dbNSFP_aaref" \
     "dbNSFP_aaalt" \
@@ -23,7 +23,7 @@ java -jar /mnt/xfs1/bioinfo/software/installs/bcbio_nextgen/150607/Cellar/snpeff
     "dbNSFP_GERP_RS_rankscore" \
     "dbNSFP_SIFT_score" \
     "dbNSFP_1000Gp3_AF" \
-    "dbNSFP_ExAC_AF" \
+    "dbNSFP_ExAC_AF" "dbNSFP_ALSPAC_AF" "dbNSFP_ESP6500_AA_AF" "dbNSFP_ESP6500_EA_AF" \
     "dbNSFP_Polyphen2_HDIV_score" \
     "dbNSFP_PROVEAN_pred" \
     "dbNSFP_CADD_phred" \
@@ -39,6 +39,7 @@ java -jar /mnt/xfs1/bioinfo/software/installs/bcbio_nextgen/150607/Cellar/snpeff
     "dbNSFP_MetaLR_score" \
     "dbNSFP_MetaLR_rankscore" \
     "dbNSFP_MetaLR_pred" \
+    "dbNSFP_M_CAP_score" "dbNSFP_M_CAP_rankscore" "dbNSFP_M_CAP_pred" \
     "spidex_dpsi_max_tissue" \
     "spidex_dpsi_zscore" \
     "spidex_gene" \
