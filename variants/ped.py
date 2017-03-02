@@ -1,7 +1,7 @@
 """Class and container for pedigree information, vcf, and bam file by sample"""
 
 import pandas as pd
-import re 
+from re import findall
 import func
 
 
@@ -11,28 +11,40 @@ class Ped:
     Paternal_ID - '.' or '0' for unknown
     Maternal_ID - '.' or '0' for unknown
     Sex - '1'=male; '2'=female; ['other', '0', '.']=unknown
-    Phenotype - '1'=unaffected, '2'=affected, ['-9', '0', '.']= missing"""
+    Phenotype - '1'=unaffected, '2'=affected, ['-9', '0', '.']= missing.
+    Extended ped file may contain additional columns, usually bam, and vcf,
+    specifying location of bam file for each sample, and vcf file for each
+    family"""
 
     def __init__(self, ped_file_name, extra_column_names=[]):
-        """read ped file into pandas data frame"""
+        """read ped file into pandas data frame, replace all missing
+        values with None"""
         self.fname = ped_file_name
         self.ped = pd.read_table(self.fname, usecols=range(6+len(extra_column_names)), header=None, dtype=str)
-        self.ped.columns = ['fam_id', 'ind_id', 'fa_id', 'mo_id', 'sex', 'pheno'] + extra_column_names
+        self.ped.columns = ['fam_id', 'ind_id', 'fa_id', 'mo_id',
+                            'sex', 'pheno'] + extra_column_names
         self.ped.replace(['.', '0', 0, -9, '-9'], [None]*5, inplace=True)
         self.ped['sex'] = self.ped.sex.astype(int)
         self.ped['pheno'] = self.ped.pheno.astype(int)
 
-    def addVcf(self, field='fam_id', file_pat='/mnt/ceph/asalomatov/SSC_Eichler/rerun/ssc%s/%s-JHC-vars.vcf.gz'):
-        num_subst = len(re.findall('\%s', file_pat))
+    def addVcf(self,
+               field='fam_id',
+               file_pat='/mnt/ceph/asalomatov/SSC_Eichler/rerun/ssc%s/%s-JHC-vars.vcf.gz'):
+        """Sometimes it is easier to add a vcf column using a sting substitution
+        pattern. Usually it is done manually"""
+        num_subst = len(findall('\%s', file_pat))
         print num_subst, ' substitutions found'
         if num_subst > 0:
-            x = self.ped[field].apply(lambda f: func.checkFile(file_pat % ((f,) * num_subst)))
+            x = self.ped[field].apply(
+                lambda f: func.checkFile(file_pat % ((f,) * num_subst)))
             self.ped['vcf'] = pd.Series(x, index=self.ped.index)
         else:
             self.ped['vcf'] = file_pat
 
     def addBam(self, field='ind_id', file_pat='/mnt/ceph/asalomatov/SSC_Eichler/data_S3/%s*.bam', num_subst=2):
-        num_subst = len(re.findall('\%s', file_pat))
+        """Sometimes it is easier to add a bam column using a sting substitution
+        pattern. Usually it is done manually"""
+        num_subst = len(findall('\%s', file_pat))
         print num_subst, ' substitutions found'
         if num_subst > 0:
             x = self.ped[field].apply(lambda f: func.listFiles(file_pat % ((f,) * num_subst)))
@@ -41,19 +53,21 @@ class Ped:
             self.ped['bam'] = file_pat
 
     def addBai(self, field='ind_id', file_pat='/mnt/ceph/asalomatov/SSC_Eichler/data_S3/%s*bam.bai', num_subst=2):
-        num_subst = len(re.findall('\%s', file_pat))
+        num_subst = len(findall('\%s', file_pat))
         print num_subst, ' substitutions found'
         if num_subst > 0:
-            x = self.ped[field].apply(lambda f: func.listFiles(file_pat % ((f,) * num_subst)))
+            x = self.ped[field].apply(
+                lambda f: func.listFiles(file_pat % ((f,) * num_subst)))
             self.ped['bai'] = pd.Series(x, index=self.ped.index)
         else:
             self.ped['bai'] = file_pat
 
     def addTestFile(self, field='ind_id', file_pat='/mnt/scratch/asalomatov/data/SSC/wes/feature_sets/fb/all_SNP/%s'):
-        num_subst = len(re.findall('\%s', file_pat))
+        num_subst = len(findall('\%s', file_pat))
         print num_subst, ' substitutions found'
         if num_subst > 0:
-            x = self.ped[field].apply(lambda f: func.listFiles(file_pat % ((f,) * num_subst)))
+            x = self.ped[field].apply(
+                lambda f: func.listFiles(file_pat % ((f,) * num_subst)))
             self.ped['test'] = pd.Series(x, index=self.ped.index)
         else:
             self.ped['test'] = file_pat
@@ -62,19 +76,25 @@ class Ped:
         return self.ped['ind_id'][self.ped['fam_id'] == family_id].tolist()
 
     def getProbands(self, family_id):
-        return self.ped['ind_id'][(self.ped['fam_id'] == family_id) & (self.ped['pheno'] == 2)].tolist()
+        return self.ped['ind_id'][(self.ped['fam_id'] == family_id) &
+                                  (self.ped['pheno'] == 2)].tolist()
 
     def getSiblings(self, family_id):
-        return self.ped['ind_id'][(self.ped['fam_id'] == family_id) & (self.ped['pheno'] == 1) \
-                & ~self.ped['fa_id'].isnull() & ~self.ped['mo_id'].isnull() ].tolist()
+        return self.ped['ind_id'][(self.ped['fam_id'] == family_id) &
+                                  (self.ped['pheno'] == 1) &\
+                                  ~self.ped['fa_id'].isnull() &\
+                                  ~self.ped['mo_id'].isnull()].tolist()
 
     def getParents(self, family_id):
         return self.ped['ind_id'][(self.ped['fam_id'] == family_id) &  \
-                self.ped['fa_id'].isnull() & self.ped['mo_id'].isnull() ].tolist()
+                                  self.ped['fa_id'].isnull() &\
+                                  self.ped['mo_id'].isnull()].tolist()
 
     def getFather(self, family_id):
-        res = self.ped['ind_id'][(self.ped['fam_id'] == family_id) & (self.ped['sex'] == 1) &  \
-                self.ped['fa_id'].isnull() & self.ped['mo_id'].isnull()]
+        res = self.ped['ind_id'][(self.ped['fam_id'] == family_id) &\
+                                 (self.ped['sex'] == 1) &\
+                                 self.ped['fa_id'].isnull() &\
+                                 self.ped['mo_id'].isnull()]
         print res
         if len(res.index) == 0: return None
         assert len(res) == 1
@@ -82,7 +102,7 @@ class Ped:
 
     def getMother(self, family_id):
         res = self.ped['ind_id'][(self.ped['fam_id'] == family_id) & (self.ped['sex'] == 2) &  \
-                self.ped['fa_id'].isnull() & self.ped['mo_id'].isnull() ]
+                                 self.ped['fa_id'].isnull() & self.ped['mo_id'].isnull()]
         if len(res.index) == 0: return None
         assert len(res) == 1
         return res.iloc[0]
