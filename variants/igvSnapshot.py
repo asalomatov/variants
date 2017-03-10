@@ -24,21 +24,37 @@ arg_parser.add_argument('--igv',
                         default='java -jar /mnt/xfs1/bioinfoCentos7/software/installs/igv/20151202/igv.jar',
                         help='path to igv.jar to overwrite\
                         the hardcoded default')
+arg_parser.add_argument('--genome_build',
+                        type=int,
+                        default=19,
+                        help='19, 37, or 38')
 
 args = arg_parser.parse_args()
 print args
 input_file = args.input_file
 output_dir = args.output_dir
+if args.genome_build in [19, 37]:
+    genome_b = 'hg19'
+elif args.genome_build in [38]:
+    genome_b = 'genome.fa'
+else:
+    sys.exit('Unknown genome build, use 19, 37, or 38')
 func.runInShell('mkdir -p ' + output_dir)
 
 igv_inp = pandas.read_csv(input_file, dtype=str)
+#igv_inp = pandas.read_table(input_file, dtype=str)
+#for reg
+if args.genome_build in [38]:
+    igv_inp.SP_id = igv_inp.ind_id
+    igv_inp.lab_id = igv_inp.ind_id
+
 myped = ped.Ped(args.ped_file, ['bam', 'vcf'])
 
 
 tmpl1 = """
 
 new
-genome hg19
+genome %(genome_b)s
 snapshotDirectory %(output_dir)s
 load %(sample_bam)s
 goto %(chr_pos)s
@@ -49,7 +65,7 @@ snapshot %(sample_snapshot_name)s
 tmpl3 = """
 
 new
-genome hg19
+genome %(genome_b)s
 snapshotDirectory %(output_dir)s
 load %(sample_bam)s
 load %(father_bam)s
@@ -75,7 +91,8 @@ for i, row in igv_inp.iterrows():
                                      row['lab_id'],
                                      row['CHROM'],
                                      row['POS'],
-                                     row['GENE']]) + '.png'
+                                     row['GENE'],
+                                     row['centers']]) + '.png'
     print sample_bam, father_bam, mother_bam, chr_pos, sample_snapshot_name
     snapshot_list.append(tmpl3 % locals())
 
