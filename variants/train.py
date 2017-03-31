@@ -1,21 +1,24 @@
 from __future__ import print_function
 import sys
-#sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/variants/variants')
+sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/update_vars/variants/variants')
 import ped
 import variants
 import func
 import pandas
 import numpy
+import xgboost
 import os
 import features
 import train
 from multiprocessing import Pool
-from sklearn.cross_validation import train_test_split
+#from sklearn.cross_validation import train_test_split
 from sklearn.ensemble import (RandomForestClassifier,
                               GradientBoostingClassifier,
                               GradientBoostingRegressor)
 from sklearn.linear_model import LogisticRegression
-from sklearn import svm, metrics
+from sklearn import svm
+from sklearn import metrics
+from sklearn.model_selection import train_test_split
 from sklearn.externals import joblib
 from sklearn.preprocessing import binarize
 from sklearn.preprocessing import scale
@@ -40,10 +43,12 @@ class TrainTest:
     def __init__(self, data_set_file, feature_list_file, y_name=[],
                  extra_col_names=[]):
         self.data_set = None
+        self.n_known_smpl = None
         self.train_set_X = None
         self.train_set_y = None
         self.train_set_var_id = []
         self.test_set_var_id = []
+        self.test_set_n_smpl = None
         self.train_set_alleles = []
         self.test_set_alleles = []
         self.test_set_DP_father = []
@@ -78,7 +83,7 @@ class TrainTest:
             return mydf
 
     def addLabels(self, level):
-        """level > 1 are specific to SF data.
+        """level > 1 are specific to SSC data.
         level == 1 applies to any set. In column self.y_name positive 
         examples should be denoted with 'Y', and negative ones with 'N'
         level = 1 - Y vs N
@@ -137,16 +142,20 @@ class TrainTest:
             c_ND = self.data_set.status.isin(['ND'])
             self.data_set.ix[c_ND, 'label'] = None
         elif level == 9:
-            self.data_set['label'] = 0
+            self.data_set['label'] = None
             c_Y = self.data_set[self.y_name[0]].isin(['Y'])
             c_N = self.data_set[self.y_name[0]].isin(['N'])
+            c_ND = self.data_set[self.y_name[0]].isin(['ND'])
             c_Krumm = self.data_set.descr.isin(['Krumm'])
             c_both = self.data_set.descr.isin(['both'])
             c_ioss = self.data_set.descr.isin(['Iossifov'])
             self.data_set.ix[c_Y & (c_Krumm | c_both), 'label'] = 1
+#            self.data_set.ix[c_Y, 'label'] = 1
+            self.data_set.ix[c_ND & c_both, 'label'] = 1
             self.data_set.ix[c_N & (c_Krumm | c_both), 'label'] = 0
-            c_ND = self.data_set.status.isin(['ND'])
-            self.data_set.ix[c_ND | c_ioss, 'label'] = None
+#            self.data_set.ix[c_N, 'label'] = 0
+#            c_ND = self.data_set.status.isin(['ND'])
+#            self.data_set.ix[c_ND | c_ioss, 'label'] = None
         elif level == 10:  # columbia data only 
             self.data_set['label'] = 0
             c_Y = self.data_set[self.y_name[0]].isin(['Y'])
@@ -198,6 +207,8 @@ class TrainTest:
         self.addAllelesBalByDP(self.data_set)
         self.addVarID(self.data_set)
         self.addAlleles(self.data_set)
+        ind_id = map(lambda i: i.split('_')[0], self.data_set.var_id)
+        self.n_known_smpl = len(set(ind_id))
         self.data_set = self.data_set[self.feature_list +
                                       self.y_name +
                                       ['var_id'] + ['offspring_alleles'] +
@@ -226,16 +237,21 @@ class TrainTest:
         if n_extra > 0:
             x = pandas.read_csv(file_name, sep='\t', nrows=n_extra)
             x = x[x.status.isnull()]
+            print('read extra vars %s' % ' '.join(map(str, x.shape)))
+            x['label'] = 0
             x = self.addAlleleBalance(x)
             self.addAllelesBalByDP(x)
             self.addVarID(x)
             self.addAlleles(x)
             x = x[self.feature_list + self.y_name + ['var_id'] +
-                  ['offspring_alleles'] + self.extra_column_names]
+                  ['offspring_alleles'] + self.extra_column_names + ['label']]
+            print('extra vars are of the shape %s' % ' '.join(map(str, x.shape)))
+            print(self.data_set.columns[~self.data_set.columns.isin(x.columns)])
+            print('known vars are of the shape %s' % ' '.join(map(str, self.data_set.shape)))
             self.data_set = pandas.concat([self.data_set, x], axis=0)
 
-    def splitTrainTest(self, trn_size=0.5, 
-                       rnd_state=0, over_sample=''):
+    def splitTrainTest(self, trn_size=0.6, 
+                       rnd_state=212, over_sample=''):
         """over_sample one of [None, 'SMOT', 'SMOT_bl1', 'SMOT_bl2', 'SMOT_svm']
         """
         X = self.data_set[self.feature_list + ['offspring_alleles'] + ['var_id']]
@@ -288,6 +304,7 @@ class TrainTest:
         self.test_set_DP_offspring = self.data_set.DP_offspring[~c1].astype(int).values
         self.test_set_DP_father = self.data_set.DP_father[~c1].astype(int).values
         self.test_set_DP_mother = self.data_set.DP_mother[~c1].astype(int).values
+#        self.test_set_vartype = self.data_set.DP_mother[~c1].astype(int).values
         if self.stdize:
             print('scaling data')
             self.test_set_X = scale(self.test_set_X)
@@ -421,51 +438,120 @@ class TrainTest:
                                        'tpr': tpr,
                                        'threshold': thresholds})
             self.roc = roc_df
+        ind_id = map(lambda i: i.split('_')[0], self.test_set_var_id)
+        n_samples = len(set(ind_id))
+        self.test_set_n_smpl = n_samples
+        self.perf_mertics['dnPerSmpl'] = (TP + FP)/float(self.n_known_smpl)
         print(self.perf_mertics)
         #print metrics.classification_report(y_test, y_pred)
         #plt.plot(fpr, tpr)
         #plt.show()
 
 if __name__ == '__main__':
-    print(sys.argv)
-    n_extra = int(sys.argv[1])
-    lvl = int(sys.argv[2])
-    feature_set_dir = sys.argv[3]
-    list_of_features = sys.argv[4]
-    infile_ped = sys.argv[5]
-    stdize = bool(int(sys.argv[6]))
-    mtd = sys.argv[7]
-    trn_tst_splt = float(sys.argv[8])
-    trshold = float(sys.argv[9])
-    smote_type = sys.argv[10]
-    model_dir = sys.argv[11]
-    known_vars = sys.argv[12]
-    extra_vars = sys.argv[13]
-    myped = ped.Ped(infile_ped)
-    myped.addTestFile(field='ind_id', file_pat=os.path.join(feature_set_dir, '%s'))
-    myped.ped.dropna(subset=['test'], inplace=True)
-    myped.ped.reset_index(inplace=True)
-    print('ped shape:')
-    print(myped.ped.shape)
-    trn = train.TrainTest(known_vars,
+    arg_parser = argparse.ArgumentParser(
+        description='Train a classifier')
+    arg_parser.add_argument('input_file',
+                        nargs=1,
+                        type=str,
+                        help='training set')
+    arg_parser.add_argument('--labeling_lvl',
+#                            nargs='+',
+                            type=int,
+                            default=9,
+                            help='How to label positives and negatives')
+    arg_parser.add_argument('--list_of_features',
+#                            nargs='+',
+                            type=str,
+                            default='/mnt/xfs1/home/asalomatov/projects/update_vars/variants/variants/ssc_wes_features_indel.txt',
+                            help='file with list of features to use')
+    arg_parser.add_argument('--method',
+#                            nargs='+',
+                            type=str,
+                            default='GBM',
+                            help='A string corresponding to a classification method')
+    arg_parser.add_argument('--standardize',
+ #                           nargs='+',
+                            type=bool,
+                            default='False',
+                            help='True/False')
+    arg_parser.add_argument('--extra_negatives',
+#                            nargs='+',
+                            type=str,
+                            default='/mnt/scratch/asalomatov/data/SSC/wes/de-novo-class/extra_neg_train.tsv',
+                            help='Extra negative examples to use in training')
+    arg_parser.add_argument('--n_extra_neg',
+#                            nargs='+',
+                            type=int,
+                            default=5000,
+                            help='Number of extra negative examples to use in training')
+    arg_parser.add_argument('--threshold',
+#                            nargs='+',
+                            type=float,
+                            default=0.4,
+                            help='Number of extra negative examples to use in training')
+    arg_parser.add_argument('--train_test_split',
+ #                           nargs='+',
+                            type=float,
+                            default='0.6',
+                            help='How to split')
+    arg_parser.add_argument('--output_dir',
+ #                           nargs='+',
+                            type=str,
+                            default='outp',
+                            help='where models are saved')
+
+    args = arg_parser.parse_args()
+    print(args)
+    input_file = args.input_file[0]
+    lvl = args.labeling_lvl
+    list_of_features = args.list_of_features
+    mtd = args.method
+    stdize = args.standardize
+    extra_vars = args.extra_negatives
+    threshold = args.threshold
+    n_extra = args.n_extra_neg
+    trn_tst_splt = args.train_test_split
+    output_dir = args.output_dir
+    
+#    n_extra = int(sys.argv[1])
+#    feature_set_dir = sys.argv[3]
+#    infile_ped = sys.argv[5]
+#    trshold = float(sys.argv[9])
+#    smote_type = sys.argv[10]
+#    model_dir = sys.argv[11]
+#    known_vars = sys.argv[12]
+#    myped = ped.Ped(infile_ped)
+#    myped.addTestFile(field='ind_id', file_pat=os.path.join(feature_set_dir, '%s'))
+#    myped.ped.dropna(subset=['test'], inplace=True)
+#    myped.ped.reset_index(inplace=True)
+#    print('ped shape:')
+#    print(myped.ped.shape)
+    trn = train.TrainTest(input_file,
                           list_of_features,
                           ['status'],
-                          ['descr'])
+                          ['descr', 'callers'])
     trn.stdize = stdize
-    trn.threshold = trshold
+    trn.threshold = threshold
     trn.readFeatureList()
     trn.readDataSet()
+    trn.addLabels(level=lvl)
+
     print('data_set shape is %s' % ' '.join(map(str, trn.data_set.shape)))
+
+#    sys.exit('Stop for now')
+
     if n_extra > 0:
         trn.readExtraVars(extra_vars, n_extra=n_extra)
-    trn.addLabels(level=lvl)
     trn.dropNA('label')
     print('data_set shape is %s' % ' '.join(map(str, trn.data_set.shape)))
     print('label balance is ')
     print(trn.data_set.label.value_counts())
-    trn.splitTrainTest(trn_size=trn_tst_splt, over_sample=smote_type)
+
+    trn.splitTrainTest(trn_size=trn_tst_splt, over_sample=None)
     print('train_set shape is %s' % ' '.join(map(str, trn.train_set_X.shape)))
     print('test_set shape is %s' % ' '.join(map(str, trn.test_set_X.shape)))
+
+
     # set test set equal to train set for final eval
     if trn_tst_splt > .9:
         print('test set is equan to train set')
@@ -475,10 +561,25 @@ if __name__ == '__main__':
                  '_std' + str(trn.stdize) +\
                  '_cut' + str(trn.threshold) +\
                  '_splt' + str(trn_tst_splt) +\
-                 '_' + str(n_extra) +\
-                 '_' + str(smote_type)
+                 '_' + str(n_extra)
+
     print('mtd is %s' % mtd)
+
     if mtd == 'GBM':
+        n_estimators = 1000
+        max_depth = 3
+        learning_rate = 0.01
+ #       n_estimators = 2000
+ #       max_depth = 1
+ #       learning_rate = 0.075
+        trn.method += '_' + '_'.join(map(str,
+                                   [n_estimators, max_depth, learning_rate]))
+        trn.model = GradientBoostingClassifier(n_estimators=n_estimators,
+                                               max_depth=max_depth,
+                                               learning_rate=learning_rate)
+        trn.fitClassifier()
+        trn.predictClass(trn.threshold)
+    elif mtd == 'XGBOOST':
  #       n_estiators = 1000
  #       max_depth = 3
  #       learning_rate = 0.01
@@ -487,7 +588,7 @@ if __name__ == '__main__':
         learning_rate = 0.075
         trn.method += '_' + '_'.join(map(str,
                                    [n_estimators, max_depth, learning_rate]))
-        trn.model = GradientBoostingClassifier(n_estimators=n_estimators,
+        trn.model = xgboost.XGBClassifier(n_estimators=n_estimators,
                                                max_depth=max_depth,
                                                learning_rate=learning_rate)
         trn.fitClassifier()
@@ -498,7 +599,7 @@ if __name__ == '__main__':
         trn.predictClass(trn.threshold)
     elif mtd == 'RF':
         n_estimators = 2000
-        max_depth = 1
+        max_depth = 3
         trn.method += '_' + '_'.join(map(str, [n_estimators, max_depth]))
         trn.model = RandomForestClassifier(max_depth=max_depth,
                                            n_estimators=n_estimators,
@@ -553,4 +654,4 @@ if __name__ == '__main__':
     else:
         sys.exit('Unknown classifier!')
     trn.getMetrics()
-    trn.pklModel(model_dir)
+    trn.pklModel(output_dir)

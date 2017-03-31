@@ -1,12 +1,12 @@
 #!/mnt/xfs1/home/asalomatov/miniconda2/bin/python
 from __future__ import print_function
 import sys
-#sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/variants/variants')
+sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/update_vars/variants/variants')
 import train
 import numpy
 import pandas
 import os
-from ggplot import *
+#from ggplot import *
 from sklearn.externals import joblib
 from keras.models import model_from_json
 
@@ -32,6 +32,8 @@ tst.feature_list = list_of_features
 if is_keras:
     tst.is_keras = True
 tst.readDataSet()
+tst.addLabels(level=lvl)
+
 print('data_set shape is %s' % ' '.join(map(str, tst.data_set.shape)))
 if tst.data_set.empty:
     sys.exit('data set is empty')
@@ -40,7 +42,6 @@ if tst.data_set.empty:
 print('adding %s extra negative examples' % n_extra)
 if n_extra > 0:
     tst.readExtraVars(extra_vars, n_extra=n_extra)
-tst.addLabels(level=lvl)
 tst.dropNA('label')
 print('data_set shape is %s' % ' '.join(map(str, tst.data_set.shape)))
 print('label balance is ')
@@ -63,14 +64,14 @@ tst.perf_mertics['method'] = tst.method
 tst.perf_mertics['prob_cutoff'] = tst.threshold
 
 
-myplot = ggplot(tst.roc, aes(x='fpr', y='tpr')) +\
-    geom_line() +\
-    geom_abline(linetype='dashed')
-myplot1 = ggplot(tst.roc, aes('threshold')) +\
-    geom_line(aes(y='tpr')) +\
-    geom_line(aes(y='fpr'))
-ggsave(plot=myplot, filename='roc_curve_1.png')
-ggsave(plot=myplot1, filename='roc_curve_2.png')
+# myplot = ggplot(tst.roc, aes(x='fpr', y='tpr')) +\
+#     geom_line() +\
+#     geom_abline(linetype='dashed')
+# myplot1 = ggplot(tst.roc, aes('threshold')) +\
+#     geom_line(aes(y='tpr')) +\
+#     geom_line(aes(y='fpr'))
+# ggsave(plot=myplot, filename='roc_curve_1.png')
+# ggsave(plot=myplot1, filename='roc_curve_2.png')
 
 
 #m_name = os.path.basename(m)

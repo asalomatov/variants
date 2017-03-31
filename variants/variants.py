@@ -1,6 +1,6 @@
 from __future__ import print_function
 import pandas as pd
-import vcf
+#import vcf
 import sys, os, re
 import func
 import collections
@@ -23,30 +23,30 @@ class Variants:
         self.required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
                                 'QUAL', 'FILTER']
 
-    def initReader(self):
-        self.vcf_reader = vcf.Reader(open(self.fname, 'r'))
-        self.contigs = self.vcf_reader.contigs
-        self.filters = self.vcf_reader.filters
-        self.formats = self.vcf_reader.formats
-        self.infos = self.vcf_reader.infos
-        self.metadata = self.vcf_reader.metadata
-        self.samples = self.vcf_reader.samples
-        self.samples_to_keep = self.vcf_reader.samples
-        self.info_fields = self.infos.keys()
-        self.format_fields = self.formats.keys()
-        self.reference = self.metadata['reference']
+    # def initReader(self):
+    #     self.vcf_reader = vcf.Reader(open(self.fname, 'r'))
+    #     self.contigs = self.vcf_reader.contigs
+    #     self.filters = self.vcf_reader.filters
+    #     self.formats = self.vcf_reader.formats
+    #     self.infos = self.vcf_reader.infos
+    #     self.metadata = self.vcf_reader.metadata
+    #     self.samples = self.vcf_reader.samples
+    #     self.samples_to_keep = self.vcf_reader.samples
+    #     self.info_fields = self.infos.keys()
+    #     self.format_fields = self.formats.keys()
+    #     self.reference = self.metadata['reference']
 
-    def guessCaller(self):
-        y = [x.lower() for x in self.metadata.keys()]
-        y = ' '.join(y)
-        if 'haplotypecaller' in y:
-            return 'HaplotypeCaller'
-        elif 'freebayes' in y:
-            return 'Freebayes'
-        elif 'platypus' in y:
-            return 'Platypus'
-        else:
-            return 'Unknown'
+    # def guessCaller(self):
+    #     y = [x.lower() for x in self.metadata.keys()]
+    #     y = ' '.join(y)
+    #     if 'haplotypecaller' in y:
+    #         return 'HaplotypeCaller'
+    #     elif 'freebayes' in y:
+    #         return 'Freebayes'
+    #     elif 'platypus' in y:
+    #         return 'Platypus'
+    #     else:
+    #         return 'Unknown'
 
     def infoFieldDescr(self, field_name):
         return self.infos[field_name].desc
