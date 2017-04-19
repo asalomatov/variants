@@ -29,7 +29,7 @@ $(outFile): $(inFile)
 	$(JAVA) -Xmx5G -jar $(SNPSIFTJAR) annotate -id -c $(SNPEFFCONF) -noLog -dbsnp $< | \
         $(JAVA) -Xmx5G -jar $(SNPSIFTJAR) varType -c $(SNPEFFCONF) -noLog - | \
         $(JAVA) -Xmx5G -jar $(SNPSIFTJAR) annotate -c $(SNPEFFCONF) -noLog -tabix $(DBSPIDEX) - | \
-	$(JAVA) -Xmx5G -jar $(SNPEFFJAR) ann -noLog -c $(SNPEFFCONF) $(SNPEFFGENOME) -v -lof  | \
+	$(JAVA) -Xmx5G -jar $(SNPEFFJAR) ann -noLog -c $(SNPEFFCONF) $(SNPEFFGENOME) -v -lof -nextProt  | \
 	$(JAVA) -Xmx5G -jar $(SNPSIFTJAR)  dbnsfp - -a -c $(SNPEFFCONF) -db $(DBNSFP) \
 	-f rs_dbSNP147,aapos,aaref,aaalt,genename,Ensembl_geneid,Ensembl_transcriptid,Ensembl_proteinid,Uniprot_acc_Polyphen2,Uniprot_id_Polyphen2,Uniprot_aapos_Polyphen2,SIFT_score,SIFT_pred,Polyphen2_HDIV_score,Polyphen2_HDIV_pred,Polyphen2_HVAR_score,Polyphen2_HVAR_pred,MutationTaster_score,MutationTaster_pred,MutationAssessor_score,MutationAssessor_pred,PROVEAN_score,PROVEAN_pred,CADD_raw,CADD_raw_rankscore,CADD_phred,GERP++_NR,GERP++_RS,GERP++_RS_rankscore,MetaSVM_score,MetaSVM_rankscore,MetaSVM_pred,MetaLR_score,MetaLR_rankscore,MetaLR_pred,M-CAP_score,M-CAP_rankscore,M-CAP_pred,1000Gp3_AF,ExAC_AF,ALSPAC_AC,ALSPAC_AF,ESP6500_AA_AC,ESP6500_AA_AF,ESP6500_EA_AC,ESP6500_EA_AF | sed "s/dbNSFP_GERP++/dbNSFP_GERP/g" | sed "s/dbNSFP_M-CAP/dbNSFP_M_CAP/g" > $@
 
