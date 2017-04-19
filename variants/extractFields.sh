@@ -4,7 +4,9 @@ java -jar /mnt/xfs1/bioinfo/software/installs/bcbio_nextgen/150607/Cellar/snpeff
     CHROM POS ID REF ALT QUAL VARTYPE \
     "ANN[*].EFFECT" "ANN[*].IMPACT" "ANN[*].GENE" "ANN[*].GENEID" \
     "ANN[*].FEATURE" "ANN[*].FEATUREID" \
-    "ANN[*].BIOTYPE" "ANN[*].RANK" "ANN[*].DISTANCE"  \
+    "ANN[*].BIOTYPE" "Ann[*].RANK" "ANN[*].HGVS_C" "ANN[*].HGVS_P" \
+    "ANN[*].CDNA_POS" "ANN[*].CDNA_LEN" "ANN[*].CDS_POS" "ANN[*].CDS_LEN" \
+    "ANN[*].AA_POS" "ANN[*].AA_LEN" "ANN[*].DISTANCE" "ANN[*].ERRORS" \
     "LOF[*].GENE" "LOF[*].GENEID" "LOF[*].NUMTR" "LOF[*].PERC" \
     "NMD[*].GENE" "NMD[*].GENEID" "NMD[*].NUMTR" "NMD[*].PERC" \
     "ind_id" "pred_labels" "pred_prob" "status" "ref_DP" "alt_DP" "DP" "DP_offspring" "DP_father" "DP_mother" \
