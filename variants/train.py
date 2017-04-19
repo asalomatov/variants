@@ -11,14 +11,14 @@ import os
 import features
 import train
 from multiprocessing import Pool
-#from sklearn.cross_validation import train_test_split
 from sklearn.ensemble import (RandomForestClassifier,
                               GradientBoostingClassifier,
                               GradientBoostingRegressor)
 from sklearn.linear_model import LogisticRegression
 from sklearn import svm
 from sklearn import metrics
-from sklearn.model_selection import train_test_split
+#from sklearn.model_selection import train_test_split
+from sklearn.cross_validation import train_test_split
 from sklearn.externals import joblib
 from sklearn.preprocessing import binarize
 from sklearn.preprocessing import scale

@@ -1,7 +1,7 @@
 #!/mnt/xfs1/home/asalomatov/miniconda2/bin/python
 from __future__ import print_function
 import sys
-sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/update_vars/variants/variants')
+#sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/update_vars/variants/variants')
 import train
 import numpy
 import pandas
