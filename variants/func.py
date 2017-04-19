@@ -34,20 +34,25 @@ def readVcfToDF1(fname, sample_list=None, chunk_size=None):
     vcf_clmns = runInShell(cmd, True).split('\t')
     vcf_clmns = [x.strip() for x in vcf_clmns]        
     vcf_clmns = [x.strip('#') for x in vcf_clmns]        
+    print(vcf_clmns)
     df_cols = []
     df_cols_ind = []
     if sample_list is None:
         df_cols = vcf_clmns
         df_cols_ind = range(len(df_cols))
     else:
-        df_cols = vcf_required_fields
+        df_cols = vcf_required_fields[:]
         df_cols_ind = range(len(df_cols))
         smp_indexes = []
         for smp in sample_list:
             smp_ind = vcf_clmns.index(smp)
             smp_indexes.append(smp_ind)
         smp_indexes.sort()
+        print('smp indexes:')
+        print smp_indexes
         for i in smp_indexes:
+            print('appending')
+            print(vcf_clmns[i])
             df_cols.append(vcf_clmns[i])
             df_cols_ind.append(i)
     df_field_types = collections.OrderedDict()
