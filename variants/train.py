@@ -150,10 +150,10 @@ class TrainTest:
             c_both = self.data_set.descr.isin(['both'])
             c_ioss = self.data_set.descr.isin(['Iossifov'])
             self.data_set.ix[c_Y & (c_Krumm | c_both), 'label'] = 1
-#            self.data_set.ix[c_Y, 'label'] = 1
+            self.data_set.ix[c_Y, 'label'] = 1
             self.data_set.ix[c_ND & c_both, 'label'] = 1
             self.data_set.ix[c_N & (c_Krumm | c_both), 'label'] = 0
-#            self.data_set.ix[c_N, 'label'] = 0
+            self.data_set.ix[c_N, 'label'] = 0
 #            c_ND = self.data_set.status.isin(['ND'])
 #            self.data_set.ix[c_ND | c_ioss, 'label'] = None
         elif level == 10:  # columbia data only 
@@ -191,6 +191,44 @@ class TrainTest:
         df['allele_balance_by_DP_father'] = df['allele_balance_father'] /\
                 df['DP_father'].astype(float)
         df['allele_balance_by_DP_mother'] = df['allele_balance_mother'] /\
+                            df['DP_mother'].astype(float)
+        # make all count fields relative
+        df['REF_num_plus_strand_offspring'] = df['REF_num_plus_strand_offspring'] /\
+                                               df['DP_offspring'].astype(float)
+        df['REF_num_plus_strand_father'] = df['REF_num_plus_strand_father'] /\
+                df['DP_father'].astype(float)
+        df['REF_num_plus_strand_mother'] = df['REF_num_plus_strand_mother'] /\
+                            df['DP_mother'].astype(float)
+        df['REF_num_minus_strand_offspring'] = df['REF_num_minus_strand_offspring'] /\
+                                               df['DP_offspring'].astype(float)
+        df['REF_num_minus_strand_father'] = df['REF_num_minus_strand_father'] /\
+                df['DP_father'].astype(float)
+        df['REF_num_minus_strand_mother'] = df['REF_num_minus_strand_mother'] /\
+                            df['DP_mother'].astype(float)
+        df['REF_num_q2_containing_reads_offspring'] = df['REF_num_q2_containing_reads_offspring'] /\
+                                               df['DP_offspring'].astype(float)
+        df['REF_num_q2_containing_reads_father'] = df['REF_num_q2_containing_reads_father'] /\
+                df['DP_father'].astype(float)
+        df['REF_num_q2_containing_reads_mother'] = df['REF_num_q2_containing_reads_mother'] /\
+                            df['DP_mother'].astype(float)
+
+        df['ALT_num_plus_strand_offspring'] = df['ALT_num_plus_strand_offspring'] /\
+                                               df['DP_offspring'].astype(float)
+        df['ALT_num_plus_strand_father'] = df['ALT_num_plus_strand_father'] /\
+                df['DP_father'].astype(float)
+        df['ALT_num_plus_strand_mother'] = df['ALT_num_plus_strand_mother'] /\
+                            df['DP_mother'].astype(float)
+        df['ALT_num_minus_strand_offspring'] = df['ALT_num_minus_strand_offspring'] /\
+                                               df['DP_offspring'].astype(float)
+        df['ALT_num_minus_strand_father'] = df['ALT_num_minus_strand_father'] /\
+                df['DP_father'].astype(float)
+        df['ALT_num_minus_strand_mother'] = df['ALT_num_minus_strand_mother'] /\
+                            df['DP_mother'].astype(float)
+        df['ALT_num_q2_containing_reads_offspring'] = df['ALT_num_q2_containing_reads_offspring'] /\
+                                               df['DP_offspring'].astype(float)
+        df['ALT_num_q2_containing_reads_father'] = df['ALT_num_q2_containing_reads_father'] /\
+                df['DP_father'].astype(float)
+        df['ALT_num_q2_containing_reads_mother'] = df['ALT_num_q2_containing_reads_mother'] /\
                             df['DP_mother'].astype(float)
 
     def readFeatureList(self):
@@ -441,7 +479,7 @@ class TrainTest:
         ind_id = map(lambda i: i.split('_')[0], self.test_set_var_id)
         n_samples = len(set(ind_id))
         self.test_set_n_smpl = n_samples
-        self.perf_mertics['dnPerSmpl'] = (TP + FP)/float(self.n_known_smpl)
+        self.perf_mertics['dnPerSmpl'] = (TP + FP)/float(self.test_set_n_smpl)
         print(self.perf_mertics)
         #print metrics.classification_report(y_test, y_pred)
         #plt.plot(fpr, tpr)
@@ -472,7 +510,7 @@ if __name__ == '__main__':
     arg_parser.add_argument('--standardize',
  #                           nargs='+',
                             type=bool,
-                            default='False',
+                            default=False,
                             help='True/False')
     arg_parser.add_argument('--extra_negatives',
 #                            nargs='+',
@@ -507,6 +545,7 @@ if __name__ == '__main__':
     list_of_features = args.list_of_features
     mtd = args.method
     stdize = args.standardize
+    print(stdize)
     extra_vars = args.extra_negatives
     threshold = args.threshold
     n_extra = args.n_extra_neg
@@ -566,9 +605,9 @@ if __name__ == '__main__':
     print('mtd is %s' % mtd)
 
     if mtd == 'GBM':
-        n_estimators = 1000
-        max_depth = 3
-        learning_rate = 0.01
+        n_estimators = 100
+        max_depth = 1
+        learning_rate = 0.1
  #       n_estimators = 2000
  #       max_depth = 1
  #       learning_rate = 0.075
@@ -580,17 +619,17 @@ if __name__ == '__main__':
         trn.fitClassifier()
         trn.predictClass(trn.threshold)
     elif mtd == 'XGBOOST':
- #       n_estiators = 1000
- #       max_depth = 3
- #       learning_rate = 0.01
+        # n_estimators = 100
+        # max_depth = 3
+        # learning_rate = 0.2
         n_estimators = 2000
         max_depth = 1
         learning_rate = 0.075
         trn.method += '_' + '_'.join(map(str,
                                    [n_estimators, max_depth, learning_rate]))
         trn.model = xgboost.XGBClassifier(n_estimators=n_estimators,
-                                               max_depth=max_depth,
-                                               learning_rate=learning_rate)
+                                          max_depth=max_depth,
+                                          learning_rate=learning_rate)
         trn.fitClassifier()
         trn.predictClass(trn.threshold)
     elif mtd == 'LogReg':
