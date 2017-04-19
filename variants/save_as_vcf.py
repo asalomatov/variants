@@ -1,6 +1,6 @@
 import pandas
 import sys, os
-sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/variants/variants')
+#sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/variants/variants')
 import func
 
 pred_file = sys.argv[1]

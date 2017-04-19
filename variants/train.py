@@ -1,6 +1,5 @@
 from __future__ import print_function
 import sys
-sys.path.insert(0, '/mnt/xfs1/home/asalomatov/projects/update_vars/variants/variants')
 import ped
 import variants
 import func
@@ -17,8 +16,8 @@ from sklearn.ensemble import (RandomForestClassifier,
 from sklearn.linear_model import LogisticRegression
 from sklearn import svm
 from sklearn import metrics
-#from sklearn.model_selection import train_test_split
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
+#from sklearn.cross_validation import train_test_split
 from sklearn.externals import joblib
 from sklearn.preprocessing import binarize
 from sklearn.preprocessing import scale
