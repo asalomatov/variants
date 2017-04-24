@@ -222,6 +222,8 @@ def summarizeMutations(infile,
     vn['c_lof'] = c_lof
     vn['c_syn'] = c_syn
 
+    c_M_CAP_D = vn.dbNSFP_M_CAP_pred.str.contains(
+        '|'.join(cfg['db_nsfp']['M_CAP_pred']))
     c_metaSVM_D = vn.dbNSFP_MetaSVM_pred.str.contains(
         '|'.join(cfg['db_nsfp']['metaSVM_pred']))
 #    c_metaSVM_null = vn.dbNSFP_MetaSVM_pred.isin(['ZZZ', '.'])
@@ -257,7 +259,8 @@ def summarizeMutations(infile,
         '|'.join(cfg['db_nsfp']['combined']['sift_pred']))
 #   c_new = (vn.pred_labels == 1) & (~vn.status.isin(['Y']))
 
-    c_dmg_miss = c_metaSVM_D | c_cadd_D | ((c_poly_HDIV_D | c_poly_HVAR_D) & c_sift_D & c_cadd_15)
+    c_dmg_miss = c_M_CAP_D | c_metaSVM_D | c_cadd_D |\
+                 ((c_poly_HDIV_D | c_poly_HVAR_D) & c_sift_D & c_cadd_15)
     vn['c_dmg_miss'] = c_dmg_miss
 #   vn_full = vn[c_missense]
     c_impact_lof = vn['ANN[*].IMPACT'].str.contains(
