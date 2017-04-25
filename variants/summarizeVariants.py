@@ -142,10 +142,10 @@ def summarizeMutations(infile,
                        prefix,
                        outp_dir,
                        config_file,
-                       exac_anno='/mnt/scratch/asalomatov/data/ExAC/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt',
-                       asd_gene_prob_anno='/mnt/scratch/asalomatov/data/gene-scores/asd_gene_prediction_olga.csv',
-                       ios_anno='/mnt/scratch/asalomatov/data/gene-scores/ioss_lgd_rvis.scores.csv',
-                       sfari_scores='/mnt/scratch/asalomatov/data/SFARI/gene-score-only.csv'):
+                       exac_anno='/mnt/xfs1/scratch/asalomatov/data/ExAC/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt',
+                       asd_gene_prob_anno='/mnt/xfs1/scratch/asalomatov/data/gene-scores/asd_gene_prediction_olga.csv',
+                       ios_anno='/mnt/xfs1/scratch/asalomatov/data/gene-scores/ioss_lgd_rvis.scores.csv',
+                       sfari_scores='/mnt/xfs1/scratch/asalomatov/data/SFARI/gene-score-only.csv'):
     with open(config_file, 'r') as f:
         cfg = yaml.safe_load(f)
 
@@ -317,10 +317,11 @@ def summarizeMutations(infile,
     vn['c_missense'] = c_missense
     vn['c_lof'] = c_lof
     vn['c_syn'] = c_syn
-
+    
+    print('M_CAP condition %s' % '|'.join(cfg['db_nsfp']['M_CAP_pred']))
     c_M_CAP_D = vn.dbNSFP_M_CAP_pred.str.contains(
         '|'.join(cfg['db_nsfp']['M_CAP_pred']))
-    print(vn.dbNSFP_CADD_phred.value_counts())
+    print(vn.dbNSFP_M_CAP_pred.value_counts())
     c_metaSVM_D = vn.dbNSFP_MetaSVM_pred.str.contains(
         '|'.join(cfg['db_nsfp']['metaSVM_pred']))
     print(vn.dbNSFP_CADD_phred.value_counts())
@@ -347,6 +348,12 @@ def summarizeMutations(infile,
         '|'.join(cfg['db_nsfp']['combined']['sift_pred']))
     c_dmg_miss = c_M_CAP_D | c_metaSVM_D | c_cadd_D |\
                  ((c_poly_HDIV_D | c_poly_HVAR_D) & c_sift_D & c_cadd_15)
+    print('N dmg_mis w/o M_CAP %s' % sum(c_metaSVM_D | c_cadd_D |
+                                         ((c_poly_HDIV_D | c_poly_HVAR_D) &
+                                          c_sift_D & c_cadd_15)))
+    print('N dmg_mis w M_CAP %s' % sum(c_M_CAP_D | c_metaSVM_D | c_cadd_D |
+                                       ((c_poly_HDIV_D | c_poly_HVAR_D) &
+                                        c_sift_D & c_cadd_15)))
     vn['c_dmg_miss'] = c_dmg_miss
     c_impact_lof = vn['ANN[*].IMPACT'].str.contains(
         '|'.join(cfg['snpeff']['impact_lof']))
