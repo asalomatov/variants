@@ -194,7 +194,7 @@ def summarizeMutations(infile,
     #vn = vn.merge(kv_vcf[['var_id', 'status']], on='var_id', how='left')
     print('before dedup')
     print(vn.shape)
-
+    vn_dups = vn[vn.v_id.duplicated()]
     vn = vn[~vn.v_id.duplicated()]
     print('after dedup')
     print(vn.shape)
@@ -434,6 +434,16 @@ def summarizeMutations(infile,
                   prefix + '_SYN', 'clinical', outp_dir)
     writeVariants(vn_other_clinical, cols_to_output[:-2] + extra_cols,
                   var_type, prefix + '_OTHER', 'clinical', outp_dir)
+    # write failed
+    writeVariants(vn_dups, vn_dups.columns, var_type, prefix, 'dups', outp_dir)
+    writeVariants(vn[~vn.c_cohort_freq], cols_to_output[:-2] + extra_cols, var_type, prefix,
+                  'cohfreq', outp_dir)
+    writeVariants(vn[~vn.c_pop_freq], cols_to_output[:-2] + extra_cols, var_type, prefix,
+                  'popfreq', outp_dir)
+    writeVariants(vn[~vn.c_cohort_freq], cols_to_output[:-2] + extra_cols, var_type, prefix,
+                  'cohfreq', outp_dir)
+    writeVariants(vn[~vn.c_allele_frac], cols_to_output[:-2] + extra_cols, var_type, prefix,
+                  'allele_frac', outp_dir)
 
 
 #    writeVariants(vn_diff, cols_to_output[:-2]+['step'], var_type,
@@ -473,7 +483,7 @@ if __name__ == '__main__':
 #                       prefix,
 #                       outp_dir,
 #                       config_file,
-#                      exac_anno='/mnt/scratch/asalomatov/data/ExAC/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt'):
+#                      exac_anno='/mnt/xfs1/scratch/asalomatov/data/ExAC/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt'):
 
 
 
@@ -501,11 +511,11 @@ if __name__ == '__main__':
     #                                 'sift_pred': ['D']}
     #                },
     #       'min_DP': 10,
-    #       'vcf_pattern': '/mnt/scratch/asalomatov/data/columbia/vcf/%s_%s-02_%s-01.annotated-norm.vcf.gz',
-    #       'bam_pattern': '/mnt/scratch/asalomatov/data/columbia/bam/Sample.%s.bam',
-    #       'ped_file': '/mnt/scratch/asalomatov/data/columbia/pcgc_ped.txt',
-    #       'known_variants': '/mnt/scratch/asalomatov/data/columbia/pcgc_denovo_snp.tsv',
-    #       'output_directory': '/mnt/scratch/asalomatov/data/columbia/feature_sets_01'
+    #       'vcf_pattern': '/mnt/xfs1/scratch/asalomatov/data/columbia/vcf/%s_%s-02_%s-01.annotated-norm.vcf.gz',
+    #       'bam_pattern': '/mnt/xfs1/scratch/asalomatov/data/columbia/bam/Sample.%s.bam',
+    #       'ped_file': '/mnt/xfs1/scratch/asalomatov/data/columbia/pcgc_ped.txt',
+    #       'known_variants': '/mnt/xfs1/scratch/asalomatov/data/columbia/pcgc_denovo_snp.tsv',
+    #       'output_directory': '/mnt/xfs1/scratch/asalomatov/data/columbia/feature_sets_01'
     #}
 
 
