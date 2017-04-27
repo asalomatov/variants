@@ -13,8 +13,8 @@ class Variants:
         self.fname = fname
         self.family_id = family_id
         self.vcf_reader = None
-        if not chrom is None:
-            self.vcf_reader = self.vcf_reader.fetch(chrom, start, end)
+#        if chrom is not None:
+#            self.vcf_reader = self.vcf_reader.fetch(chrom, start, end)
         self.current_record = None
         self.variants = pd.DataFrame()
         self.chrom = chrom
@@ -165,7 +165,6 @@ class Variants:
         else:
             return self.current_record.var_type
     
-
     def readFromVcf(self, min_depth=8):
         lines = []
         num_multiallelic = 0
@@ -202,19 +201,37 @@ class Variants:
             #self.variants[1:] = self.variants[1:].convert_objects(convert_numeric=True)
             print("%s multiallelic sites skipped" % num_multiallelic)
 
+    def catOrzcat(self, path_to_file):
+        if path_to_file.endswith(".gz"):
+            return ('zcat', 'gzip')
+        elif path_to_file.endswith(".bz2"):
+            return ('zcat', 'bz2')
+        else:
+            return('cat', None)
+
+    def vcfGetVEPannoClms(self, info_title='CSQ'):
+        """From vcf file's header extract names of VEP annotation fields"""
+        path = self.fname
+        cat, compression = self.catOrzcat(path)
+        print(cat)
+        cmd = ' '.join([cat, path,
+                        '''| head -10000 | grep "^##INFO=<ID=%s"''' %
+                        info_title])
+        print(cmd)
+        l = func.runInShell(cmd, True)
+        return l
+        #vcf_clmns = [x.strip() for x in vcf_clmns]        
+        #vcf_clmns = [x.strip('#') for x in vcf_clmns]        
+        #df_cols = []
+        #df_cols_ind = []
+
+
     def readVcfToDF(self, sample_list=None, chunk_size=None):
         """read vcf file into pandas DF without parsing.
         If sample_list is None, it'll read all of the samples"""
         # after github/hammerlab/varcode/vcf but keeping sample information
         path = self.fname
-        compression = None
-        if path.endswith(".gz"):
-            compression = "gzip"
-        elif path.endswith(".bz2"):
-            compression = "bz2"
-        cat = 'cat'
-        if compression is not None:
-            cat = 'zcat'
+        cat, compression = self.catOrzcat(path)
         cmd = ' '.join([cat, path, '| head -10000 | grep ^# | grep -v ^##'])
         vcf_clmns = func.runInShell(cmd, True).split('\t')
         vcf_clmns = [x.strip() for x in vcf_clmns]        
@@ -225,7 +242,7 @@ class Variants:
             df_cols = vcf_clmns
             df_cols_ind = range(len(df_cols))
         else:
-            df_cols = self.required_fields
+            df_cols = self.required_fields[:]
             df_cols_ind = range(len(df_cols))
             smp_indexes = []
             for smp in sample_list:
