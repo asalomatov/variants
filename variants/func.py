@@ -417,16 +417,25 @@ def splitVarId(x):
 
 def splitAlleles(x, n_allels=1):
     res = x.split('_')
-    col_names = ['REF', 'ref_DP', 'ALT', 'alt_DP']
+    col_names = ['REF', 'ref_DP', 'ALT1', 'alt1_DP']
     if len(res) > 4:
-        col_names += ['ALT1', 'alt1_DP']
-    if len(res) == 8:
         col_names += ['ALT2', 'alt2_DP']
+    if len(res) == 8:
+        col_names += ['ALT3', 'alt3_DP']
     DP = sum(map(int, res[1::2]))
-    res += [DP]
-    col_names += ['DP']
-    return pandas.Series(res[:(n_allels + 1) * 2] + res[-1:],
-                         col_names[:(n_allels + 1) * 2] + col_names[-1:])
+    df = pandas.DataFrame({'counts': map(int, res[3::2]),
+                           'alleles': res[2::2]})
+    df.sort_values(by='counts', ascending=False, inplace=True)
+    print(df)
+    alt_DP = df.counts.sum()
+    ALT = ','.join(df.alleles)
+    res += [ALT, alt_DP, DP]
+    print(res)
+    col_names += ['ALT', 'alt_DP', 'DP']
+    print(col_names)
+    return pandas.Series(res, col_names)
+#    return pandas.Series(res[:(n_allels + 1) * 2] + res[-1:],
+#                         col_names[:(n_allels + 1) * 2] + col_names[-1:])
 
 
 def mergeClmnsToInfo(df, clmn_list=[]):
