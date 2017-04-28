@@ -400,10 +400,23 @@ class Variants:
         c2 = self.variants[smpl_fa + '_gt'].isin(['0/0', '0|0'])
         c3 = self.variants[smpl_mo + '_gt'].isin(['0/0', '0|0'])
         # insted if the stricter definition above try this one
-        c4 = (self.variants[smpl_ch + '_gt'] !=
-              self.variants[smpl_fa + '_gt']) &\
-            (self.variants[smpl_ch + '_gt'] !=
-             self.variants[smpl_mo + '_gt'])
+        
+        def newAllel(row, smpl_ch=smpl_ch, smpl_fa=smpl_fa, smpl_mo=smpl_mo):
+            ch_gt = row[smpl_ch + '_gt']
+            fa_gt = row[smpl_fa + '_gt']
+            mo_gt = row[smpl_mo + '_gt']
+            ch_has_ref = ch_gt[0] == '0'
+            ch_diff_alt1 = ch_gt[0] not in '_'.join([fa_gt, mo_gt])
+            ch_diff_alt2 = ch_gt[2] not in '_'.join([fa_gt, mo_gt])
+            possib_dnv1 = ch_has_ref and ch_diff_alt2
+            possib_dnv2 = (not ch_has_ref) and ch_diff_alt2 and ch_diff_alt1
+            return possib_dnv1 or possib_dnv2
+
+        c4 = self.variants.apply(lambda row: newAllel, axis=1) 
+        # c4 = (self.variants[smpl_ch + '_gt'] !=
+        #       self.variants[smpl_fa + '_gt']) &\
+        #     (self.variants[smpl_ch + '_gt'] !=
+        #      self.variants[smpl_mo + '_gt'])
         dnv1 = (~c1) & c2 & c3
         dnv2 = (~c1) & c4
         print('Strictly defined de novo candidates: %s' % sum(dnv1))
