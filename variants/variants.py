@@ -401,7 +401,15 @@ class Variants:
                                                   '1|1', '0|1', '0|2'])
         c2 = self.variants[smpl_fa + '_gt'].isin(['0/0', '0|0'])
         c3 = self.variants[smpl_mo + '_gt'].isin(['0/0', '0|0'])
-        self.variants = self.variants[c1 & c2 & c3]
+        # insted if the stricter definition above try this one
+        c4 = (self.variants[smpl_ch + '_gt'] !=
+              self.variants[smpl_fa + '_gt']) &\
+            (self.variants[smpl_ch + '_gt'] !=
+             self.variants[smpl_mo + '_gt'])
+        print('Strictly defined de novo candidates: %s' % sum(c1 & c2 & c3))
+        print('Generally defined de novo candidates: %s' % sum(c4))
+        # self.variants = self.variants[c1 & c2 & c3]
+        self.variants = self.variants[c4]
         return 0
 
     def saveAsVcf(self):
