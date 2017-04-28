@@ -412,13 +412,13 @@ class Variants:
             possib_dnv2 = (not ch_has_ref) and ch_diff_alt2 and ch_diff_alt1
             return possib_dnv1 or possib_dnv2
 
-        c4 = self.variants.apply(lambda row: newAllel, axis=1) 
+        self.possib_dnv = self.variants.apply(lambda row: newAllel, axis=1) 
         # c4 = (self.variants[smpl_ch + '_gt'] !=
         #       self.variants[smpl_fa + '_gt']) &\
         #     (self.variants[smpl_ch + '_gt'] !=
         #      self.variants[smpl_mo + '_gt'])
         dnv1 = (~c1) & c2 & c3
-        dnv2 = (~c1) & c4
+        dnv2 = (~c1) & self.variants.possib_dnv
         print('Strictly defined de novo candidates: %s' % sum(dnv1))
         print('Generally defined de novo candidates: %s' % sum(dnv2))
         if sum(dnv2) > sum(dnv1):
