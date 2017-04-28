@@ -412,7 +412,7 @@ class Variants:
             possib_dnv2 = (not ch_has_ref) and ch_diff_alt2 and ch_diff_alt1
             return possib_dnv1 or possib_dnv2
 
-        self['possib_dnv'] = self.variants.apply(lambda row: newAllel, axis=1) 
+        self.variants['possib_dnv'] = self.variants.apply(lambda row: newAllel, axis=1) 
         # c4 = (self.variants[smpl_ch + '_gt'] !=
         #       self.variants[smpl_fa + '_gt']) &\
         #     (self.variants[smpl_ch + '_gt'] !=
