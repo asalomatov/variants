@@ -225,7 +225,6 @@ class Variants:
         #df_cols = []
         #df_cols_ind = []
 
-
     def readVcfToDF(self, sample_list=None, chunk_size=None):
         """read vcf file into pandas DF without parsing.
         If sample_list is None, it'll read all of the samples"""
@@ -397,8 +396,7 @@ class Variants:
         gt_mo = self.variants[smpl_mo].apply(lambda i: i.split(':')[0].strip())
         #gt = [i.strip() for i in gt]
         self.variants[smpl_mo + '_gt'] = gt_mo
-        c1 = self.variants[smpl_ch + '_gt'].isin(['1/1', '0/1', '0/2',
-                                                  '1|1', '0|1', '0|2'])
+        c1 = self.variants[smpl_ch + '_gt'].isin(['0/0', '0|0'])
         c2 = self.variants[smpl_fa + '_gt'].isin(['0/0', '0|0'])
         c3 = self.variants[smpl_mo + '_gt'].isin(['0/0', '0|0'])
         # insted if the stricter definition above try this one
@@ -406,8 +404,13 @@ class Variants:
               self.variants[smpl_fa + '_gt']) &\
             (self.variants[smpl_ch + '_gt'] !=
              self.variants[smpl_mo + '_gt'])
-        print('Strictly defined de novo candidates: %s' % sum(c1 & c2 & c3))
-        print('Generally defined de novo candidates: %s' % sum(c4))
+        dnv1 = (~c1) & c2 & c3
+        dnv2 = (~c1) & c4
+        print('Strictly defined de novo candidates: %s' % sum(dnv1))
+        print('Generally defined de novo candidates: %s' % sum(dnv2))
+        if sum(dnv2) > sum(dnv1):
+            print('The additional candidates are:')
+            print(self.variants[dnv2 & (~dnv1)])
         # self.variants = self.variants[c1 & c2 & c3]
         self.variants = self.variants[c4]
         return 0
