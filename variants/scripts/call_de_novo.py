@@ -196,6 +196,8 @@ else:
     pred_labels = numpy.array([], dtype=int)
     test_var_id = numpy.array([], dtype=str)
     test_alleles = numpy.array([], dtype=str)
+    test_alleles_fa = numpy.array([], dtype=str)
+    test_alleles_mo = numpy.array([], dtype=str)
     pred_prob = numpy.array([], dtype=float)
     dp_offspring = numpy.array([], dtype=int)
     dp_father = numpy.array([], dtype=int)
@@ -239,12 +241,21 @@ else:
         pred_prob = numpy.concatenate((pred_prob, tst.pred_y_prob))
         test_var_id = numpy.concatenate((test_var_id, tst.test_set_var_id))
         test_alleles = numpy.concatenate((test_alleles, tst.test_set_alleles))
-        dp_offspring = numpy.concatenate((dp_offspring, tst.test_set_DP_offspring))
+        test_alleles_fa = numpy.concatenate((test_alleles_fa,
+                                             tst.test_set_alleles_fa))
+        test_alleles_mo = numpy.concatenate((test_alleles_mo,
+                                             tst.test_set_alleles_mo))
+        dp_offspring = numpy.concatenate((dp_offspring,
+                                          tst.test_set_DP_offspring))
         dp_father = numpy.concatenate((dp_father, tst.test_set_DP_father))
         dp_mother = numpy.concatenate((dp_mother, tst.test_set_DP_mother))
-    res = pandas.DataFrame({'test_labels': test_labels, 'pred_labels': pred_labels,
-                            'pred_prob': pred_prob, 'test_var_id': test_var_id,
+    res = pandas.DataFrame({'test_labels': test_labels,
+                            'pred_labels': pred_labels,
+                            'pred_prob': pred_prob,
+                            'test_var_id': test_var_id,
                             'test_var_alleles': test_alleles,
+                            'test_var_alleles_fa': test_alleles_fa,
+                            'test_var_alleles_mo': test_alleles_mo,
                             'DP_offspring': dp_offspring,
                             'DP_father': dp_father,
                             'DP_mother': dp_mother})
@@ -258,68 +269,44 @@ else:
     res_u.ix[:, 'pred_labels'] = (res_u['pred_prob'] > prob_cutoff).astype(int)
     res_u = res_u[res_u.pred_labels == 1]
     res_u.reset_index(inplace=True)
-    print('found de novo')
-    print(res_u.shape)
     if res_u.empty:
-        print('found no de novo')
-        sys.exit(0)
-    varid = res_u.var_id.apply(func.splitVarId)
-    lls = res_u.test_var_alleles.apply(func.splitAlleles)
-    res_u = res_u.merge(varid, left_index=True, right_index=True)
-    res_u = res_u.merge(lls, left_index=True, right_index=True)
-    res_u['POS'] = res_u.POS.astype(int)
-    if var_type.lower() == 'indel':
-        c_ins = res_u.ALT.str.contains('+', regex=False)
-        c_del = res_u.ALT.str.contains('-', regex=False)
-        res_u.ix[:, 'ALT'] = res_u.ALT.apply(lambda x: x.strip('+'))
-        res_u.ix[:, 'ALT'] = res_u.ALT.apply(lambda x: x.strip('-'))
-        res_u.ix[c_ins, 'ALT'] = res_u.REF[c_ins] + res_u.ALT[c_ins]
-        res_u.ix[c_del, 'REF'] = res_u.ALT[c_del]
-        res_u.ix[c_del, 'POS'] -= 1
-        ref_pos = res_u[c_del].apply(lambda row:
-                                     func.refAtPos(row['CHROM'],
-                                                   row['POS']),
-                                     axis=1)
-        res_u.ix[c_del, 'REF'] = ref_pos + res_u.ix[c_del, 'REF']
-        res_u.ix[c_del, 'ALT'] = ref_pos
-
-    res_u[['ind_id',
-           'CHROM',
-           'POS',
-           'REF',
-           'ALT',
-           'pred_prob',
-           'DP_offspring',
-           'DP_father',
-           'DP_mother',
-           'var_id',
-           'test_var_alleles']].to_csv(os.path.join(output_dir,
-                                                    child_id +
-                                                    '-' + var_type +
-                                                    '-class.csv'),
-                                       index=False)
-
-    # outp_tsv = os.path.join(output_dir, m_name + '.tsv')
-    # outp_tsv = os.path.join(output_dir, child_id + '.tsv')
-    # func.writePredAsVcf(res_u, outp_tsv, min_DP=min_DP)
-
-    # script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-    #cmd = ' '.join([os.path.join(script_dir, 'vcf2table.sh'),
-    #               outp_tsv,
-    #               script_dir,
-    #               child_id])
-    # print(cmd)
-    # func.runInShell(cmd)
-
-    # summarizeVariants.summarizeMutations(os.path.join(output_dir, child_id + '-ann-onePline.tsv'),
-    #                                                  os.path.join(output_dir, 'denovo'),
-    #                                                  config_file)
-
-
-#cmd = ' '.join([os.path.join(script_dir, 'work', 'summarizeMutations.py'),
-#               os.path.join(output_dir, child_id + '-ann-onePline.tsv'),
-#               os.path.join(output_dir, 'denovo'),
-#                config_file])
-#func.runInShell(cmd)
-
-# work/summarizeMutations.py /mnt/xfs1/home/asalomatov/projects/spark/feature_sets/hc/trio003.p1_642940-ann-onePline.tsv /mnt/xfs1/home/asalomatov/projects/spark/feature_sets/hc/denovo cfg_spark.yml
+        print('found no de novo mutations')
+    else:
+        print('found de novo')
+        print(res_u.shape)
+        varid = res_u.var_id.apply(func.splitVarId)
+        lls = res_u.test_var_alleles.apply(func.splitAlleles)
+        res_u = res_u.merge(varid, left_index=True, right_index=True)
+        res_u = res_u.merge(lls, left_index=True, right_index=True)
+        res_u['POS'] = res_u.POS.astype(int)
+        if var_type.lower() == 'indel':
+            c_ins = res_u.ALT.str.contains('+', regex=False)
+            c_del = res_u.ALT.str.contains('-', regex=False)
+            res_u.ix[:, 'ALT'] = res_u.ALT.apply(lambda x: x.strip('+'))
+            res_u.ix[:, 'ALT'] = res_u.ALT.apply(lambda x: x.strip('-'))
+            res_u.ix[c_ins, 'ALT'] = res_u.REF[c_ins] + res_u.ALT[c_ins]
+            res_u.ix[c_del, 'REF'] = res_u.ALT[c_del]
+            res_u.ix[c_del, 'POS'] -= 1
+            ref_pos = res_u[c_del].apply(lambda row:
+                                         func.refAtPos(row['CHROM'],
+                                                       row['POS']),
+                                         axis=1)
+            res_u.ix[c_del, 'REF'] = ref_pos + res_u.ix[c_del, 'REF']
+            res_u.ix[c_del, 'ALT'] = ref_pos
+        res_u[['ind_id',
+               'CHROM',
+               'POS',
+               'REF',
+               'ALT',
+               'pred_prob',
+               'DP_offspring',
+               'DP_father',
+               'DP_mother',
+               'var_id',
+               'test_var_alleles',
+               'test_alleles_fa',
+               'test_var_alleles_mo']].to_csv(os.path.join(output_dir,
+                                                           child_id +
+                                                           '-' + var_type +
+                                                           '-class.csv'),
+                                              index=False)
