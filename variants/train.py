@@ -49,7 +49,11 @@ class TrainTest:
         self.test_set_var_id = []
         self.test_set_n_smpl = None
         self.train_set_alleles = []
+        self.train_set_alleles_fa = []
+        self.train_set_alleles_mo = []
         self.test_set_alleles = []
+        self.test_set_alleles_fa = []
+        self.test_set_alleles_mo = []
         self.test_set_DP_father = []
         self.test_set_DP_mother = []
         self.test_set_X = None
@@ -59,7 +63,7 @@ class TrainTest:
         self.feature_list = None
         self.feature_list_file = feature_list_file
         self.data_set_file = data_set_file
-        self.y_name = y_name # a list of length 0 or 1
+        self.y_name = y_name  # a list of length 0 or 1
         self.extra_column_names = extra_col_names  # a list of length >= 0
         self.method = None
         self.model = None
@@ -183,6 +187,16 @@ class TrainTest:
                                  df.REF_count_offspring.astype(int).astype(str) +\
                                  '_' +\
                                  df.ALT_base_offspring.astype(str)
+        df['fa_alleles'] = df.REF_base_father +\
+                                 '_' +\
+                                 df.REF_count_father.astype(int).astype(str) +\
+                                 '_' +\
+                                 df.ALT_base_father.astype(str)
+        df['mo_alleles'] = df.REF_base_mother +\
+                                 '_' +\
+                                 df.REF_count_mother.astype(int).astype(str) +\
+                                 '_' +\
+                                 df.ALT_base_mother.astype(str)
 
     def addAllelesBalByDP(self, df):
         df['allele_balance_by_DP_offspring'] = df['allele_balance_offspring'] /\
@@ -248,7 +262,10 @@ class TrainTest:
         self.n_known_smpl = len(set(ind_id))
         self.data_set = self.data_set[self.feature_list +
                                       self.y_name +
-                                      ['var_id'] + ['offspring_alleles'] +
+                                      ['var_id',
+                                       'offspring_alleles',
+                                       'fa_alleles',
+                                       'mo_alleles'] +
                                       self.extra_column_names]
 
     def addExtraColumns(self):
@@ -258,7 +275,10 @@ class TrainTest:
         self.addAlleles(self.data_set)
         self.data_set = self.data_set[self.feature_list +
                                       self.y_name +
-                                      ['var_id'] + ['offspring_alleles'] +
+                                      ['var_id',
+                                       'offspring_alleles',
+                                       'fa_alleles',
+                                       'mo_alleles'] +
                                       self.extra_column_names]
 
     def readTestSet(self):
@@ -267,8 +287,11 @@ class TrainTest:
         self.addAllelesBalByDP(self.data_set)
         self.addVarID(self.data_set)
         self.addAlleles(self.data_set)
-        self.data_set = self.data_set[self.feature_list + ['var_id'] +
-                                      ['offspring_alleles']]
+        self.data_set = self.data_set[self.feature_list +
+                                      ['var_id',
+                                       'offspring_alleles',
+                                       'fa_alleles',
+                                       'mo_alleles']]
 
     def readExtraVars(self, file_name,  n_extra=0):
         if n_extra > 0:
@@ -280,8 +303,12 @@ class TrainTest:
             self.addAllelesBalByDP(x)
             self.addVarID(x)
             self.addAlleles(x)
-            x = x[self.feature_list + self.y_name + ['var_id'] +
-                  ['offspring_alleles'] + self.extra_column_names + ['label']]
+            x = x[self.feature_list + self.y_name +
+                  ['var_id',
+                   'offspring_alleles',
+                   'fa_alleles',
+                   'mo_alleles'] +
+                  self.extra_column_names + ['label']]
             print('extra vars are of the shape %s' % ' '.join(map(str, x.shape)))
             print(self.data_set.columns[~self.data_set.columns.isin(x.columns)])
             print('known vars are of the shape %s' % ' '.join(map(str, self.data_set.shape)))
@@ -291,7 +318,11 @@ class TrainTest:
                        rnd_state=212, over_sample=''):
         """over_sample one of [None, 'SMOT', 'SMOT_bl1', 'SMOT_bl2', 'SMOT_svm']
         """
-        X = self.data_set[self.feature_list + ['offspring_alleles'] + ['var_id']]
+        X = self.data_set[self.feature_list +
+                                      ['var_id',
+                                       'offspring_alleles',
+                                       'fa_alleles',
+                                       'mo_alleles']]
         y = self.data_set.label.astype(int)
         X_tr, X_te, y_tr, y_te = train_test_split(X, y, train_size=trn_size,
                                                   random_state=rnd_state,
@@ -304,6 +335,10 @@ class TrainTest:
         self.test_set_var_id = list(X_te.var_id)
         self.train_set_alleles = list(X_tr.offspring_alleles)
         self.test_set_alleles = list(X_te.offspring_alleles)
+        self.train_set_alleles_fa = list(X_tr.fa_alleles)
+        self.test_set_alleles_fa = list(X_te.fa_alleles)
+        self.train_set_alleles_mo = list(X_tr.mo_alleles)
+        self.test_set_alleles_mo = list(X_te.mo_alleles)
         if self.stdize:
             self.train_set_X = scale(self.train_set_X)
             self.test_set_X = scale(self.test_set_X)
@@ -338,6 +373,8 @@ class TrainTest:
         self.test_set_y = self.data_set.label[~c1].astype(int).values
         self.test_set_var_id = self.data_set.var_id[~c1].astype(str).values
         self.test_set_alleles = self.data_set.offspring_alleles[~c1].astype(str).values
+        self.test_set_alleles_fa = self.data_set.fa_alleles[~c1].astype(str).values
+        self.test_set_alleles_mo = self.data_set.mo_alleles[~c1].astype(str).values
         self.test_set_DP_offspring = self.data_set.DP_offspring[~c1].astype(int).values
         self.test_set_DP_father = self.data_set.DP_father[~c1].astype(int).values
         self.test_set_DP_mother = self.data_set.DP_mother[~c1].astype(int).values
@@ -349,6 +386,8 @@ class TrainTest:
     def keepPosOnly(self):
         c1 = self.train_set_y == 1
         self.train_set_alleles = self.train_set_alleles[c1]
+        self.train_set_alleles_fa = self.train_set_alleles_fa[c1]
+        self.train_set_alleles_mo = self.train_set_alleles_mo[c1]
         self.train_set_var_id = self.train_set_var_id[c1]
         self.train_set_X = self.train_set_X[c1]
         self.train_set_y = self.train_set_y[c1]
