@@ -388,15 +388,13 @@ class Variants:
     def keepOnlyPossibleDenovos(self, smpl_ch, smpl_fa, smpl_mo):
         """child != 0/0 and both parents == 0/0"""
         gt_ch = self.variants[smpl_ch].apply(lambda i: i.split(':')[0].strip())
-        #gt = [i.strip() for i in gt]
         self.variants[smpl_ch + '_gt'] = gt_ch
+        c1 = self.variants[smpl_ch + '_gt'].isin(['0/0', '0|0'])
+        self.variants = self.variants[~c1]
         gt_fa = self.variants[smpl_fa].apply(lambda i: i.split(':')[0].strip())
-        #gt = [i.strip() for i in gt]
         self.variants[smpl_fa + '_gt'] = gt_fa
         gt_mo = self.variants[smpl_mo].apply(lambda i: i.split(':')[0].strip())
-        #gt = [i.strip() for i in gt]
         self.variants[smpl_mo + '_gt'] = gt_mo
-        c1 = self.variants[smpl_ch + '_gt'].isin(['0/0', '0|0'])
         c2 = self.variants[smpl_fa + '_gt'].isin(['0/0', '0|0'])
         c3 = self.variants[smpl_mo + '_gt'].isin(['0/0', '0|0'])
         # insted if the stricter definition above try this one
@@ -413,20 +411,14 @@ class Variants:
             return possib_dnv1 or possib_dnv2
 
         # self.variants['possib_dnv'] = self.variants.apply(
-        c4 = self.variants.apply(
+        dnv2 = self.variants.apply(
             lambda row: newAllel(row), axis=1)
-        # c4 = (self.variants[smpl_ch + '_gt'] !=
-        #       self.variants[smpl_fa + '_gt']) &\
-        #     (self.variants[smpl_ch + '_gt'] !=
-        #      self.variants[smpl_mo + '_gt'])
-        dnv1 = (~c1) & c2 & c3
-        dnv2 = (~c1) & c4  # self.variants.possib_dnv
+        dnv1 = c2 & c3
         print('Strictly defined de novo candidates: %s' % sum(dnv1))
         print('Generally defined de novo candidates: %s' % sum(dnv2))
-        if sum(dnv2) > sum(dnv1):
-            print('The additional candidates are:')
-            print(self.variants[dnv2 & (~dnv1)])
-        # self.variants = self.variants[c1 & c2 & c3]
+        # if sum(dnv2) > sum(dnv1):
+        #     print('The additional candidates are:')
+        #     print(self.variants[dnv2 & (~dnv1)])
         self.variants = self.variants[dnv2]
         return 0
 
