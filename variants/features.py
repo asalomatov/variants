@@ -126,6 +126,8 @@ class Features:
         print('rm nan mo')
         print(vrs.variants.shape)
         # vrs.removeHomRef(self.sample_id)
+        # print('rm homref loci child')
+        # print(vrs.variants.shape)
         # vrs.removeHomVar(self.father_id)
         # vrs.removeHomVar(self.mother_id)
         vrs.removeNoGT(self.sample_id)
