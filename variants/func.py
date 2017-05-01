@@ -418,10 +418,16 @@ def splitVarId(x):
 def splitAlleles(x, n_allels=1):
     res = x.split('_')
     col_names = ['REF', 'ref_DP', 'ALT1', 'alt1_DP']
-    if len(res) > 4:
+    if len(res) == 6:
         col_names += ['ALT2', 'alt2_DP']
     if len(res) == 8:
         col_names += ['ALT3', 'alt3_DP']
+    if len(res) == 10:
+        col_names += ['ALT4', 'alt4_DP']
+    if len(res) == 12:
+        col_names += ['ALT5', 'alt5_DP']
+    if len(res) == 14:
+        col_names += ['ALT6', 'alt6_DP']
     DP = sum(map(int, res[1::2]))
     df = pandas.DataFrame({'counts': map(int, res[3::2]),
                            'alleles': res[2::2]})
