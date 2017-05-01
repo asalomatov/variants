@@ -141,7 +141,8 @@ class Features:
         print(vrs.variants.shape)
         vrs.keepOnlyPossibleDenovos(self.sample_id,
                                     self.father_id,
-                                    self.mother_id)
+                                    self.mother_id,
+                                    vartype.lower() == 'indel')
         print('keep de novos')
         print(vrs.variants.shape)
         temp_dir = tempfile.mkdtemp()

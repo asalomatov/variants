@@ -385,7 +385,7 @@ class Variants:
                 fam_var.append('_'.join([fam_id, next_var.CHROM, str(next_var.POS), next_var.REF, v]))
         return fam_var
 
-    def keepOnlyPossibleDenovos(self, smpl_ch, smpl_fa, smpl_mo):
+    def keepOnlyPossibleDenovos(self, smpl_ch, smpl_fa, smpl_mo, only01=True):
         """child != 0/0 and both parents == 0/0"""
         gt_ch = self.variants[smpl_ch].apply(lambda i: i.split(':')[0].strip())
         self.variants[smpl_ch + '_gt'] = gt_ch
@@ -418,7 +418,10 @@ class Variants:
         # if sum(dnv2) > sum(dnv1):
         #     print('The additional candidates are:')
         #     print(self.variants[dnv2 & (~dnv1)])
-        self.variants = self.variants[dnv2]
+        if only01:
+            self.variants = self.variants[dnv1]
+        else:
+            self.variants = self.variants[dnv2]
         return 0
 
     def saveAsVcf(self):
