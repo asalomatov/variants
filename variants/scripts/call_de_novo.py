@@ -304,7 +304,7 @@ else:
                'DP_mother',
                'var_id',
                'test_var_alleles',
-               'test_alleles_fa',
+               'test_var_alleles_fa',
                'test_var_alleles_mo']].to_csv(os.path.join(output_dir,
                                                            child_id +
                                                            '-' + var_type +
