@@ -382,10 +382,12 @@ class Variants:
             for nucl_alt in next_var.ALT:
                 alt_allel.append(nucl_alt.sequence)
             for v in alt_allel:
-                fam_var.append('_'.join([fam_id, next_var.CHROM, str(next_var.POS), next_var.REF, v]))
+                fam_var.append('_'.join([fam_id, next_var.CHROM,
+                                         str(next_var.POS), next_var.REF, v]))
         return fam_var
 
-    def keepOnlyPossibleDenovos(self, smpl_ch, smpl_fa, smpl_mo, only01=True):
+    def keepOnlyPossibleDenovos(self, smpl_ch, smpl_fa,
+                                smpl_mo, strict_dnv=True):
         """child != 0/0 and both parents == 0/0"""
         gt_ch = self.variants[smpl_ch].apply(lambda i: i.split(':')[0].strip())
         self.variants[smpl_ch + '_gt'] = gt_ch
@@ -418,7 +420,7 @@ class Variants:
         # if sum(dnv2) > sum(dnv1):
         #     print('The additional candidates are:')
         #     print(self.variants[dnv2 & (~dnv1)])
-        if only01:
+        if strict_dnv:
             self.variants = self.variants[dnv1]
         else:
             self.variants = self.variants[dnv2]
