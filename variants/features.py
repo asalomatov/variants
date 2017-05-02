@@ -108,7 +108,8 @@ class Features:
         sys.stdout.write('removing ' + tmpdir)
         func.runInShell('rm -rf ' + tmpdir)
 
-    def extractFeatures(self, genome_ref, bam_readcount, vartype='SNP', n_cores=3):
+    def extractFeatures(self, genome_ref, bam_readcount,
+                        vartype='SNP', strict_dnv=True, n_cores=3):
         """For the defined sample extract variant loci from the vcf file.
         """
         vrs = variants.Variants(self.sample_vcf, self.family_id)
@@ -116,51 +117,40 @@ class Features:
             sample_list=[self.sample_id, self.father_id, self.mother_id])
         print('all variants')
         print(vrs.variants.shape)
+        print('removing loci with missing genotypes ...')
         vrs.removeNaN(self.sample_id)
-        print('rm nan child')
-        print(vrs.variants.shape)
         vrs.removeNaN(self.father_id)
-        print('rm nan fa')
-        print(vrs.variants.shape)
         vrs.removeNaN(self.mother_id)
-        print('rm nan mo')
-        print(vrs.variants.shape)
         # vrs.removeHomRef(self.sample_id)
         # print('rm homref loci child')
         # print(vrs.variants.shape)
         # vrs.removeHomVar(self.father_id)
         # vrs.removeHomVar(self.mother_id)
         vrs.removeNoGT(self.sample_id)
-        print('rm no GT child')
-        print(vrs.variants.shape)
         vrs.removeNoGT(self.father_id)
-        print('rm no GT fa')
-        print(vrs.variants.shape)
         vrs.removeNoGT(self.mother_id)
-        print('rm no GT mo')
+        print('variants left:')
         print(vrs.variants.shape)
+        print('keeping only de novo candidates ...')
         vrs.keepOnlyPossibleDenovos(self.sample_id,
                                     self.father_id,
                                     self.mother_id,
-                                    vartype.lower() == 'indel')
-        print('keep de novos')
+                                    strict_dnv)
         print(vrs.variants.shape)
+        print('extracting features from bam files ...')
         temp_dir = tempfile.mkdtemp()
+        print('working directory is %s' % temp_dir)
         reg_file = tempfile.mktemp(dir=temp_dir,
                                    suffix='_' + self.sample_id +
                                    '.region')
-        print(reg_file)
         sys.stdout.flush()        
         vrs.vcfDF2regions(reg_file, vartype)
         self.sample_features = os.path.join(temp_dir,
                                             self.sample_id + '.features')
-        print(self.sample_features)
         self.father_features = os.path.join(temp_dir,
                                             self.father_id + '.features')
-        print(self.father_features)
         self.mother_features = os.path.join(temp_dir,
                                             self.mother_id + '.features')
-        print(self.mother_features)
         sys.stdout.flush()
         pool = Pool(n_cores)
         results = pool.map(multi_wrap,
@@ -179,8 +169,9 @@ class Features:
                              self.mother_features,
                              genome_ref,
                              bam_readcount)])
-        print(results)
         if max(results) > 0:
             sys.stderr.write('Feature extraction failed')
             return 1
+        else:
+            print('Feature extraction completed.')
         return 0
