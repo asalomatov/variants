@@ -75,6 +75,11 @@ known_vars = None
 output_dir = cfg['output_directory']
 test_set_pat = output_dir + '/%s'
 
+if cfg['strict_denovo'].lower() == 'yes':
+    strict_dnv = True
+else:
+    strict_dnv = False
+
 if not os.path.isfile(model):
     # script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
     # print(script_dir)
@@ -130,7 +135,7 @@ if not f.initTrioFor(child_id):
 else:
     sys.stdout.write('\ninitialized trio for ' + child_id)
     sys.stdout.write('\n')
-    f.extractFeatures(genome_ref, bam_readcount, var_type)
+    f.extractFeatures(genome_ref, bam_readcount, var_type, strict_dnv)
     pool = Pool(3)
     fam_features = pool.map(multi_wrap_readBamReadcount,
                             [(f.sample_features, var_type, 14),
@@ -138,9 +143,12 @@ else:
                              (f.mother_features, var_type, 14)])
     if rm_tmp:
         f.removeTmpDir()
-    fam_features[0].columns = ['CHROM', 'POS'] + func.addSuffix(fam_features[0].columns[2:], '_offspring')
-    fam_features[1].columns = ['CHROM', 'POS'] + func.addSuffix(fam_features[1].columns[2:], '_father')
-    fam_features[2].columns = ['CHROM', 'POS'] + func.addSuffix(fam_features[2].columns[2:], '_mother')
+    fam_features[0].columns = ['CHROM', 'POS'] + func.addSuffix(
+        fam_features[0].columns[2:], '_offspring')
+    fam_features[1].columns = ['CHROM', 'POS'] + func.addSuffix(
+        fam_features[1].columns[2:], '_father')
+    fam_features[2].columns = ['CHROM', 'POS'] + func.addSuffix(
+        fam_features[2].columns[2:], '_mother')
     fam_f = fam_features[0]
     fam_f = fam_f.merge(fam_features[1], how='inner', on=['CHROM', 'POS'])
     fam_f = fam_f.merge(fam_features[2], how='inner', on=['CHROM', 'POS'])
