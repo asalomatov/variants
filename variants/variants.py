@@ -423,7 +423,7 @@ class Variants:
         if strict_dnv:
             self.variants = self.variants[dnv1]
         else:
-            self.variants = self.variants[dnv2]
+            self.variants = self.variants[dnv2 & (~dnv1)]
         return 0
 
     def saveAsVcf(self):
