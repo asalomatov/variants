@@ -74,11 +74,7 @@ genome_ref = cfg['genome_ref']
 known_vars = None
 output_dir = cfg['output_directory']
 test_set_pat = output_dir + '/%s'
-
-if cfg['strict_denovo'].lower() == 'yes':
-    strict_dnv = True
-else:
-    strict_dnv = False
+strict_dnv = cfg['strict_denovo']  # will interpret yes as bool
 
 if not os.path.isfile(model):
     # script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
