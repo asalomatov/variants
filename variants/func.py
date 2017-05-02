@@ -428,7 +428,8 @@ def splitAlleles(x, n_allels=1):
     df.sort_values(by='counts', ascending=False, inplace=True)
     # print(df)
     alt_DP = df.counts.sum()
-    ALT = ','.join(df.alleles)
+    # ALT = ','.join(df.alleles)
+    ALT = df.alleles.iloc[0]
     res += [ALT, alt_DP, DP]
     # print(res)
     col_names += ['ALT', 'alt_DP', 'DP']
