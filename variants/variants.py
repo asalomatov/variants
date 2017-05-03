@@ -387,7 +387,7 @@ class Variants:
         return fam_var
 
     def keepOnlyPossibleDenovos(self, smpl_ch, smpl_fa,
-                                smpl_mo, strict_dnv=True):
+                                smpl_mo, dnv_def=1):
         """child != 0/0 and both parents == 0/0"""
         gt_ch = self.variants[smpl_ch].apply(lambda i: i.split(':')[0].strip())
         self.variants[smpl_ch + '_gt'] = gt_ch
@@ -420,8 +420,10 @@ class Variants:
         # if sum(dnv2) > sum(dnv1):
         #     print('The additional candidates are:')
         #     print(self.variants[dnv2 & (~dnv1)])
-        if strict_dnv:
+        if dnv_def == 1:
             self.variants = self.variants[dnv1]
+        elif dnv_def == 2:
+            self.variants = self.variants[dnv2]
         else:
             self.variants = self.variants[dnv2 & (~dnv1)]
         return 0

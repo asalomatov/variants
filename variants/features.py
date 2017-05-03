@@ -109,7 +109,7 @@ class Features:
         func.runInShell('rm -rf ' + tmpdir)
 
     def extractFeatures(self, genome_ref, bam_readcount,
-                        vartype='SNP', strict_dnv=True, n_cores=3):
+                        vartype='SNP', dnv_def=1, n_cores=3):
         """For the defined sample extract variant loci from the vcf file.
         """
         vrs = variants.Variants(self.sample_vcf, self.family_id)
@@ -135,7 +135,7 @@ class Features:
         vrs.keepOnlyPossibleDenovos(self.sample_id,
                                     self.father_id,
                                     self.mother_id,
-                                    strict_dnv)
+                                    dnv_def)
         print(vrs.variants.shape)
         print('extracting features from bam files ...')
         temp_dir = tempfile.mkdtemp()

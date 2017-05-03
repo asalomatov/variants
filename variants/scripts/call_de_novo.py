@@ -74,7 +74,7 @@ genome_ref = cfg['genome_ref']
 known_vars = None
 output_dir = cfg['output_directory']
 test_set_pat = output_dir + '/%s'
-strict_dnv = cfg['strict_denovo']  # will interpret yes as bool
+dnv_def = cfg['denovo_definition']  # will interpret yes as bool
 
 if not os.path.isfile(model):
     # script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -131,7 +131,7 @@ if not f.initTrioFor(child_id):
 else:
     sys.stdout.write('\ninitialized trio for ' + child_id)
     sys.stdout.write('\n')
-    f.extractFeatures(genome_ref, bam_readcount, var_type, strict_dnv)
+    f.extractFeatures(genome_ref, bam_readcount, var_type, dnv_def)
     pool = Pool(3)
     fam_features = pool.map(multi_wrap_readBamReadcount,
                             [(f.sample_features, var_type, 14),
