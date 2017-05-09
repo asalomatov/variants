@@ -297,13 +297,13 @@ else:
                                          axis=1)
             res_u.ix[c_del, 'REF'] = ref_pos + res_u.ix[c_del, 'REF']
             res_u.ix[c_del, 'ALT'] = ref_pos
-        res_u['var_id'] = res_u.ind_id.astype(str) +\
-                          res_u.CHROM.astype(str) +\
+        res_u['var_id'] = res_u.ind_id.astype(str) + '_' +\
+                          res_u.CHROM.astype(str) + '_' +\
                           res_u.POS.astype(str)
-        res_u['var_id_a'] = res_u.ind_id.astype(str) +\
-                            res_u.CHROM.astype(str) +\
-                            res_u.POS.astype(str) +\
-                            res_u.REF +\
+        res_u['var_id_a'] = res_u.ind_id.astype(str) + '_' +\
+                            res_u.CHROM.astype(str) + '_' +\
+                            res_u.POS.astype(str) + '_' +\
+                            res_u.REF + '_' +\
                             res_u.ALT
         res_u[['ind_id',
                'CHROM',
