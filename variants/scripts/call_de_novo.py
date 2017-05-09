@@ -315,7 +315,7 @@ else:
                'DP_father',
                'DP_mother',
                'var_id',
-               'var_is_a',
+               'var_id_a',
                'test_var_alleles',
                'test_var_alleles_fa',
                'test_var_alleles_mo']].to_csv(os.path.join(output_dir,
