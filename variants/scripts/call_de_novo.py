@@ -293,7 +293,8 @@ else:
             res_u.ix[c_del, 'POS'] -= 1
             ref_pos = res_u[c_del].apply(lambda row:
                                          func.refAtPos(row['CHROM'],
-                                                       row['POS']),
+                                                       row['POS'],
+                                                       genref=genome_ref),
                                          axis=1)
             res_u.ix[c_del, 'REF'] = ref_pos + res_u.ix[c_del, 'REF']
             res_u.ix[c_del, 'ALT'] = ref_pos
