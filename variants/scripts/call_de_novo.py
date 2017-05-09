@@ -297,6 +297,14 @@ else:
                                          axis=1)
             res_u.ix[c_del, 'REF'] = ref_pos + res_u.ix[c_del, 'REF']
             res_u.ix[c_del, 'ALT'] = ref_pos
+        res_u['var_id'] = res_u.ind_is.astype(str) +\
+                          res_u.CHROM.astype(str) +\
+                          res_u.POS.astype(str)
+        res_u['var_id_a'] = res_u.ind_is.astype(str) +\
+                            res_u.CHROM.astype(str) +\
+                            res_u.POS.astype(str) +\
+                            res_u.REF +\
+                            res_u.ALT
         res_u[['ind_id',
                'CHROM',
                'POS',
@@ -307,6 +315,7 @@ else:
                'DP_father',
                'DP_mother',
                'var_id',
+               'var_is_a',
                'test_var_alleles',
                'test_var_alleles_fa',
                'test_var_alleles_mo']].to_csv(os.path.join(output_dir,
