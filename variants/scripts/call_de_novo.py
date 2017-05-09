@@ -74,7 +74,7 @@ genome_ref = cfg['genome_ref']
 known_vars = None
 output_dir = cfg['output_directory']
 test_set_pat = output_dir + '/%s'
-dnv_def = cfg['denovo_definition']  # will interpret yes as bool
+dnv_def = cfg['denovo_definition']
 
 if not os.path.isfile(model):
     # script_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -297,10 +297,10 @@ else:
                                          axis=1)
             res_u.ix[c_del, 'REF'] = ref_pos + res_u.ix[c_del, 'REF']
             res_u.ix[c_del, 'ALT'] = ref_pos
-        res_u['var_id'] = res_u.ind_is.astype(str) +\
+        res_u['var_id'] = res_u.ind_id.astype(str) +\
                           res_u.CHROM.astype(str) +\
                           res_u.POS.astype(str)
-        res_u['var_id_a'] = res_u.ind_is.astype(str) +\
+        res_u['var_id_a'] = res_u.ind_id.astype(str) +\
                             res_u.CHROM.astype(str) +\
                             res_u.POS.astype(str) +\
                             res_u.REF +\
