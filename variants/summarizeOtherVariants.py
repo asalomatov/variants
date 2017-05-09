@@ -43,8 +43,8 @@ def summarizeMutations(infile,
                        prefix,
                        outp_dir,
                        config_file,
-                       exac_anno='/mnt/scratch/asalomatov/data/ExAC/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt',
-                       sfari_scores='/mnt/scratch/asalomatov/data/SFARI/gene-score-only.csv'):
+                       exac_anno='/mnt/xfs1/scratch/asalomatov/data/ExAC/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt',
+                       sfari_scores='/mnt/xfs1/scratch/asalomatov/data/SFARI/gene-score-only.csv'):
     with open(config_file, 'r') as f:
         cfg = yaml.safe_load(f)
 
@@ -64,7 +64,7 @@ def summarizeMutations(infile,
         sys.exit('ped_file or ped_file_extended must be defined')
 
 
-    #kv_vcf = pandas.read_csv('/mnt/scratch/asalomatov/data/columbia/feature_sets/known/all_known.txt', sep='\t')
+    #kv_vcf = pandas.read_csv('/mnt/xfs1/scratch/asalomatov/data/columbia/feature_sets/known/all_known.txt', sep='\t')
     #kv_vcf = kv_vcf[['ind_id','CHROM', 'POS', 'REF_offspring', 'ALT_base_offspring', 'status', 'descr', 'DP_offspring', 'DP_father', 'DP_mother']]
     #kv_vcf = kv_vcf[kv_vcf.descr.isin(['after'])]
     #kv_vcf['var_id'] = kv_vcf.ind_id.astype(str)+'_'+kv_vcf.CHROM.astype(str)+'_'+kv_vcf.POS.astype(str)
@@ -381,7 +381,7 @@ if __name__ == '__main__':
 #                       prefix,
 #                       outp_dir,
 #                       config_file,
-#                      exac_anno='/mnt/scratch/asalomatov/data/ExAC/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt'):
+#                      exac_anno='/mnt/xfs1/scratch/asalomatov/data/ExAC/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt'):
 
 
 
@@ -409,11 +409,11 @@ if __name__ == '__main__':
     #                                 'sift_pred': ['D']}
     #                },
     #       'min_DP': 10,
-    #       'vcf_pattern': '/mnt/scratch/asalomatov/data/columbia/vcf/%s_%s-02_%s-01.annotated-norm.vcf.gz',
-    #       'bam_pattern': '/mnt/scratch/asalomatov/data/columbia/bam/Sample.%s.bam',
-    #       'ped_file': '/mnt/scratch/asalomatov/data/columbia/pcgc_ped.txt',
-    #       'known_variants': '/mnt/scratch/asalomatov/data/columbia/pcgc_denovo_snp.tsv',
-    #       'output_directory': '/mnt/scratch/asalomatov/data/columbia/feature_sets_01'
+    #       'vcf_pattern': '/mnt/xfs1/scratch/asalomatov/data/columbia/vcf/%s_%s-02_%s-01.annotated-norm.vcf.gz',
+    #       'bam_pattern': '/mnt/xfs1/scratch/asalomatov/data/columbia/bam/Sample.%s.bam',
+    #       'ped_file': '/mnt/xfs1/scratch/asalomatov/data/columbia/pcgc_ped.txt',
+    #       'known_variants': '/mnt/xfs1/scratch/asalomatov/data/columbia/pcgc_denovo_snp.tsv',
+    #       'output_directory': '/mnt/xfs1/scratch/asalomatov/data/columbia/feature_sets_01'
     #}
 
 

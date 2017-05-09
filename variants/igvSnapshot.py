@@ -49,6 +49,7 @@ if args.genome_build in [38]:
     igv_inp.lab_id = igv_inp.ind_id
 
 myped = ped.Ped(args.ped_file, ['bam', 'vcf'])
+#myped = ped.Ped(args.ped_file, ['batch', 'bam'])
 
 
 tmpl1 = """
