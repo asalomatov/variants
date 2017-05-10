@@ -149,8 +149,34 @@ def run_once(f):
 
 
 def refAtPos(chrom, pos, genref):
-    ref_allel = pysam.faidx(genref, str(chrom)+':'+str(pos)+'-'+str(pos))[1].strip()
+    ref_allel = pysam.faidx(genref,
+                            str(chrom)+':'+str(pos)+'-'+str(pos))[1].strip()
     return ref_allel
+
+
+def vepVar2vcfVar(vep_var, genref):
+    '''Convert VEP variant description, eg 3_148802449_-/TTTAG,
+    to VCF fields, CHROM, POS, REF, ALT.'''
+    chrom, pos, refalt = vep_var.split('_')
+    ref, alt = refalt.split('/')
+    if ref != '-' and alt != '-':
+        #  snp
+        pass
+    elif ref == '-' and alt != '-':
+        #  insertion
+        pos = int(pos) - 1
+        ref = refAtPos(chrom=chrom, pos=pos, genref=genref)
+        alt = ref + alt
+    elif ref != '-' and alt == '-':
+        #  deletion
+        pos = int(pos) - 1
+        alt = refAtPos(chrom=chrom, pos=pos, genref=genref)
+        ref = alt + ref
+    else:
+        sys.exit('Unknown mutation type: %s' % vep_var)
+    res = pandas.Series([chrom, pos, ref, alt],
+                        ['CHROM', 'POS', 'REF', 'ALT'])
+    return res
 
 
 def df2sklearn(mydf, col_to_keep):
