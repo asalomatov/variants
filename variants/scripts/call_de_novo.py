@@ -203,10 +203,16 @@ else:
     test_alleles_fa = numpy.array([], dtype=str)
     test_alleles_mo = numpy.array([], dtype=str)
     pred_prob = numpy.array([], dtype=float)
-    dp_offspring = numpy.array([], dtype=int)
-    dp_father = numpy.array([], dtype=int)
-    dp_mother = numpy.array([], dtype=int)
-
+    dp_of = numpy.array([], dtype=int)
+    dp_fa = numpy.array([], dtype=int)
+    dp_mo = numpy.array([], dtype=int)
+    num_alt_of = numpy.array([], dtype=int)
+    num_alt_fa = numpy.array([], dtype=int)
+    num_alt_mo = numpy.array([], dtype=int)
+    num_alt_all = numpy.array([], dtype=int)
+    inherit_fa = numpy.array([], dtype=int)
+    inherit_mo = numpy.array([], dtype=int)
+    inherit_all = numpy.array([], dtype=int)
     for i, row in myped.ped.iterrows():
         if row['ind_id'] != child_id:
             continue
@@ -249,20 +255,33 @@ else:
                                              tst.test_set_alleles_fa))
         test_alleles_mo = numpy.concatenate((test_alleles_mo,
                                              tst.test_set_alleles_mo))
-        dp_offspring = numpy.concatenate((dp_offspring,
-                                          tst.test_set_DP_offspring))
-        dp_father = numpy.concatenate((dp_father, tst.test_set_DP_father))
-        dp_mother = numpy.concatenate((dp_mother, tst.test_set_DP_mother))
+        dp_of = numpy.concatenate((dp_of, tst.test_set_DP_offspring))
+        dp_fa = numpy.concatenate((dp_fa, tst.test_set_DP_father))
+        dp_mo = numpy.concatenate((dp_mo, tst.test_set_DP_mother))
+        num_alt_of = numpy.concatenate((num_alt_of, tst.test_set_num_alt))
+        num_alt_fa = numpy.concatenate((num_alt_fa, tst.test_set_num_alt_fa))
+        num_alt_mo = numpy.concatenate((num_alt_mo, tst.test_set_num_alt_mo))
+        num_alt_all = numpy.concatenate((num_alt_all, tst.test_set_num_alt_all))
+        inherit_fa = numpy.concatenate((inherit_fa, tst.test_set_inherit_fa))
+        inherit_mo = numpy.concatenate((inherit_mo, tst.test_set_inherit_mo))
+        inherit_all = numpy.concatenate((inherit_all, tst.test_set_inherit_all))
     res = pandas.DataFrame({'test_labels': test_labels,
                             'pred_labels': pred_labels,
                             'pred_prob': pred_prob,
                             'test_var_id': test_var_id,
-                            'test_var_alleles': test_alleles,
-                            'test_var_alleles_fa': test_alleles_fa,
-                            'test_var_alleles_mo': test_alleles_mo,
-                            'DP_offspring': dp_offspring,
-                            'DP_father': dp_father,
-                            'DP_mother': dp_mother})
+                            'alleles_of': test_alleles,
+                            'alleles_fa': test_alleles_fa,
+                            'alleles_mo': test_alleles_mo,
+                            'num_alt_of': num_alt_of,
+                            'num_alt_fa': num_alt_fa,
+                            'num_alt_mo': num_alt_mo,
+                            'num_alt_all': num_alt_all,
+                            'inherit_fa': inherit_fa,
+                            'inherit_mo': inherit_mo,
+                            'inherit_all': inherit_all,
+                            'DP_of': dp_of,
+                            'DP_fa': dp_fa,
+                            'DP_mo': dp_mo})
     m_name = os.path.basename(model)
     m_name = '.'.join(m_name.split('.')[:-1]) + '_tstlvl' + str(lvl)
     res['method'] = m_name
@@ -312,15 +331,22 @@ else:
                'REF',
                'ALT',
                'pred_prob',
-               'DP_offspring',
-               'DP_father',
-               'DP_mother',
+               'DP_of',
+               'DP_fa',
+               'DP_mo',
                'var_id',
                'var_id_a',
-               'test_var_alleles',
-               'test_var_alleles_fa',
-               'test_var_alleles_mo']].to_csv(os.path.join(output_dir,
-                                                           child_id +
-                                                           '-' + var_type +
-                                                           '-class.csv'),
-                                              index=False)
+               'alleles_of',
+               'alleles_fa',
+               'alleles_mo',
+               'num_alt_of',
+               'num_alt_fa',
+               'num_alt_mo',
+               'num_alt_all',
+               'inherit_fa',
+               'inherit_mo',
+               'inherit_all']].to_csv(os.path.join(output_dir,
+                                                   child_id +
+                                                   '-' + var_type +
+                                                   '-class.csv'),
+                                      index=False)
