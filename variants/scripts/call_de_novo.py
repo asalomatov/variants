@@ -272,7 +272,7 @@ else:
     res = pandas.DataFrame({'test_labels': test_labels,
                             'pred_labels': pred_labels,
                             'pred_prob': pred_prob,
-                            'test_var_id': test_var_id,
+                            'var_id': test_var_id,
                             'alleles_of': test_alleles,
                             'alleles_fa': test_alleles_fa,
                             'alleles_mo': test_alleles_mo,
@@ -289,8 +289,8 @@ else:
     m_name = os.path.basename(model)
     m_name = '.'.join(m_name.split('.')[:-1]) + '_tstlvl' + str(lvl)
     res['method'] = m_name
-    res = res[~res.test_var_alleles.str.contains('nan')]
-    res['var_id'] = res['test_var_id']
+    res = res[~res.alleles_of.str.contains('nan')]
+    # res['var_id'] = res['test_var_id']
     res_u = res[~res.var_id.duplicated()]
     res_u.reset_index(inplace=True)
     res_u.ix[:, 'pred_labels'] = (res_u['pred_prob'] > prob_cutoff).astype(int)
