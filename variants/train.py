@@ -68,8 +68,12 @@ class TrainTest:
         self.test_set_num_alt_fa = []
         self.test_set_num_alt_mo = []
         self.test_set_num_alt_all = []
-        self.test_set_DP_father = []
-        self.test_set_DP_mother = []
+        self.train_set_DP_fa = []
+        self.train_set_DP_mo = []
+        self.train_set_DP_of = []
+        self.test_set_DP_fa = []
+        self.test_set_DP_mo = []
+        self.test_set_DP_of = []
         self.test_set_X = None
         self.test_set_y = None
         self.pred_y = None
@@ -389,6 +393,12 @@ class TrainTest:
         self.train_set_y = y_tr.values
         self.test_set_y = y_te.values
         # carry some variables
+        self.train_set_DP_of = list(X_tr.DP_offspring)
+        self.test_set_DP_of = list(X_te.DP_offspring)
+        self.train_set_DP_fa = list(X_tr.DP_father)
+        self.test_set_DP_fa = list(X_te.DP_father)
+        self.train_set_DP_mo = list(X_tr.DP_mother)
+        self.test_set_DP_mo = list(X_te.DP_mother)
         self.train_set_var_id = list(X_tr.var_id)
         self.test_set_var_id = list(X_te.var_id)
         self.train_set_alleles = list(X_tr.offspring_alleles)
@@ -447,6 +457,9 @@ class TrainTest:
         self.test_set_X = self.data_set[self.feature_list].values
         self.test_set_y = self.data_set.label.astype(int).values
         # carry some variables
+        self.test_set_DP_of = list(self.data_set.DP_offspring)
+        self.test_set_DP_fa = list(self.data_set.DP_father)
+        self.test_set_DP_mo = list(self.data_set.DP_mother)
         self.test_set_var_id = list(self.data_set.var_id)
         self.test_set_alleles = list(self.data_set.offspring_alleles)
         self.test_set_alleles_fa = list(self.data_set.fa_alleles)

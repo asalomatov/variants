@@ -221,7 +221,8 @@ else:
         tst = train.TrainTest(row['test'],
                               list_of_features,
                               m_pkl['y_name'],
-                              m_pkl['extra_col_names'] + ['DP_offspring', 'DP_father', 'DP_mother'])
+                              m_pkl['extra_col_names'] +\
+                              ['DP_offspring', 'DP_father', 'DP_mother'])
         if is_keras:
             tst.is_keras = True
         tst.feature_list = list_of_features
@@ -255,9 +256,9 @@ else:
                                              tst.test_set_alleles_fa))
         test_alleles_mo = numpy.concatenate((test_alleles_mo,
                                              tst.test_set_alleles_mo))
-        dp_of = numpy.concatenate((dp_of, tst.test_set_DP_offspring))
-        dp_fa = numpy.concatenate((dp_fa, tst.test_set_DP_father))
-        dp_mo = numpy.concatenate((dp_mo, tst.test_set_DP_mother))
+        dp_of = numpy.concatenate((dp_of, tst.test_set_DP_of))
+        dp_fa = numpy.concatenate((dp_fa, tst.test_set_DP_fa))
+        dp_mo = numpy.concatenate((dp_mo, tst.test_set_DP_mo))
         num_alt_of = numpy.concatenate((num_alt_of, tst.test_set_num_alt))
         num_alt_fa = numpy.concatenate((num_alt_fa, tst.test_set_num_alt_fa))
         num_alt_mo = numpy.concatenate((num_alt_mo, tst.test_set_num_alt_mo))
