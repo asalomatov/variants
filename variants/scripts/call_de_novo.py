@@ -346,8 +346,8 @@ else:
                'num_alt_all',
                'inherit_fa',
                'inherit_mo',
-               'inherit_all']].to_csv(os.path.join(output_dir,
-                                                   child_id +
-                                                   '-' + var_type +
-                                                   '-class.csv'),
-                                      index=False)
+               'inherit_prnts']].to_csv(os.path.join(output_dir,
+                                                     child_id +
+                                                     '-' + var_type +
+                                                     '-class.csv'),
+                                        index=False)
