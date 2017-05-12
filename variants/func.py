@@ -17,6 +17,14 @@ vcf_required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
                                 'QUAL', 'FILTER']
 
 
+def addRank(df, clm_name):
+    df[clm_name + '_rank'] = df[clm_name].rank()
+
+
+def addPercRank(df, clm_name):
+    df[clm_name + '_perc_rank'] = df[clm_name].rank(pct=True)
+
+
 def readVcfToDF1(fname, sample_list=None, chunk_size=None):
     """read vcf file into pandas DF without parsing.
     If sample_list is None, it'll read all of the samples"""
@@ -153,10 +161,15 @@ def refAtPos(chrom, pos, genref):
                             str(chrom)+':'+str(pos)+'-'+str(pos))[1].strip()
     return ref_allel
 
+# /mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa  
+
 
 def vepVar2vcfVar(vep_var, genref):
-    '''Convert VEP variant description, eg 3_148802449_-/TTTAG,
-    to VCF fields, CHROM, POS, REF, ALT.'''
+    """
+    Convert VEP variant description (Uploaded_variation),
+    e.g., 3_148802449_-/TTTAG,
+    to VCF fields, CHROM, POS, REF, ALT.
+    """
     chrom, pos, refalt = vep_var.split('_')
     ref, alt = refalt.split('/')
     if ref != '-' and alt != '-':
