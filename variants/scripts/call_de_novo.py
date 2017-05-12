@@ -212,7 +212,7 @@ else:
     num_alt_all = numpy.array([], dtype=int)
     inherit_fa = numpy.array([], dtype=int)
     inherit_mo = numpy.array([], dtype=int)
-    inherit_all = numpy.array([], dtype=int)
+    inherit_prnts = numpy.array([], dtype=int)
     for i, row in myped.ped.iterrows():
         if row['ind_id'] != child_id:
             continue
@@ -221,8 +221,9 @@ else:
         tst = train.TrainTest(row['test'],
                               list_of_features,
                               m_pkl['y_name'],
-                              m_pkl['extra_col_names'] +\
-                              ['DP_offspring', 'DP_father', 'DP_mother'])
+                              m_pkl['extra_col_names'])
+# +\
+#                              ['DP_offspring', 'DP_father', 'DP_mother'])
         if is_keras:
             tst.is_keras = True
         tst.feature_list = list_of_features
@@ -262,10 +263,12 @@ else:
         num_alt_of = numpy.concatenate((num_alt_of, tst.test_set_num_alt))
         num_alt_fa = numpy.concatenate((num_alt_fa, tst.test_set_num_alt_fa))
         num_alt_mo = numpy.concatenate((num_alt_mo, tst.test_set_num_alt_mo))
-        num_alt_all = numpy.concatenate((num_alt_all, tst.test_set_num_alt_all))
+        num_alt_all = numpy.concatenate((num_alt_all,
+                                         tst.test_set_num_alt_all))
         inherit_fa = numpy.concatenate((inherit_fa, tst.test_set_inherit_fa))
         inherit_mo = numpy.concatenate((inherit_mo, tst.test_set_inherit_mo))
-        inherit_all = numpy.concatenate((inherit_all, tst.test_set_inherit_all))
+        inherit_prnts = numpy.concatenate((inherit_prnts,
+                                           tst.test_set_inherit_prnts))
     res = pandas.DataFrame({'test_labels': test_labels,
                             'pred_labels': pred_labels,
                             'pred_prob': pred_prob,
@@ -279,7 +282,7 @@ else:
                             'num_alt_all': num_alt_all,
                             'inherit_fa': inherit_fa,
                             'inherit_mo': inherit_mo,
-                            'inherit_all': inherit_all,
+                            'inherit_prnts': inherit_prnts,
                             'DP_of': dp_of,
                             'DP_fa': dp_fa,
                             'DP_mo': dp_mo})
