@@ -329,6 +329,10 @@ else:
                             res_u.POS.astype(str) + '_' +\
                             res_u.REF + '_' +\
                             res_u.ALT
+        res_u.DP_of = res_u.DP_of.astype(int)
+        res_u.DP_fa = res_u.DP_fa.astype(int)
+        res_u.DP_mo = res_u.DP_mo.astype(int)
+        res_u.num_alt_all = res_u.num_alt_all.astype(int)
         res_u[['ind_id',
                'CHROM',
                'POS',
