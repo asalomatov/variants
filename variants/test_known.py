@@ -26,8 +26,9 @@ list_of_features = m_pkl['features']
 tst = train.TrainTest(known_vars,
                       list_of_features,
                       m_pkl['y_name'],
-                      m_pkl['extra_col_names'] +
-                      ['DP_offspring', 'DP_father', 'DP_mother'])
+                      m_pkl['extra_col_names'])
+# +
+#                      ['DP_offspring', 'DP_father', 'DP_mother'])
 tst.feature_list = list_of_features
 if is_keras:
     tst.is_keras = True

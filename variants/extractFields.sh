@@ -9,7 +9,12 @@ java -jar /mnt/xfs1/bioinfo/software/installs/bcbio_nextgen/150607/Cellar/snpeff
     "ANN[*].AA_POS" "ANN[*].AA_LEN" "ANN[*].DISTANCE" "ANN[*].ERRORS" \
     "LOF[*].GENE" "LOF[*].GENEID" "LOF[*].NUMTR" "LOF[*].PERC" \
     "NMD[*].GENE" "NMD[*].GENEID" "NMD[*].NUMTR" "NMD[*].PERC" \
-    "ind_id" "pred_labels" "pred_prob" "status" "ref_DP" "alt_DP" "DP" "DP_offspring" "DP_father" "DP_mother" \
+    "ind_id" "pred_labels" "pred_prob" "status" "ref_DP" "alt_DP" \
+    "DP" "DP_of" "DP_fa" "DP_mo" \
+    "alleles_of" "alleles_fa" "alleles_mo" \
+    "num_alt_of" "num_alt_fa" "num_alt_mo" "num_alt_all" \
+    "inherit_fa" "inherit_mo" "inherit_all" \
+    "var_id" "var_id_a" \
     "dbNSFP_PROVEAN_score" "dbNSFP_CADD_raw_rankscore" \
     "dbNSFP_GERP_RS"  "dbNSFP_genename"  \
     "dbNSFP_GERP_NR" "dbNSFP_Ensembl_transcriptid"  \

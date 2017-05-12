@@ -70,3 +70,13 @@ allele_balance_mother
 allele_balance_by_DP_offspring
 allele_balance_by_DP_father
 allele_balance_by_DP_mother
+num_allels_offspring
+num_allels_father
+num_allels_mother
+num_alleles_all
+inherit_fa
+inherit_mo
+inherit_prnts
+DP_offspring
+DP_father
+DP_mother

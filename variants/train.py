@@ -51,9 +51,23 @@ class TrainTest:
         self.train_set_alleles = []
         self.train_set_alleles_fa = []
         self.train_set_alleles_mo = []
+        self.train_set_inherit_mo = []
+        self.train_set_inherit_fa = []
+        self.train_set_inherit_prnts = []
         self.test_set_alleles = []
         self.test_set_alleles_fa = []
         self.test_set_alleles_mo = []
+        self.test_set_inherit_mo = []
+        self.test_set_inherit_fa = []
+        self.test_set_inherit_prnts = []
+        self.train_set_num_alt = []
+        self.train_set_num_alt_fa = []
+        self.train_set_num_alt_mo = []
+        self.train_set_num_alt_all = []
+        self.test_set_num_alt = []
+        self.test_set_num_alt_fa = []
+        self.test_set_num_alt_mo = []
+        self.test_set_num_alt_all = []
         self.test_set_DP_father = []
         self.test_set_DP_mother = []
         self.test_set_X = None
@@ -69,21 +83,54 @@ class TrainTest:
         self.model = None
         self.perf_mertics = None
         self.roc = None
-        self.stdize = True
+        self.stdize = 'no'
         self.feature_importance = None
         self.threshold = 0.5
         self.is_keras = False
 
     def addAlleleBalance(self, mydf=None):
         if mydf is None:
-            self.data_set['allele_balance_offspring'] = self.data_set['REF_count_offspring']/self.data_set['DP_offspring']
-            self.data_set['allele_balance_father'] = self.data_set['REF_count_father']/self.data_set['DP_father']
-            self.data_set['allele_balance_mother'] = self.data_set['REF_count_mother']/self.data_set['DP_mother']
+            self.data_set['allele_balance_offspring'] =\
+                                                        self.data_set.REF_count_offspring.astype(float) / \
+                                                        self.data_set.DP_offspring.astype(float)
+            self.data_set['allele_balance_father'] =\
+                                                     self.data_set.REF_count_father.astype(float) / \
+                                                     self.data_set.DP_father.astype(float)
+            self.data_set['allele_balance_mother'] = self.data_set.REF_count_mother.astype(float) / \
+                                                     self.data_set.DP_mother.astype(float)
         else:
-            mydf['allele_balance_offspring'] = mydf['REF_count_offspring']/mydf['DP_offspring']
-            mydf['allele_balance_father'] = mydf['REF_count_father']/mydf['DP_father']
-            mydf['allele_balance_mother'] = mydf['REF_count_mother']/mydf['DP_mother']
+            mydf['allele_balance_offspring'] = mydf.REF_count_offspring.astype(float)/mydf.DP_offspring.astype(float)
+            mydf['allele_balance_father'] = mydf.REF_count_father.astype(float)/mydf.DP_father.astype(float)
+            mydf['allele_balance_mother'] = mydf.REF_count_mother.astype(float)/mydf.DP_mother.astype(float)
             return mydf
+
+    def checkIfInherited(self, child_alt_base, parent_alt_base):
+        ch_bases = str(child_alt_base).split('_')[::2]
+        prnt_bases = str(parent_alt_base).split('_')[::2]
+        res = 0
+        for i in ch_bases:
+            if i in prnt_bases:
+                res = res + 1
+        return res
+        
+    def addInheritedFromParents(self, df=None):
+        if df is None:
+            self.data_set.ix[self.data_set.ALT_base_father.isnull(), 'ALT_base_father'] = 'none'
+            self.data_set.ix[self.data_set.ALT_base_mother.isnull(), 'ALT_base_mother'] = 'none'
+            self.data_set['inherit_fa'] = self.data_set.apply(
+                lambda row: self.checkIfInherited(row['ALT_base_offspring'], row['ALT_base_father']), axis=1)
+            self.data_set['inherit_mo'] = self.data_set.apply(
+                lambda row: self.checkIfInherited(row['ALT_base_offspring'], row['ALT_base_mother']), axis=1)
+            self.data_set['inherit_prnts'] = self.data_set.inherit_fa + self.data_set.inherit_mo
+        else:
+            df.ix[df.ALT_base_father.isnull(), 'ALT_base_father'] = 'none'
+            df.ix[df.ALT_base_mother.isnull(), 'ALT_base_mother'] = 'none'
+            df['inherit_fa'] = df.apply(
+                lambda row: self.checkIfInherited(row['ALT_base_offspring'], row['ALT_base_father']), axis=1)
+            df['inherit_mo'] = df.apply(
+                lambda row: self.checkIfInherited(row['ALT_base_offspring'], row['ALT_base_mother']), axis=1)
+            df['inherit_prnts'] = df.inherit_fa + df.inherit_mo
+            return df
 
     def addLabels(self, level):
         """level > 1 are specific to SSC data.
@@ -152,10 +199,11 @@ class TrainTest:
             c_Krumm = self.data_set.descr.isin(['Krumm'])
             c_both = self.data_set.descr.isin(['both'])
             c_ioss = self.data_set.descr.isin(['Iossifov'])
-            self.data_set.ix[c_Y & (c_Krumm | c_both), 'label'] = 1
+            self.data_set.ix[~(c_Krumm | c_both | c_ioss), 'label'] = 0
+#           self.data_set.ix[c_Y & (c_Krumm | c_both), 'label'] = 1
             self.data_set.ix[c_Y, 'label'] = 1
             self.data_set.ix[c_ND & c_both, 'label'] = 1
-            self.data_set.ix[c_N & (c_Krumm | c_both), 'label'] = 0
+#            self.data_set.ix[c_N & (c_Krumm | c_both), 'label'] = 0
             self.data_set.ix[c_N, 'label'] = 0
 #            c_ND = self.data_set.status.isin(['ND'])
 #            self.data_set.ix[c_ND | c_ioss, 'label'] = None
@@ -184,65 +232,69 @@ class TrainTest:
     def addAlleles(self, df):
         df['offspring_alleles'] = df.REF_base_offspring +\
                                  '_' +\
-                                 df.REF_count_offspring.astype(int).astype(str) +\
+                                 df.REF_count_offspring.astype(float).astype(int).astype(str) +\
                                  '_' +\
                                  df.ALT_base_offspring.astype(str)
         df['fa_alleles'] = df.REF_base_father +\
                                  '_' +\
-                                 df.REF_count_father.astype(int).astype(str) +\
+                                 df.REF_count_father.astype(float).astype(int).astype(str) +\
                                  '_' +\
                                  df.ALT_base_father.astype(str)
         df['mo_alleles'] = df.REF_base_mother +\
                                  '_' +\
-                                 df.REF_count_mother.astype(int).astype(str) +\
+                                 df.REF_count_mother.astype(float).astype(int).astype(str) +\
                                  '_' +\
                                  df.ALT_base_mother.astype(str)
+        df['num_alleles_all'] = df.num_allels_offspring.astype(float) +\
+                                df.num_allels_father.astype(float) +\
+                                df.num_allels_mother.astype(float)\
 
     def addAllelesBalByDP(self, df):
-        df['allele_balance_by_DP_offspring'] = df['allele_balance_offspring'] /\
+        df['allele_balance_by_DP_offspring'] = df['allele_balance_offspring'].astype(float) /\
                                                df['DP_offspring'].astype(float)
-        df['allele_balance_by_DP_father'] = df['allele_balance_father'] /\
+        df['allele_balance_by_DP_father'] = df['allele_balance_father'].astype(float) /\
                 df['DP_father'].astype(float)
-        df['allele_balance_by_DP_mother'] = df['allele_balance_mother'] /\
+        df['allele_balance_by_DP_mother'] = df['allele_balance_mother'].astype(float) /\
                             df['DP_mother'].astype(float)
         # make all count fields relative
-        df['REF_num_plus_strand_offspring'] = df['REF_num_plus_strand_offspring'] /\
+        df['REF_num_plus_strand_offspring'] = df['REF_num_plus_strand_offspring'].astype(float) /\
                                                df['DP_offspring'].astype(float)
-        df['REF_num_plus_strand_father'] = df['REF_num_plus_strand_father'] /\
+        df['REF_num_plus_strand_father'] = df['REF_num_plus_strand_father'].astype(float) /\
                 df['DP_father'].astype(float)
-        df['REF_num_plus_strand_mother'] = df['REF_num_plus_strand_mother'] /\
+        df['REF_num_plus_strand_mother'] = df['REF_num_plus_strand_mother'].astype(float) /\
                             df['DP_mother'].astype(float)
-        df['REF_num_minus_strand_offspring'] = df['REF_num_minus_strand_offspring'] /\
+        df['REF_num_minus_strand_offspring'] = df['REF_num_minus_strand_offspring'].astype(float) /\
                                                df['DP_offspring'].astype(float)
-        df['REF_num_minus_strand_father'] = df['REF_num_minus_strand_father'] /\
+        df['REF_num_minus_strand_father'] = df['REF_num_minus_strand_father'].astype(float) /\
                 df['DP_father'].astype(float)
-        df['REF_num_minus_strand_mother'] = df['REF_num_minus_strand_mother'] /\
+        df['REF_num_minus_strand_mother'] = df['REF_num_minus_strand_mother'].astype(float) /\
                             df['DP_mother'].astype(float)
-        df['REF_num_q2_containing_reads_offspring'] = df['REF_num_q2_containing_reads_offspring'] /\
+        df['REF_num_q2_containing_reads_offspring'] = df['REF_num_q2_containing_reads_offspring'].astype(float) /\
                                                df['DP_offspring'].astype(float)
-        df['REF_num_q2_containing_reads_father'] = df['REF_num_q2_containing_reads_father'] /\
+        df['REF_num_q2_containing_reads_father'] = df['REF_num_q2_containing_reads_father'].astype(float) /\
                 df['DP_father'].astype(float)
-        df['REF_num_q2_containing_reads_mother'] = df['REF_num_q2_containing_reads_mother'] /\
+        df['REF_num_q2_containing_reads_mother'] = df['REF_num_q2_containing_reads_mother'].astype(float) /\
                             df['DP_mother'].astype(float)
 
-        df['ALT_num_plus_strand_offspring'] = df['ALT_num_plus_strand_offspring'] /\
+        df['ALT_num_plus_strand_offspring'] = df['ALT_num_plus_strand_offspring'].astype(float) /\
                                                df['DP_offspring'].astype(float)
-        df['ALT_num_plus_strand_father'] = df['ALT_num_plus_strand_father'] /\
+        df['ALT_num_plus_strand_father'] = df['ALT_num_plus_strand_father'].astype(float) /\
                 df['DP_father'].astype(float)
-        df['ALT_num_plus_strand_mother'] = df['ALT_num_plus_strand_mother'] /\
+        df['ALT_num_plus_strand_mother'] = df['ALT_num_plus_strand_mother'].astype(float) /\
                             df['DP_mother'].astype(float)
-        df['ALT_num_minus_strand_offspring'] = df['ALT_num_minus_strand_offspring'] /\
+        df['ALT_num_minus_strand_offspring'] = df['ALT_num_minus_strand_offspring'].astype(float) /\
                                                df['DP_offspring'].astype(float)
-        df['ALT_num_minus_strand_father'] = df['ALT_num_minus_strand_father'] /\
+        df['ALT_num_minus_strand_father'] = df['ALT_num_minus_strand_father'].astype(float) /\
                 df['DP_father'].astype(float)
-        df['ALT_num_minus_strand_mother'] = df['ALT_num_minus_strand_mother'] /\
+        df['ALT_num_minus_strand_mother'] = df['ALT_num_minus_strand_mother'].astype(float) /\
                             df['DP_mother'].astype(float)
-        df['ALT_num_q2_containing_reads_offspring'] = df['ALT_num_q2_containing_reads_offspring'] /\
+        df['ALT_num_q2_containing_reads_offspring'] = df['ALT_num_q2_containing_reads_offspring'].astype(float) /\
                                                df['DP_offspring'].astype(float)
-        df['ALT_num_q2_containing_reads_father'] = df['ALT_num_q2_containing_reads_father'] /\
+        df['ALT_num_q2_containing_reads_father'] = df['ALT_num_q2_containing_reads_father'].astype(float) /\
                 df['DP_father'].astype(float)
-        df['ALT_num_q2_containing_reads_mother'] = df['ALT_num_q2_containing_reads_mother'] /\
+        df['ALT_num_q2_containing_reads_mother'] = df['ALT_num_q2_containing_reads_mother'].astype(float) /\
                             df['DP_mother'].astype(float)
+        return df
 
     def readFeatureList(self):
         """features_file contains names of the columns to be
@@ -253,23 +305,25 @@ class TrainTest:
             self.feature_list = [x.strip('\n') for x in self.feature_list]
 
     def readDataSet(self):
-        self.data_set = pandas.read_csv(self.data_set_file, sep='\t')
+        self.data_set = pandas.read_table(self.data_set_file, dtype=str)
         self.addAlleleBalance()
+        self.addInheritedFromParents()
         self.addAllelesBalByDP(self.data_set)
         self.addVarID(self.data_set)
         self.addAlleles(self.data_set)
         ind_id = map(lambda i: i.split('_')[0], self.data_set.var_id)
         self.n_known_smpl = len(set(ind_id))
-        self.data_set = self.data_set[self.feature_list +
-                                      self.y_name +
-                                      ['var_id',
-                                       'offspring_alleles',
-                                       'fa_alleles',
-                                       'mo_alleles'] +
-                                      self.extra_column_names]
+        # self.data_set = self.data_set[self.feature_list +
+        #                               self.y_name +
+        #                               ['var_id',
+        #                                'offspring_alleles',
+        #                                'fa_alleles',
+        #                                'mo_alleles'] +
+        #                               self.extra_column_names]
 
     def addExtraColumns(self):
         self.addAlleleBalance()
+        self.addInheritedFromParents()
         self.addAllelesBalByDP(self.data_set)
         self.addVarID(self.data_set)
         self.addAlleles(self.data_set)
@@ -284,6 +338,7 @@ class TrainTest:
     def readTestSet(self):
         self.data_set = pandas.read_csv(self.data_set_file, sep='\t')
         self.addAlleleBalance()
+        self.addInheritedFromParents()
         self.addAllelesBalByDP(self.data_set)
         self.addVarID(self.data_set)
         self.addAlleles(self.data_set)
@@ -300,17 +355,18 @@ class TrainTest:
             print('read extra vars %s' % ' '.join(map(str, x.shape)))
             x['label'] = 0
             x = self.addAlleleBalance(x)
+            x = self.addInheritedFromParents(x)
             self.addAllelesBalByDP(x)
             self.addVarID(x)
             self.addAlleles(x)
-            x = x[self.feature_list + self.y_name +
-                  ['var_id',
-                   'offspring_alleles',
-                   'fa_alleles',
-                   'mo_alleles'] +
-                  self.extra_column_names + ['label']]
+            # x = x[self.feature_list + self.y_name +
+            #       ['var_id',
+            #        'offspring_alleles',
+            #        'fa_alleles',
+            #        'mo_alleles'] +
+            #       self.extra_column_names + ['label']]
             print('extra vars are of the shape %s' % ' '.join(map(str, x.shape)))
-            print(self.data_set.columns[~self.data_set.columns.isin(x.columns)])
+            # print(self.data_set.columns[~self.data_set.columns.isin(x.columns)])
             print('known vars are of the shape %s' % ' '.join(map(str, self.data_set.shape)))
             self.data_set = pandas.concat([self.data_set, x], axis=0)
 
@@ -318,19 +374,21 @@ class TrainTest:
                        rnd_state=212, over_sample=''):
         """over_sample one of [None, 'SMOT', 'SMOT_bl1', 'SMOT_bl2', 'SMOT_svm']
         """
-        X = self.data_set[self.feature_list +
-                                      ['var_id',
-                                       'offspring_alleles',
-                                       'fa_alleles',
-                                       'mo_alleles']]
+        # X = self.data_set[self.feature_list +
+        #                               ['var_id',
+        #                                'offspring_alleles',
+        #                                'fa_alleles',
+        #                                'mo_alleles']]
         y = self.data_set.label.astype(int)
-        X_tr, X_te, y_tr, y_te = train_test_split(X, y, train_size=trn_size,
+        X_tr, X_te, y_tr, y_te = train_test_split(self.data_set, y, train_size=trn_size,
                                                   random_state=rnd_state,
                                                   stratify=y)
+        # convert to arrays
         self.train_set_X = X_tr[self.feature_list].values
         self.test_set_X = X_te[self.feature_list].values
         self.train_set_y = y_tr.values
         self.test_set_y = y_te.values
+        # carry some variables
         self.train_set_var_id = list(X_tr.var_id)
         self.test_set_var_id = list(X_te.var_id)
         self.train_set_alleles = list(X_tr.offspring_alleles)
@@ -339,10 +397,25 @@ class TrainTest:
         self.test_set_alleles_fa = list(X_te.fa_alleles)
         self.train_set_alleles_mo = list(X_tr.mo_alleles)
         self.test_set_alleles_mo = list(X_te.mo_alleles)
-        if self.stdize:
+        self.train_set_num_alt = list(X_tr.num_allels_offspring)
+        self.test_set_num_alt = list(X_te.num_allels_offspring)
+        self.train_set_num_alt_fa = list(X_tr.num_allels_father)
+        self.test_set_num_alt_fa = list(X_te.num_allels_father)
+        self.train_set_num_alt_mo = list(X_tr.num_allels_mother)
+        self.test_set_num_alt_mo = list(X_te.num_allels_mother)
+        self.train_set_num_alt_all = list(X_tr.num_alleles_all)
+        self.test_set_num_alt_all = list(X_te.num_alleles_all)
+        self.train_set_inherit_fa = list(X_tr.inherit_fa)
+        self.test_set_inherit_fa = list(X_te.inherit_fa)
+        self.train_set_inherit_mo = list(X_tr.inherit_mo)
+        self.test_set_inherit_mo = list(X_te.inherit_mo)
+        self.train_set_inherit_prnts = list(X_tr.inherit_prnts)
+        self.test_set_inherit_prnts = list(X_te.inherit_prnts)
+        if self.stdize.lower() == 'yes':
+            print('scaling...')
             self.train_set_X = scale(self.train_set_X)
             self.test_set_X = scale(self.test_set_X)
-#        if over_sample is not '':
+#        If over_sample is not '':
 #            ratio = float(numpy.count_nonzero(self.train_set_y == 1)) /\
 #                    float(numpy.count_nonzero(self.train_set_y == 0))
 #            smote = None
@@ -369,19 +442,38 @@ class TrainTest:
     def data2Test(self):
         c1 = self.data_set.var_id.isin(self.train_set_var_id)
         print(str(sum(c1)) + ' variants will be removed')
-        self.test_set_X = self.data_set[self.feature_list][~c1].values
-        self.test_set_y = self.data_set.label[~c1].astype(int).values
-        self.test_set_var_id = self.data_set.var_id[~c1].astype(str).values
-        self.test_set_alleles = self.data_set.offspring_alleles[~c1].astype(str).values
-        self.test_set_alleles_fa = self.data_set.fa_alleles[~c1].astype(str).values
-        self.test_set_alleles_mo = self.data_set.mo_alleles[~c1].astype(str).values
-        self.test_set_DP_offspring = self.data_set.DP_offspring[~c1].astype(int).values
-        self.test_set_DP_father = self.data_set.DP_father[~c1].astype(int).values
-        self.test_set_DP_mother = self.data_set.DP_mother[~c1].astype(int).values
-#        self.test_set_vartype = self.data_set.DP_mother[~c1].astype(int).values
-        if self.stdize:
-            print('scaling data')
+        self.data_set = self.data_set[~c1]
+        # convert to arrays
+        self.test_set_X = self.data_set[self.feature_list].values
+        self.test_set_y = self.data_set.label.astype(int).values
+        # carry some variables
+        self.test_set_var_id = list(self.data_set.var_id)
+        self.test_set_alleles = list(self.data_set.offspring_alleles)
+        self.test_set_alleles_fa = list(self.data_set.fa_alleles)
+        self.test_set_alleles_mo = list(self.data_set.mo_alleles)
+        self.test_set_num_alt = list(self.data_set.num_allels_offspring)
+        self.test_set_num_alt_fa = list(self.data_set.num_allels_father)
+        self.test_set_num_alt_mo = list(self.data_set.num_allels_mother)
+        self.test_set_num_alt_all = list(self.data_set.num_alleles_all)
+        self.test_set_inherit_fa = list(self.data_set.inherit_fa)
+        self.test_set_inherit_mo = list(self.data_set.inherit_mo)
+        self.test_set_inherit_prnts = list(self.data_set.inherit_prnts)
+        if self.stdize.lower() == 'yes':
+            print('scaling...')
             self.test_set_X = scale(self.test_set_X)
+#         self.test_set_X = self.data_set[self.feature_list][~c1].values
+#         self.test_set_y = self.data_set.label[~c1].astype(int).values
+#         self.test_set_var_id = self.data_set.var_id[~c1].astype(str).values
+#         self.test_set_alleles = self.data_set.offspring_alleles[~c1].astype(str).values
+#         self.test_set_alleles_fa = self.data_set.fa_alleles[~c1].astype(str).values
+#         self.test_set_alleles_mo = self.data_set.mo_alleles[~c1].astype(str).values
+#         self.test_set_DP_offspring = self.data_set.DP_offspring[~c1].astype(int).values
+#         self.test_set_DP_father = self.data_set.DP_father[~c1].astype(int).values
+#         self.test_set_DP_mother = self.data_set.DP_mother[~c1].astype(int).values
+# #        self.test_set_vartype = self.data_set.DP_mother[~c1].astype(int).values
+#         if self.stdize:
+#             print('scaling data')
+#             self.test_set_X = scale(self.test_set_X)
 
     def keepPosOnly(self):
         c1 = self.train_set_y == 1
@@ -547,9 +639,9 @@ if __name__ == '__main__':
                             help='A string corresponding to a classification method')
     arg_parser.add_argument('--standardize',
  #                           nargs='+',
-                            type=bool,
-                            default=False,
-                            help='True/False')
+                            type=str,
+                            default='No',
+                            help='Yes/No')
     arg_parser.add_argument('--extra_negatives',
 #                            nargs='+',
                             type=str,
@@ -606,7 +698,8 @@ if __name__ == '__main__':
     trn = train.TrainTest(input_file,
                           list_of_features,
                           ['status'],
-                          ['descr', 'callers'])
+                          ['descr'])
+#                          ['descr', 'callers'])
     trn.stdize = stdize
     trn.threshold = threshold
     trn.readFeatureList()
