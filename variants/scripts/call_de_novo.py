@@ -302,7 +302,7 @@ else:
         print('found de novo')
         print(res_u.shape)
         varid = res_u.var_id.apply(func.splitVarId)
-        lls = res_u.test_var_alleles.apply(func.splitAlleles)
+        lls = res_u.alleles_of.apply(func.splitAlleles)
         res_u = res_u.merge(varid, left_index=True, right_index=True)
         res_u = res_u.merge(lls, left_index=True, right_index=True)
         res_u['POS'] = res_u.POS.astype(int)
