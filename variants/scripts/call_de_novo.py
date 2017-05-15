@@ -128,6 +128,7 @@ f = features.Features(myped, known_vars)
 # trio has to be complete with no files missing
 if not f.initTrioFor(child_id):
     sys.stderr.write('\nfailed to initialize trio for ' + child_id)
+    sys.exit(1)
 else:
     sys.stdout.write('\ninitialized trio for ' + child_id)
     sys.stdout.write('\n')

@@ -494,14 +494,14 @@ def mergeClmnsToInfo(df, clmn_list=[]):
 def writePredAsVcf(pred_df, outp_file, min_DP=0):
     pred_df.reset_index(inplace=True, drop=True)
     # res1 = pred_df.var_id.apply(splitVarId)
-    res2 = pred_df.test_var_alleles.apply(splitAlleles)
+    res2 = pred_df.alleles_of.apply(splitAlleles)
     res2 = res2[['ref_DP', 'alt_DP', 'DP']]
     # x = pred_df.merge(res1, left_index=True, right_index=True)
     x = pred_df.merge(res2, left_index=True, right_index=True)
     print 'shape all DP:', pred_df.shape
-    x = x[(x['DP_offspring'] >= min_DP) &
-          (x['DP_father'] >= min_DP) &
-          (x['DP_mother'] >= min_DP)]
+    x = x[(x['DP_of'] >= min_DP) &
+          (x['DP_fa'] >= min_DP) &
+          (x['DP_mo'] >= min_DP)]
     print 'shape DP >= ', min_DP
     print x.shape
     required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER']
