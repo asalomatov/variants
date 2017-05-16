@@ -36,38 +36,32 @@ cols_to_output = [u'CHROM',
                   u'inherit_fa',
                   u'inherit_mo',
                   u'inherit_prnts',
-                  u'ANN[*].EFFECT',
-                  u'ANN[*].IMPACT',
-                  u'ANN[*].GENE',
-                  u'ANN[*].GENEID',
-                  u'ANN[*].FEATURE',
-                  u'ANN[*].FEATUREID',
-                  u'ANN[*].BIOTYPE',
-                  u'Ann[*].RANK',
-                  u'ANN[*].HGVS_C',
-                  u'ANN[*].HGVS_P',
-                  u'ANN[*].CDNA_POS',
-                  u'ANN[*].CDNA_LEN',
-                  u'ANN[*].CDS_POS',
-                  u'ANN[*].CDS_LEN',
-                  u'ANN[*].AA_POS',
-                  u'ANN[*].AA_LEN',
-                  u'ANN[*].DISTANCE',
-                  u'ANN[*].ERRORS',
-                  u'LOF[*].GENE',
-                  u'LOF[*].GENEID',
-                  u'LOF[*].NUMTR',
-                  u'LOF[*].PERC',
-                  u'NMD[*].GENE',
-                  u'NMD[*].GENEID',
-                  u'NMD[*].NUMTR',
-                  u'NMD[*].PERC',
-                  u'ANN[*].EFFECT',
-                  u'ANN[*].IMPACT',
-                  u'ANN[*].GENE',
-                  u'ANN[*].GENEID',
-                  u'ANN[*].FEATUREID',
-                  u'ANN[*].BIOTYPE',
+                  u'ANN.EFFECT',
+                  u'ANN.IMPACT',
+                  u'ANN.GENE',
+                  u'ANN.GENEID',
+                  u'ANN.FEATURE',
+                  u'ANN.FEATUREID',
+                  u'ANN.BIOTYPE',
+                  u'Ann.RANK',
+                  u'ANN.HGVS_C',
+                  u'ANN.HGVS_P',
+                  u'ANN.CDNA_POS',
+                  u'ANN.CDNA_LEN',
+                  u'ANN.CDS_POS',
+                  u'ANN.CDS_LEN',
+                  u'ANN.AA_POS',
+                  u'ANN.AA_LEN',
+                  u'ANN.DISTANCE',
+                  u'ANN.ERRORS',
+                  u'LOF.GENE',
+                  u'LOF.GENEID',
+                  u'LOF.NUMTR',
+                  u'LOF.PERC',
+                  u'NMD.GENE',
+                  u'NMD.GENEID',
+                  u'NMD.NUMTR',
+                  u'NMD.PERC',
 #                  u'dbNSFP_rs_dbSNP146',
                   u'dbNSFP_aapos',
                   u'dbNSFP_aaref',
@@ -134,6 +128,7 @@ extra_cols = ['c_spark_genes',
               'c_lof',
               'c_syn',
               'c_dmg_miss',
+              'c_dmg_miss_woMCAP',
               'c_impact_lof']
 
 
@@ -194,14 +189,21 @@ def summarizeMutations(infile,
     sfari_scores_df = pandas.read_csv(sfari_scores)
     vn = pandas.read_table(infile)
     vn.columns = vn.columns.str.translate(None, '#')
+    vn.columns = [i.replace('[*]', '') for i in vn.columns]
     # read vep
     vep = func.readVcfToDF(infile_vep)
     vep = vep.merge(vep.apply(lambda row: func.vepVar2vcfVar(row, cfg['genome_ref']), axis=1),
                     right_index=True, left_index=True)
 
-    vn.ix[:, 'gene'] = vn['ANN[*].GENE']
+    vn.ix[:, 'gene'] = vn['ANN.GENE']
     vn = vn.merge(
-        exac[[u'syn_z', u'mis_z', u'lof_z', u'pLI', u'pRec', u'pNull', u'gene']],
+        exac[[u'syn_z', u'syn_z_rank', u'syn_z_perc_rank',
+              u'mis_z', u'mis_z_rank', u'mis_z_perc_rank',
+              u'lof_z', u'lof_z_rank', u'lof_z_perc_rank',
+              u'pLI', u'pLI_rank', u'pLI_perc_rank',
+              u'pRec', u'pRec_rank', u'pRec_perc_rank',
+              u'pNull', u'pNull_rank', u'pNull_perc_rank',
+              u'gene']],
         on='gene', how='left')
     vn = vn.merge(
         sfari_scores_df,
@@ -210,10 +212,10 @@ def summarizeMutations(infile,
     vn['v_id'] = vn.ind_id.astype(str) + '_' +\
                  vn['CHROM'].astype(str) + '_' +\
                  vn.POS.astype(str) + '_' +\
-                 vn['ANN[*].GENE'] # + '_' +\
-                 # vn['ANN[*].FEATUREID']
-                 # vn['ANN[*].EFFECT'] + '_' +\
-                 # vn['ANN[*].IMPACT']
+                 vn['ANN.GENE'] # + '_' +\
+                 # vn['ANN.FEATUREID']
+                 # vn['ANN.EFFECT'] + '_' +\
+                 # vn['ANN.IMPACT']
     vn['var_id'] = vn.ind_id.astype(str) + '_' +\
                  vn['CHROM'].astype(str) + '_' +\
                  vn.POS.astype(str)
@@ -223,7 +225,8 @@ def summarizeMutations(infile,
                              vn.POS.astype(str) + '_' +\
                              vn.REF.astype(str) + '_' +\
                              vn.ALT.astype(str) + '_' +\
-                             vn.FEATUREID.astype(str)
+                             vn['ANN.FEATUREID'].astype(str)
+    
     vep['chr_pos_allel_tr'] = vep['CHROM'].astype(str) + '_' +\
                              vep.POS.astype(str) + '_' +\
                              vep.REF.astype(str) + '_' +\
@@ -231,7 +234,10 @@ def summarizeMutations(infile,
                              vep.Feature.astype(str)
     print('vn dim before merging with vep:')
     print(vn.shape)
-    vn = vn.merge(vep, how='left', left_on='chr_pos_allel_tr', right_on='chr_pos_allel_tr')
+    vn = vn.merge(vep, how='left',
+                  left_on='chr_pos_allel_tr',
+                  right_on='chr_pos_allel_tr',
+                  suffixes=['', '_vep'])
     #vn = vn.merge(kv_vcf[['var_id', 'status']], on='var_id', how='left')
     print('vn dim after merging with vep:')
     print(vn.shape)
@@ -264,11 +270,11 @@ def summarizeMutations(infile,
 #    vn_diff =  getDiff(vn_full, vn, msg='cohort_freq')
 
     vn.ix[:, 'effect_cat'] = 'other'
-    vn.ix[vn['ANN[*].EFFECT'].str.contains(
+    vn.ix[vn['ANN.EFFECT'].str.contains(
         '|'.join(cfg['snpeff']['effect_synon'])), 'effect_cat'] = 'syn' 
-    vn.ix[vn['ANN[*].EFFECT'].str.contains(
+    vn.ix[vn['ANN.EFFECT'].str.contains(
         '|'.join(cfg['snpeff']['effect_dmgmis'])), 'effect_cat'] = 'mis' 
-    vn.ix[vn['ANN[*].EFFECT'].str.contains(
+    vn.ix[vn['ANN.EFFECT'].str.contains(
         '|'.join(cfg['snpeff']['effect_lof'])), 'effect_cat'] = 'lof'
     vn['c_effect_cat'] = ~vn.effect_cat.isin(['other'])
 #    print(vn.shape)
@@ -311,9 +317,9 @@ def summarizeMutations(infile,
 
 #    vn_full = vn
 
-    vn['c_biotype'] = vn['ANN[*].BIOTYPE'].str.contains(
+    vn['c_biotype'] = vn['ANN.BIOTYPE'].str.contains(
         '|'.join(cfg['snpeff']['biotype']))
-#    vn = vn[vn['ANN[*].BIOTYPE'].str.contains('|'.join(cfg['snpeff']['biotype']))]
+#    vn = vn[vn['ANN.BIOTYPE'].str.contains('|'.join(cfg['snpeff']['biotype']))]
 
 #    print('\nprotein coding vars, pred_labels value_counts:')
 #    print(vn.pred_labels.value_counts())
@@ -356,7 +362,7 @@ def summarizeMutations(infile,
                        '5_prime_UTR_variant', '3_prime_UTR_variant']
     vn['coding_var'] = True
     for i in non_coding_vars:
-        vn.ix[vn['ANN[*].EFFECT'] == i, 'coding_var'] = False
+        vn.ix[vn['ANN.EFFECT'] == i, 'coding_var'] = False
 
     c_missense = vn['effect_cat'] == 'mis'
     c_lof = vn['effect_cat'] == 'lof'
@@ -403,7 +409,10 @@ def summarizeMutations(infile,
                                        ((c_poly_HDIV_D | c_poly_HVAR_D) &
                                         c_sift_D & c_cadd_15)))
     vn['c_dmg_miss'] = c_dmg_miss
-    c_impact_lof = vn['ANN[*].IMPACT'].str.contains(
+    vn['c_dmg_miss_woMCAP'] = c_metaSVM_D | c_cadd_D |\
+                              ((c_poly_HDIV_D | c_poly_HVAR_D) &
+                                          c_sift_D & c_cadd_15)
+    c_impact_lof = vn['ANN.IMPACT'].str.contains(
         '|'.join(cfg['snpeff']['impact_lof']))
     vn['c_impact_lof'] = c_impact_lof
     c_all_denovo = vn.c_cohort_freq & vn.c_pop_freq &\
@@ -415,7 +424,7 @@ def summarizeMutations(infile,
 #             vn.c_biotype &\
     print('sum(c_prev)')
     print(sum(c_prev))
-    c_spark_genes = vn['ANN[*].GENE'].str.contains(
+    c_spark_genes = vn['ANN.GENE'].str.contains(
         '|'.join(cfg['snpeff']['genes']))
     vn['c_spark_genes'] = c_spark_genes
     vn_mis = vn[c_dmg_miss & c_missense & c_prev]
