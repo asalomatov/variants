@@ -108,7 +108,20 @@ cols_to_output = [u'CHROM',
                   u'VARTYPE',
                   u'var_id',
                   u'var_id_a',
-                  u'v_id']
+                  u'v_id'] +\
+    [u'Uploaded_variation', u'Location', u'Allele', u'Gene', u'Feature',
+     u'Feature_type', u'Consequence', u'cDNA_position', u'CDS_position',
+     u'Protein_position', u'Amino_acids', u'Codons', u'Existing_variation',
+     u'IMPACT', u'DISTANCE', u'STRAND', u'FLAGS', u'VARIANT_CLASS',
+     u'SYMBOL', u'SYMBOL_SOURCE', u'HGNC_ID', u'BIOTYPE', u'CANONICAL',
+     u'TSL', u'APPRIS', u'CCDS', u'ENSP', u'SWISSPROT', u'TREMBL',
+     u'UNIPARC', u'GENE_PHENO', u'SIFT', u'PolyPhen', u'EXON', u'INTRON',
+     u'DOMAINS', u'HGVSc', u'HGVSp', u'HGVS_OFFSET', u'GMAF', u'AFR_MAF',
+     u'AMR_MAF', u'EAS_MAF', u'EUR_MAF', u'SAS_MAF', u'AA_MAF', u'EA_MAF',
+     u'ExAC_MAF', u'ExAC_Adj_MAF', u'ExAC_AFR_MAF', u'ExAC_AMR_MAF',
+     u'ExAC_EAS_MAF', u'ExAC_FIN_MAF', u'ExAC_NFE_MAF', u'ExAC_OTH_MAF',
+     u'ExAC_SAS_MAF', u'CLIN_SIG', u'SOMATIC', u'PHENO', u'PUBMED',
+     u'MOTIF_NAME', u'MOTIF_POS', u'HIGH_INF_POS', u'MOTIF_SCORE_CHANGE']
 
 
 extra_cols = ['c_spark_genes',
@@ -150,6 +163,7 @@ def getDiff(df_full, df_new, msg, field='var_id'):
 
 
 def summarizeMutations(infile,
+                       infile_vep,
                        prefix,
                        outp_dir,
                        config_file,
@@ -180,7 +194,11 @@ def summarizeMutations(infile,
     sfari_scores_df = pandas.read_csv(sfari_scores)
     vn = pandas.read_table(infile)
     vn.columns = vn.columns.str.translate(None, '#')
-    print(vn.shape)
+    # read vep
+    vep = func.readVcfToDF(infile_vep)
+    vep = vep.merge(vep.apply(lambda row: func.vepVar2vcfVar(row, cfg['genome_ref']), axis=1),
+                    right_index=True, left_index=True)
+
     vn.ix[:, 'gene'] = vn['ANN[*].GENE']
     vn = vn.merge(
         exac[[u'syn_z', u'mis_z', u'lof_z', u'pLI', u'pRec', u'pNull', u'gene']],
@@ -201,8 +219,22 @@ def summarizeMutations(infile,
                  vn.POS.astype(str)
     vn['chr_pos'] = vn['CHROM'].astype(str) + '_' +\
                  vn.POS.astype(str)
-
+    vn['chr_pos_allel_tr'] = vn['CHROM'].astype(str) + '_' +\
+                             vn.POS.astype(str) + '_' +\
+                             vn.REF.astype(str) + '_' +\
+                             vn.ALT.astype(str) + '_' +\
+                             vn.FEATUREID.astype(str)
+    vep['chr_pos_allel_tr'] = vep['CHROM'].astype(str) + '_' +\
+                             vep.POS.astype(str) + '_' +\
+                             vep.REF.astype(str) + '_' +\
+                             vep.ALT.astype(str) + '_' +\
+                             vep.Feature.astype(str)
+    print('vn dim before merging with vep:')
+    print(vn.shape)
+    vn = vn.merge(vep, how='left', left_on='chr_pos_allel_tr', right_on='chr_pos_allel_tr')
     #vn = vn.merge(kv_vcf[['var_id', 'status']], on='var_id', how='left')
+    print('vn dim after merging with vep:')
+    print(vn.shape)
     print('before dedup')
     print(vn.shape)
     vn_dups = vn[vn.v_id.duplicated()]

@@ -164,29 +164,38 @@ def refAtPos(chrom, pos, genref):
 # /mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa  
 
 
-def vepVar2vcfVar(vep_var, genref):
+def vepVar2vcfVar(vep_tsv_row, genref):
     """
     Convert VEP variant description (Uploaded_variation),
     e.g., 3_148802449_-/TTTAG,
     to VCF fields, CHROM, POS, REF, ALT.
     """
-    chrom, pos, refalt = vep_var.split('_')
-    ref, alt = refalt.split('/')
-    if ref != '-' and alt != '-':
-        #  snp
-        pass
-    elif ref == '-' and alt != '-':
-        #  insertion
-        pos = int(pos) - 1
-        ref = refAtPos(chrom=chrom, pos=pos, genref=genref)
-        alt = ref + alt
-    elif ref != '-' and alt == '-':
-        #  deletion
-        pos = int(pos) - 1
-        alt = refAtPos(chrom=chrom, pos=pos, genref=genref)
-        ref = alt + ref
+    print(vep_tsv_row.Uploaded_variation)
+    if vep_tsv_row.Uploaded_variation[:2] != 'rs':
+        print('no rs id')
+        chrom, pos, refalt = vep_tsv_row.Uploaded_variation.split('_')
+        ref, alt = refalt.split('/')
+        if ref != '-' and alt != '-':
+            #  snp
+            pass
+        elif ref == '-' and alt != '-':
+            #  insertion
+            pos = int(pos) - 1
+            ref = refAtPos(chrom=chrom, pos=pos, genref=genref)
+            alt = ref + alt
+        elif ref != '-' and alt == '-':
+            #  deletion
+            pos = int(pos) - 1
+            alt = refAtPos(chrom=chrom, pos=pos, genref=genref)
+            ref = alt + ref
+        else:
+            sys.exit('Unknown mutation type: %s' % vep_var)
     else:
-        sys.exit('Unknown mutation type: %s' % vep_var)
+        chrom, pos = vep_tsv_row.Location.split(':')
+        if len(pos.split('-')) > 1:
+            sys.exit('this is not SNP!')
+        alt = vep_tsv_row.Allele
+        ref = refAtPos(chrom=chrom, pos=pos, genref=genref)
     res = pandas.Series([chrom, pos, ref, alt],
                         ['CHROM', 'POS', 'REF', 'ALT'])
     return res

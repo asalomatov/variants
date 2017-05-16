@@ -91,6 +91,9 @@ vn = summarizeVariants.summarizeMutations(
     os.path.join(tmp_dir,
                  input_file_bn +
                  '-ann-onePline.tsv'),
+    os.path.join(tmp_dir,
+                 input_file_bn +
+                 '-vep.tsv'),
     input_file_bn,
     output_dir,
     config_file)
