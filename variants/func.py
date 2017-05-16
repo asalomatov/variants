@@ -170,9 +170,9 @@ def vepVar2vcfVar(vep_tsv_row, genref):
     e.g., 3_148802449_-/TTTAG,
     to VCF fields, CHROM, POS, REF, ALT.
     """
-    print(vep_tsv_row.Uploaded_variation)
+    # print(vep_tsv_row.Uploaded_variation)
     if vep_tsv_row.Uploaded_variation[:2] != 'rs':
-        print('no rs id')
+        # print('no rs id')
         chrom, pos, refalt = vep_tsv_row.Uploaded_variation.split('_')
         ref, alt = refalt.split('/')
         if ref != '-' and alt != '-':
