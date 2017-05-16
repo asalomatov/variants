@@ -314,6 +314,11 @@ def summarizeMutations(infile,
     print('vn shape in vcf')
     print(vn.shape)
     
+    # c_pass_hard_filters = vn.FILTER.isin(['.', 'PASS'])
+    # vn_failed_hardfilt = vn.ix[~c_pass_hard_filters, :]
+    # vn = vn.ix[c_pass_hard_filters, :]
+    # vn.reset_index(drop=True, inplace=True)
+
     non_coding_vars = ['intron_variant', 'downstream_gene_variant',
                        'upstream_gene_variant', 'sequence_feature',
                        '5_prime_UTR_variant', '3_prime_UTR_variant']
@@ -332,19 +337,19 @@ def summarizeMutations(infile,
     print('M_CAP condition %s' % '|'.join(cfg['db_nsfp']['M_CAP_pred']))
     c_M_CAP_D = vn.dbNSFP_M_CAP_pred.str.contains(
         '|'.join(cfg['db_nsfp']['M_CAP_pred']))
-    print(vn.dbNSFP_M_CAP_pred.value_counts())
+    # print(vn.dbNSFP_M_CAP_pred.value_counts())
     c_metaSVM_D = vn.dbNSFP_MetaSVM_pred.str.contains(
         '|'.join(cfg['db_nsfp']['metaSVM_pred']))
-    print(vn.dbNSFP_CADD_phred.value_counts())
+    # print(vn.dbNSFP_CADD_phred.value_counts())
     c_cadd_null = vn.dbNSFP_CADD_phred.isin(['ZZZ', '.'])
     vn.ix[c_cadd_null, 'dbNSFP_CADD_phred'] = 0
-    print(vn.dbNSFP_CADD_phred.value_counts())
+    # print(vn.dbNSFP_CADD_phred.value_counts())
     vn.ix[:, 'dbNSFP_CADD_phred'] = vn.dbNSFP_CADD_phred.astype(
         str).str.replace(',\.', ',0')
-    print(vn.dbNSFP_CADD_phred.value_counts())
+    # print(vn.dbNSFP_CADD_phred.value_counts())
     vn.ix[:, 'dbNSFP_CADD_phred'] = vn.dbNSFP_CADD_phred.astype(
         str).str.replace('\.,', '0,')
-    print(vn.dbNSFP_CADD_phred.value_counts())
+    # print(vn.dbNSFP_CADD_phred.value_counts())
     c_cadd_D = vn.dbNSFP_CADD_phred.astype(str).apply(
         lambda x: max(map(float, x.split(',')))) >=\
         cfg['db_nsfp']['cadd_phred']
