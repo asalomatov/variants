@@ -465,9 +465,11 @@ def splitVarId(x):
 
 def splitAlleles(x, n_allels=1):
     res = x.split('_')
+    # print(res)
     col_names = ['REF', 'ref_DP']
-    if len(res) % 2 != 0:
-        raise('Expecting an even number!')
+    if len(res) == 3:
+        res = [res[0], int(res[1]), '.', 0, int(res[1])]
+        return pandas.Series(res, col_names + ['ALT', 'alt_DP', 'DP']) 
     for i in range(len(res)/2)[1:]:
         col_names += ['ALT%s' % str(i), 'alt%s_DP' % str(i)]
     DP = sum(map(int, res[1::2]))
