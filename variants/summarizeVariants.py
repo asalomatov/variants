@@ -467,55 +467,40 @@ def summarizeMutations(infile,
                                          suffix]) + '.csv'),
                   index=False)
     
-    writeVariants(vn[c_all_denovo], cols_to_output[:-2] + extra_cols, var_type,
+    writeVariants(vn[c_all_denovo], cols_to_output + extra_cols, var_type,
                   prefix, 'ALL_DENOVO', outp_dir)
-    writeVariants(vn[vn.c_biotype], cols_to_output[:-2] + extra_cols, var_type,
+    writeVariants(vn[vn.c_biotype], cols_to_output + extra_cols, var_type,
                   prefix, 'ALL_DENOVO_CODING', outp_dir)
-    writeVariants(vn_FN, cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn_FN, cols_to_output + extra_cols, var_type, prefix,
                   'FN', outp_dir)
-    writeVariants(vn_TP, cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn_TP, cols_to_output + extra_cols, var_type, prefix,
                   'TP', outp_dir)
-    writeVariants(vn_mis, cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn_mis, cols_to_output + extra_cols, var_type, prefix,
                   'MIS', outp_dir)
-    writeVariants(vn_lof, cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn_lof, cols_to_output + extra_cols, var_type, prefix,
                   'LOF', outp_dir)
-    writeVariants(vn_syn, cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn_syn, cols_to_output + extra_cols, var_type, prefix,
                   'SYN', outp_dir)
-    writeVariants(vn_other, cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn_other, cols_to_output + extra_cols, var_type, prefix,
                   'OTHER', outp_dir)
-    writeVariants(vn_mis_clinical, cols_to_output[:-2] + extra_cols, var_type,
+    writeVariants(vn_mis_clinical, cols_to_output + extra_cols, var_type,
                   prefix + '_MIS', 'clinical', outp_dir)
-    writeVariants(vn_lof_clinical, cols_to_output[:-2] + extra_cols, var_type,
+    writeVariants(vn_lof_clinical, cols_to_output + extra_cols, var_type,
                   prefix + '_LOF', 'clinical', outp_dir)
-    writeVariants(vn_syn_clinical, cols_to_output[:-2] + extra_cols, var_type,
+    writeVariants(vn_syn_clinical, cols_to_output + extra_cols, var_type,
                   prefix + '_SYN', 'clinical', outp_dir)
-    writeVariants(vn_other_clinical, cols_to_output[:-2] + extra_cols,
+    writeVariants(vn_other_clinical, cols_to_output + extra_cols,
                   var_type, prefix + '_OTHER', 'clinical', outp_dir)
     # write failed
     writeVariants(vn_dups, vn_dups.columns, var_type, prefix, 'dups', outp_dir)
-    writeVariants(vn[~vn.c_cohort_freq], cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn[~vn.c_cohort_freq], cols_to_output + extra_cols, var_type, prefix,
                   'cohfreq', outp_dir)
-    writeVariants(vn[~vn.c_pop_freq], cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn[~vn.c_pop_freq], cols_to_output + extra_cols, var_type, prefix,
                   'popfreq', outp_dir)
-    writeVariants(vn[~vn.c_cohort_freq], cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn[~vn.c_cohort_freq], cols_to_output + extra_cols, var_type, prefix,
                   'cohfreq', outp_dir)
-    writeVariants(vn[~vn.c_allele_frac], cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn[~vn.c_allele_frac], cols_to_output + extra_cols, var_type, prefix,
                   'allele_frac', outp_dir)
-
-
-#    writeVariants(vn_diff, cols_to_output[:-2]+['step'], var_type,
-#                  prefix + '_DIFF', outp_suffix, outp_dir)
-        
-#    vn_TP[cols_to_output[:-2]].to_csv(
-#        os.path.join(outp_dir, 'true_pos_snp' + outp_suffix + '.csv'), index=False)
-#    vn_mis[cols_to_output[:-2]][c_new].to_csv(
-#        os.path.join(outp_dir, 'dmg_missense' + outp_suffix + '.csv'), index=False)
-#    vn_lof[cols_to_output[:-2]][c_new].to_csv(
-#        os.path.join(outp_dir, 'lof' + outp_suffix + '.csv'), index=False)
-#    vn_syn[cols_to_output[:-2]][c_new].to_csv(
-#        os.path.join(outp_dir, 'syn' + outp_suffix + '.csv'), index=False)
-#    vn_diff[cols_to_output[:-2] + ['step']].to_csv(
-#        os.path.join(outp_dir, 'lostTP' + outp_suffix + '.csv'), index=False)
 
     cfg['predictions_file'] = infile
 
