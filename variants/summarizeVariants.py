@@ -66,7 +66,7 @@ cols_to_output = [u'CHROM',
                   u'dbNSFP_aapos',
                   u'dbNSFP_aaref',
                   u'dbNSFP_aaalt',
-                  u'dbNSFP_Uniprot_acPolyphen2',
+                  u'dbNSFP_Uniprot_acc_Polyphen2',
                   u'dbNSFP_Uniprot_id_Polyphen2',
                   u'dbNSFP_Uniprot_aapos_Polyphen2',
                   u'dbNSFP_1000Gp3_AF',
@@ -460,7 +460,8 @@ def summarizeMutations(infile,
             print('%s is empty' % prefix)
             return None
         df = df[cols_to_output]
-        df.columns = df.columns.str.replace('c_', '')
+        df.columns = map(lambda i: i[2:] if i.startswith('c_') else i,
+                         df.columns)
         df.to_csv(os.path.join(outp_dir,
                                '_'.join([prefix,
                                          var_type,
