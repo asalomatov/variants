@@ -17,6 +17,44 @@ vcf_required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
                                 'QUAL', 'FILTER']
 
 
+def numCoding(df, p_snp, p_indel):
+    snp = df[(df.pred_prob.astype(float) > p_snp) &
+               (df.VARTYPE == 'SNP')]
+    indel = df[(df.pred_prob.astype(float) > p_indel) &
+               (df.VARTYPE != 'SNP') &
+               ((df.inherit_prnts.astype(int) == 0) |
+                (df.alt_DP_fa.astype(int) + df.alt_DP_mo.astype(int) < 3))]
+    print('num of coding snp: %s' % snp[snp.effect_cat != 'other'].shape[0])
+    print(snp.inherit_prnts.astype(int).value_counts())
+    print('num of coding indel: %s' %indel[indel.effect_cat != 'other'].shape[0])
+    print(indel.inherit_prnts.astype(int).value_counts())
+    return pandas.concat([snp, indel])
+
+
+def varId(df, idfield='SP_id'):
+    varid = df[idfield].astype(str) + '_' +\
+            df.CHROM.astype(str) + '_' +\
+            df.POS.astype(str)
+    return varid
+
+
+def checkConcordance(call_set1, call_set2, idfield='SP_id'):
+    df1 = pandas.read_csv(call_set1)
+    df2 = pandas.read_csv(call_set2)
+    set1 = set(varId(df1[df1.effect_cat != 'other'], idfield))
+    set2 = set(varId(df2[df2.effect_cat != 'other'], idfield))
+    both = len(set1.intersection(set2))
+    set1not2 = len(set1.difference(set2))
+    set2not1 = len(set2.difference(set1))
+    print(call_set1 + ' only: %s' % set1not2)
+    if len(set1.difference(set2)) < 6:
+        print(set1.difference(set2))
+    print('both sets: %s' % both)
+    print(call_set2 + ' only: %s' % set2not1)
+    if len(set2.difference(set1)) < 6:
+        print(set2.difference(set1))
+
+
 def addRank(df, clm_name):
     df[clm_name + '_rank'] = df[clm_name].rank()
 
