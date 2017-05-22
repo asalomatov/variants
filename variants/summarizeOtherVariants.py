@@ -40,10 +40,13 @@ def getDiff(df_full, df_new, msg, field='var_id'):
 
 
 def summarizeMutations(infile,
+                       infile_vep,
                        prefix,
                        outp_dir,
                        config_file,
                        exac_anno='/mnt/xfs1/scratch/asalomatov/data/ExAC/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt',
+                       asd_gene_prob_anno='/mnt/xfs1/scratch/asalomatov/data/gene-scores/asd_gene_prediction_olga.csv',
+                       ios_anno='/mnt/xfs1/scratch/asalomatov/data/gene-scores/ioss_lgd_rvis.scores.csv',
                        sfari_scores='/mnt/xfs1/scratch/asalomatov/data/SFARI/gene-score-only.csv'):
     with open(config_file, 'r') as f:
         cfg = yaml.safe_load(f)
@@ -73,10 +76,21 @@ def summarizeMutations(infile,
     sfari_scores_df = pandas.read_csv(sfari_scores)
     vn = pandas.read_table(infile)
     vn.columns = vn.columns.str.translate(None, '#')
-    print(vn.shape)
+    vn.columns = [i.replace('[*]', '') for i in vn.columns]
+    # read vep
+    vep = func.readVcfToDF(infile_vep)
+    vep = vep.merge(vep.apply(lambda row: func.vepVar2vcfVar(row, cfg['genome_ref']), axis=1),
+                    right_index=True, left_index=True)
+
     vn.ix[:, 'gene'] = vn['ANN[*].GENE']
     vn = vn.merge(
-        exac[[u'syn_z', u'mis_z', u'lof_z', u'pLI', u'pRec', u'pNull', u'gene']],
+        exac[[u'syn_z', u'syn_z_rank', u'syn_z_perc_rank',
+              u'mis_z', u'mis_z_rank', u'mis_z_perc_rank',
+              u'lof_z', u'lof_z_rank', u'lof_z_perc_rank',
+              u'pLI', u'pLI_rank', u'pLI_perc_rank',
+              u'pRec', u'pRec_rank', u'pRec_perc_rank',
+              u'pNull', u'pNull_rank', u'pNull_perc_rank',
+              u'gene']],
         on='gene', how='left')
     vn = vn.merge(
         sfari_scores_df,
@@ -94,15 +108,33 @@ def summarizeMutations(infile,
                  vn.POS.astype(str)
     vn['chr_pos'] = vn['CHROM'].astype(str) + '_' +\
                  vn.POS.astype(str)
-
+    vn['chr_pos_allel_tr'] = vn['CHROM'].astype(str) + '_' +\
+                             vn.POS.astype(str) + '_' +\
+                             vn.REF.astype(str) + '_' +\
+                             vn.ALT.astype(str) + '_' +\
+                             vn['ANN.FEATUREID'].astype(str)
+    
+    vep['chr_pos_allel_tr'] = vep['CHROM'].astype(str) + '_' +\
+                             vep.POS.astype(str) + '_' +\
+                             vep.REF.astype(str) + '_' +\
+                             vep.ALT.astype(str) + '_' +\
+                             vep.Feature.astype(str)
+    print('vn dim before merging with vep:')
+    print(vn.shape)
+    vn = vn.merge(vep, how='left',
+                  left_on='chr_pos_allel_tr',
+                  right_on='chr_pos_allel_tr',
+                  suffixes=['', '_vep'])
     #vn = vn.merge(kv_vcf[['var_id', 'status']], on='var_id', how='left')
+    print('vn dim after merging with vep:')
+    print(vn.shape)
     print('before dedup')
     print(vn.shape)
-
+    vn_dups = vn[vn.v_id.duplicated()]
     vn = vn[~vn.v_id.duplicated()]
     print('after dedup')
     print(vn.shape)
-    
+
 #    vn_all = vn
 # stats before any filtering
 #    print('\ndeduped and annotated vars, pred_labels value_counts:')
@@ -125,11 +157,11 @@ def summarizeMutations(infile,
 #    vn_diff =  getDiff(vn_full, vn, msg='cohort_freq')
 
     vn.ix[:, 'effect_cat'] = 'other'
-    vn.ix[vn['ANN[*].EFFECT'].str.contains(
+    vn.ix[vn['ANN.EFFECT'].str.contains(
         '|'.join(cfg['snpeff']['effect_synon'])), 'effect_cat'] = 'syn' 
-    vn.ix[vn['ANN[*].EFFECT'].str.contains(
+    vn.ix[vn['ANN.EFFECT'].str.contains(
         '|'.join(cfg['snpeff']['effect_dmgmis'])), 'effect_cat'] = 'mis' 
-    vn.ix[vn['ANN[*].EFFECT'].str.contains(
+    vn.ix[vn['ANN.EFFECT'].str.contains(
         '|'.join(cfg['snpeff']['effect_lof'])), 'effect_cat'] = 'lof'
     vn['c_effect_cat'] = ~vn.effect_cat.isin(['other'])
 #    print(vn.shape)
@@ -241,14 +273,6 @@ def summarizeMutations(infile,
         lambda x: max(map(float, x.split(',')))) >=\
         cfg['db_nsfp']['combined']['cadd_phred']
 
-#    c_cadd_null = vn.dbNSFP_CADD_phred.isin(['ZZZ', '.'])
-#    c_cadd_D = vn.dbNSFP_CADD_phred[~c_cadd_null].apply(
-#        lambda x: min(map(float, x.split(',')))) >= cfg['db_nsfp']['cadd_phred']
-#    c_cadd_15 = vn.dbNSFP_CADD_phred[~c_cadd_null].apply(
-#        lambda x: min(map(float, x.split(',')))) >= cfg['db_nsfp']['combined']['cadd_phred']
-
-#    c_poly_HVAR_null = vn.dbNSFP_Polyphen2_HVAR_pred.isin(['ZZZ', '.'])
-#    c_poly_HDIV_null = vn.dbNSFP_Polyphen2_HVAR_pred.isin(['ZZZ', '.'])
     c_poly_HVAR_D = vn.dbNSFP_Polyphen2_HVAR_pred.str.contains(
         '|'.join(cfg['db_nsfp']['combined']['polyphen2_pred']))
     c_poly_HDIV_D = vn.dbNSFP_Polyphen2_HVAR_pred.str.contains(
@@ -261,9 +285,19 @@ def summarizeMutations(infile,
 
     c_dmg_miss = c_M_CAP_D | c_metaSVM_D | c_cadd_D |\
                  ((c_poly_HDIV_D | c_poly_HVAR_D) & c_sift_D & c_cadd_15)
+    print('N dmg_mis w/o M_CAP %s' % sum(c_metaSVM_D | c_cadd_D |
+                                         ((c_poly_HDIV_D | c_poly_HVAR_D) &
+                                          c_sift_D & c_cadd_15)))
+    print('N dmg_mis w M_CAP %s' % sum(c_M_CAP_D | c_metaSVM_D | c_cadd_D |
+                                       ((c_poly_HDIV_D | c_poly_HVAR_D) &
+                                        c_sift_D & c_cadd_15)))
     vn['c_dmg_miss'] = c_dmg_miss
+    vn['c_dmg_miss_woMCAP'] = c_metaSVM_D | c_cadd_D |\
+                              ((c_poly_HDIV_D | c_poly_HVAR_D) &
+                               c_sift_D & c_cadd_15)
+
 #   vn_full = vn[c_missense]
-    c_impact_lof = vn['ANN[*].IMPACT'].str.contains(
+    c_impact_lof = vn['ANN.IMPACT'].str.contains(
         '|'.join(cfg['snpeff']['impact_lof']))
     vn['c_impact_lof'] = c_impact_lof
 
@@ -275,7 +309,7 @@ def summarizeMutations(infile,
 #             vn.c_biotype &\
     print('sum(c_prev)')
     print(sum(c_prev))
-    c_spark_genes = vn['ANN[*].GENE'].str.contains(
+    c_spark_genes = vn['ANN.GENE'].str.contains(
         '|'.join(cfg['snpeff']['genes']))
     vn['c_spark_genes'] = c_spark_genes
     vn_mis = vn[c_dmg_miss & c_missense & c_prev]
@@ -311,36 +345,37 @@ def summarizeMutations(infile,
             print('%s is empty' % prefix)
             return None
         df = df[cols_to_output]
-        df.columns = df.columns.str.replace('c_', '')
+        df.columns = map(lambda i: i[2:] if i.startswith('c_') else i,
+                         df.columns)
         df.to_csv(os.path.join(outp_dir,
                                '_'.join([prefix,
                                          var_type,
                                          suffix]) + '.csv'),
                   index=False)
     
-    writeVariants(vn[c_all_denovo], cols_to_output[:-2] + extra_cols, var_type,
+    writeVariants(vn[c_all_denovo], cols_to_output + extra_cols, var_type,
                   prefix, 'ALL_DENOVO', outp_dir)
-    writeVariants(vn[vn.c_biotype], cols_to_output[:-2] + extra_cols, var_type,
+    writeVariants(vn[vn.c_biotype], cols_to_output + extra_cols, var_type,
                   prefix, 'ALL_DENOVO_CODING', outp_dir)
-    writeVariants(vn_FN, cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn_FN, cols_to_output + extra_cols, var_type, prefix,
                   'FN', outp_dir)
-    writeVariants(vn_TP, cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn_TP, cols_to_output + extra_cols, var_type, prefix,
                   'TP', outp_dir)
-    writeVariants(vn_mis, cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn_mis, cols_to_output + extra_cols, var_type, prefix,
                   'MIS', outp_dir)
-    writeVariants(vn_lof, cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn_lof, cols_to_output + extra_cols, var_type, prefix,
                   'LOF', outp_dir)
-    writeVariants(vn_syn, cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn_syn, cols_to_output + extra_cols, var_type, prefix,
                   'SYN', outp_dir)
-    writeVariants(vn_other, cols_to_output[:-2] + extra_cols, var_type, prefix,
+    writeVariants(vn_other, cols_to_output + extra_cols, var_type, prefix,
                   'OTHER', outp_dir)
-    writeVariants(vn_mis_clinical, cols_to_output[:-2] + extra_cols, var_type,
+    writeVariants(vn_mis_clinical, cols_to_output + extra_cols, var_type,
                   prefix + '_MIS', 'clinical', outp_dir)
-    writeVariants(vn_lof_clinical, cols_to_output[:-2] + extra_cols, var_type,
+    writeVariants(vn_lof_clinical, cols_to_output + extra_cols, var_type,
                   prefix + '_LOF', 'clinical', outp_dir)
-    writeVariants(vn_syn_clinical, cols_to_output[:-2] + extra_cols, var_type,
+    writeVariants(vn_syn_clinical, cols_to_output + extra_cols, var_type,
                   prefix + '_SYN', 'clinical', outp_dir)
-    writeVariants(vn_other_clinical, cols_to_output[:-2] + extra_cols,
+    writeVariants(vn_other_clinical, cols_to_output + extra_cols,
                   var_type, prefix + '_OTHER', 'clinical', outp_dir)
 
 
