@@ -82,7 +82,7 @@ def summarizeMutations(infile,
     vep = vep.merge(vep.apply(lambda row: func.vepVar2vcfVar(row, cfg['genome_ref']), axis=1),
                     right_index=True, left_index=True)
 
-    vn.ix[:, 'gene'] = vn['ANN[*].GENE']
+    vn.ix[:, 'gene'] = vn['ANN.GENE']
     vn = vn.merge(
         exac[[u'syn_z', u'syn_z_rank', u'syn_z_perc_rank',
               u'mis_z', u'mis_z_rank', u'mis_z_perc_rank',
@@ -99,7 +99,7 @@ def summarizeMutations(infile,
     vn['v_id'] = vn.ind_id.astype(str) + '_' +\
                  vn['CHROM'].astype(str) + '_' +\
                  vn.POS.astype(str) + '_' +\
-                 vn['ANN[*].GENE'] # + '_' +\
+                 vn['ANN.GENE'] # + '_' +\
                  # vn['ANN[*].FEATUREID']
                  # vn['ANN[*].EFFECT'] + '_' +\
                  # vn['ANN[*].IMPACT']
@@ -204,9 +204,9 @@ def summarizeMutations(infile,
 
 #    vn_full = vn
 
-    vn['c_biotype'] = vn['ANN[*].BIOTYPE'].str.contains(
+    vn['c_biotype'] = vn['ANN.BIOTYPE'].str.contains(
         '|'.join(cfg['snpeff']['biotype']))
-#    vn = vn[vn['ANN[*].BIOTYPE'].str.contains('|'.join(cfg['snpeff']['biotype']))]
+#    vn = vn[vn['ANN.BIOTYPE'].str.contains('|'.join(cfg['snpeff']['biotype']))]
 
 #    print('\nprotein coding vars, pred_labels value_counts:')
 #    print(vn.pred_labels.value_counts())
@@ -244,7 +244,7 @@ def summarizeMutations(infile,
                        '5_prime_UTR_variant', '3_prime_UTR_variant']
     vn['coding_var'] = True
     for i in non_coding_vars:
-        vn.ix[vn['ANN[*].EFFECT'] == i, 'coding_var'] = False
+        vn.ix[vn['ANN.EFFECT'] == i, 'coding_var'] = False
 
     c_missense = vn['effect_cat'] == 'mis'
     c_lof = vn['effect_cat'] == 'lof'
