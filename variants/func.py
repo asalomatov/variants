@@ -17,6 +17,72 @@ vcf_required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
                                 'QUAL', 'FILTER']
 
 
+def sumGene(x):
+    Count = len(x)
+    Count_LOF = sum(x.lof.astype(str) == 'True')
+    Count_MIS = sum(x.missense.astype(str) == 'True')
+    N_indiv = round(len(x.SP_id.unique()), 0)
+    indiv = '_'.join(x.SP_id.unique().tolist())
+    SFARI_score = x.SFARIscore.iloc[0]
+    lof_z_perc_rank = round(x.lof_z_perc_rank.iloc[0], 3)
+    mis_z_perc_rank = round(x.mis_z_perc_rank.iloc[0], 3)
+    pLI_perc_rank = round(x.pLI_perc_rank.iloc[0], 3)
+    asd_score_perc_rank = round(x.asd_score_perc_rank.iloc[0], 3)
+    LGDscore_perc_rank = round(x.LGDscore_perc_rank.iloc[0], 3)
+    RVIS_perc_rank = round(x.RVIS_perc_rank.iloc[0], 3)
+    return pandas.Series(
+        [Count, Count_LOF, Count_MIS, N_indiv,
+         SFARI_score,
+         lof_z_perc_rank, mis_z_perc_rank,
+         pLI_perc_rank,
+         asd_score_perc_rank,
+         LGDscore_perc_rank,
+         RVIS_perc_rank,
+         indiv],
+        index=['Count', 'Count_LOF', 'Count_MIS', 
+               'N_indiv', 'SFARI_score',
+               'lof_z_perc_rank', 'mis_z_perc_rank',
+               'pLI_perc_rank',
+               'asd_score_perc_rank',
+               'LGDscore_perc_rank',
+               'RVIS_perc_rank',
+               'indiv']
+    )
+
+
+# def sumGene(x):
+#     Count = len(x)
+#     Count_LOF = sum(x.missense.astype(str) == 'True')
+#     Count_MIS = sum(x.lof.astype(str) == 'True')
+#     N_indiv = round(len(x.SP_id.unique()), 0)
+#     indiv = '_'.join(x.SP_id.unique().tolist())
+#     SFARI_score = x.SFARIscore.iloc[0]
+#     lof_z_perc_rank = round(x.lof_z_perc_rank.iloc[0], 3)
+#     mis_z_perc_rank = round(x.mis_z_perc_rank.iloc[0], 3)
+#     pLI_perc_rank = round(x.pLI_perc_rank.iloc[0], 3)
+#     asd_score_perc_rank = round(x.asd_score_perc_rank.iloc[0], 3)
+#     LGDscore_perc_rank = round(x.LGDscore_perc_rank.iloc[0], 3)
+#     RVIS_perc_rank = round(x.RVIS_perc_rank.iloc[0], 3)
+#     return pandas.Series(
+#         [Count, N_indiv,
+#          SFARI_score,
+#          lof_z_perc_rank, mis_z_perc_rank,
+#          pLI_perc_rank,
+#          asd_score_perc_rank,
+#          LGDscore_perc_rank,
+#          RVIS_perc_rank,
+#          indiv],
+#         index=['Count', 'N_indiv',
+#                'SFARI_score',
+#                'lof_z_perc_rank', 'mis_z_perc_rank',
+#                'pLI_perc_rank',
+#                'asd_score_perc_rank',
+#                'LGDscore_perc_rank',
+#                'RVIS_perc_rank',
+#                'indiv']
+#     )
+
+
 def numCoding(df, p_snp, p_indel):
     snp = df[(df.pred_prob.astype(float) > p_snp) &
                (df.VARTYPE == 'SNP')]
