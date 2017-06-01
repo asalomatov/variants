@@ -22,7 +22,9 @@ class Variants:
         self.end = end
         self.required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
                                 'QUAL', 'FILTER']
-
+        self.vcf_header = None
+        self.vcf_sample_list = None
+        self.vcf_clmns = None
     # def initReader(self):
     #     self.vcf_reader = vcf.Reader(open(self.fname, 'r'))
     #     self.contigs = self.vcf_reader.contigs
@@ -231,7 +233,9 @@ class Variants:
         # after github/hammerlab/varcode/vcf but keeping sample information
         path = self.fname
         cat, compression = self.catOrzcat(path)
+        cmd_header = ' '.join([cat, path, '| head -10000 | grep ^##'])
         cmd = ' '.join([cat, path, '| head -10000 | grep ^# | grep -v ^##'])
+        self.vcf_header = func.runInShell(cmd_header, True)
         vcf_clmns = func.runInShell(cmd, True).split('\t')
         vcf_clmns = [x.strip() for x in vcf_clmns]        
         vcf_clmns = [x.strip('#') for x in vcf_clmns]        
@@ -251,6 +255,9 @@ class Variants:
             for i in smp_indexes:
                 df_cols.append(vcf_clmns[i])
                 df_cols_ind.append(i)
+        self.vcf_clmns = df_cols[:]
+        self.vcf_sample_list = [i for i in self.vcf_clmns
+                                if i not in self.required_fields]
         df_field_types = collections.OrderedDict()
         for i in df_cols:
             df_field_types[i] = str
@@ -310,9 +317,9 @@ class Variants:
         gt = self.variants[sample_name].apply(lambda i: i.split(':')[0])
         gt = [i.strip() for i in gt]
         self.variants[sample_name+'_gt'] = gt        
-        c1 = self.variants[sample_name+'_gt'].isin(['0/0'])
+        c1 = self.variants[sample_name+'_gt'].isin(['0/0', '0|0'])
         c2 = self.variants[sample_name+'_gt'].apply(lambda i: '.' in i)        
-        self.variants = self.variants[(~c1) & (~c2)]         
+        self.variants = self.variants[(~c1) & (~c2)]
         return 0
 
     def removeUndefined(self, sample_name):
@@ -428,8 +435,12 @@ class Variants:
             self.variants = self.variants[dnv2 & (~dnv1)]
         return 0
 
-    def saveAsVcf(self):
-        pass
+    def saveAsVcf(self, target_vcf):
+        with open(target_vcf, 'w') as f:
+            f.write(self.vcf_header)
+        with open(target_vcf, 'a') as f:
+            f[self.vcf_clmns].write('#' + '\t'.join(self.vcf_clmns) + '\n')
+            self.variants.to_csv(f, header=False, index=False, sep='\t')
 
 if __name__ == '__main__':
     pass
