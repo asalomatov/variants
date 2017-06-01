@@ -17,6 +17,31 @@ vcf_required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
                                 'QUAL', 'FILTER']
 
 
+def parentForOffspring(smpl_id, ped_file, sex=1):
+    ped = pandas.read_table(ped_file, usecols=range(6), header=None, dtype=str)
+    ped.columns = ['fam_id', 'ind_id', 'fa_id', 'mo_id',
+                   'sex', 'pheno']
+    if sex == 1:
+        fa_id = ped.fa_id[ped.ind_id == smpl_id].iloc[0] 
+        return fa_id
+    else:
+        mo_id = ped.mo_id[ped.ind_id == smpl_id].iloc[0] 
+        return mo_id
+
+
+def siblingsForOffspring(smpl_id, ped_file):
+    ped = pandas.read_table(ped_file, usecols=range(6), header=None, dtype=str)
+    ped.columns = ['fam_id', 'ind_id', 'fa_id', 'mo_id',
+                   'sex', 'pheno']
+    ped['ff'] = ped.fa_id + '_' + ped.mo_id
+    ff = ped.ff[ped.ind_id == smpl_id].iloc[0]
+    # print(ped.ff.value_counts().head())
+    prnts_prob = ff.split('_') + [smpl_id]
+    children = ped.ind_id[ped.ff == ff].tolist()
+    sibs = [i for i in children if i not in prnts_prob]
+    return '_'.join(sibs)
+
+
 def sumGene(x):
     Count = len(x)
     Count_LOF = sum(x.lof.astype(str) == 'True')
@@ -39,14 +64,24 @@ def sumGene(x):
          LGDscore_perc_rank,
          RVIS_perc_rank,
          indiv],
-        index=['Count', 'Count_LOF', 'Count_MIS', 
-               'N_indiv', 'SFARI_score',
-               'lof_z_perc_rank', 'mis_z_perc_rank',
-               'pLI_perc_rank',
-               'asd_score_perc_rank',
-               'LGDscore_perc_rank',
-               'RVIS_perc_rank',
+        index=['N', 'N_LOF', 'N_DMIS', 
+               'N_indiv', 'SFARI',
+               'lof_z', 'mis_z',
+               'pLI',
+               'asd(Olga)',
+               'LGD',
+               'RVIS',
                'indiv']
+    )
+
+
+def sumGeneGPF(x):
+    Count = len(x)
+    Count_LGD = sum(x['worst requested effect'] != 'missense')
+    Count_MIS = sum(x['worst requested effect'] == 'missense')
+    return pandas.Series(
+        [Count, Count_LGD, Count_MIS],
+        index=['Number of mutations', 'Number of LGD', 'Number of MIS']
     )
 
 
@@ -267,6 +302,29 @@ def refAtPos(chrom, pos, genref):
 
 # /mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa  
 
+def bamrcIndel2vcfIndel(ind_id, chrom, position, ref, smpl_alt, genref):
+    REF = ref
+    ALT = smpl_alt.split('_')[0]
+    POS = position
+    c_ins = ALT[0] == '+'
+    c_del = ALT[0] == '-'
+    ALT = ALT.strip('+')
+    ALT = ALT.strip('-')
+    if c_ins:
+        ALT = REF + ALT
+    elif c_del:
+        REF = ALT
+        # POS -= 1  commented out for train set use only
+        ref_at_pos = refAtPos(chrom,
+                              POS,
+                              genref)
+        REF = ref_at_pos + REF
+        ALT = ref_at_pos
+    else:
+        sys.exit('Unknown type')
+    res = pandas.Series([ind_id, chrom, POS, REF, ALT],
+                        ['ind_id', 'CHROM', 'POS', 'REF', 'ALT'])
+    return res
 
 def vepVar2vcfVar(vep_tsv_row, genref):
     """
@@ -339,6 +397,16 @@ def runInShell(cmd, return_output=False):
     else:
         sys.stderr.write(stderr)
         return 1
+
+
+def createTempFile(suffix, prefix, tmp_dir=None):
+    if not tmp_dir:
+        tmp_dir = tempfile.mkdtemp()
+    makeDir(tmp_dir)
+    tmp_file = tempfile.mktemp(dir=tmp_dir,
+                               suffix=suffix,
+                               prefix=prefix)
+    return (tmp_dir, tmp_file)
 
 
 def runBamReadcounts(vcffile, bamfile, output_dir,
