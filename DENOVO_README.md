@@ -2,7 +2,7 @@
 
 ### Overview
 
-**_de novo classifier_** is a tool for identifying *de novo* genomic variants. It is 
+**_de novo classifier_** is a tool for identifying *de novo* genomic variants. It is
 similar to [DNMFilter](http://www.ncbi.nlm.nih.gov/pubmed/24618463) in its approach but it is
 not limited to using gradient-boosting as a sole predictive model. Please see [slides](https://www.dropbox.com/s/ico6qo6pe0zanqe/denovo_filt_IT_20160520.pptx?dl=0) for details on features, model selection, training set, validation ect.
 
@@ -28,44 +28,38 @@ conda install numpy
 conda install scipy
 conda install pandas
 conda install scikit-learn
+pip install xgboost
 ```
 
-Install **_variants_** from github 
+Install **_variants_** from github
 
 ```
 pip install git+git://github.com/asalomatov/variants.git
 ```
-    
+
 #### Configuration
 
-Put together a yaml config file, see 
+Put together a yaml config file, see
 [example](https://github.com/asalomatov/variants/blob/master/variants/denovo_classifier_config/cfg.yml).
-    
-You will need a PED file. A sample file(tab delimeted and headerless):
 
-trio id | sample id | father's id (0 if missing) | mother's id (0 if missing) | sex 1-male 2-female | phenotype 1-unaffected 2-affected |
-------- | --------- | -------------------------- | -------------------------- | ------------------- | --------------------------------- |
-trio001 | trio001.fa |  0 |      0 |      1 |      1 |
-trio001 | trio001.mo |  0 |      0 |      2 |      1 |
-trio001 | trio001.p1 |  trio001.fa |      trio001.mo |      1 |      2 |
+You will need a PED file with two additional columns assosiating samples with BAM and VCF files. A sample file(tab delimeted and **headerless**):
 
-A VCF file, and BAM files are specified via patterns to be used with python string substitution.
-A `vcf_pattern` like `/path/to/%s-example.vcf.gz` will be transated to `/path/to/trio1-example.vcf.gz`,
-this VCF file must have samples `trio001.fa`, `trio001.mo`, `trio001.p1` in the header.
-A `bam_pattern` like `/path/to/%s-example.bam` will be transated to a 
+trio id | sample id | father's id (0 if missing) | mother's id (0 if missing) | sex 1-male 2-female | phenotype 1-unaffected 2-affected | path to BAM | path to VCF
+------- | --------- | -------------------------- | -------------------------- | ------------------- | --------------------------------- | -------------------------- | -------------------------
+trio001 | trio001.fa |  0 |      0 |      1 |      1 | ~/bam/trio001.fa.bam  | ~/vcf/trio001.vcf
 
-```
-/path/to/trio001.fa-example.bam
-/path/to/trio001.mo-example.bam
-/path/to/trio001.p1-example.bam
-```
+trio001 | trio001.mo |  0 |      0 |      2 |      1 | | ~/bam/trio001.mo.bam  | ~/vcf/trio001.vcf
+trio001 | trio001.p1 |  trio001.fa |      trio001.mo |      1 |      2 | | ~/bam/trio001.p1.bam  | ~/vcf/trio001.vcf
+
+The VCF file specified in the extended pedigree file must contain genotype information about the trio.
+Single sample VCF files are not supported.
 
 #### Ready to run
 
 Issue in your terminal
 ```
-call_de_novo.py trio001.p1 /path/to/config/cfg.yml 0.3 
-```   
+call_de_novo.py trio001.p1 /path/to/config/cfg.yml 0.3
+```
 
 To score all possible *de novo* variants decrease the class probability threashold to 0.
 
