@@ -47,7 +47,6 @@ You will need a PED file with two additional columns assosiating samples with BA
 trio id | sample id | father's id (0 if missing) | mother's id (0 if missing) | sex 1-male 2-female | phenotype 1-unaffected 2-affected | path to BAM | path to VCF
 ------- | --------- | -------------------------- | -------------------------- | ------------------- | --------------------------------- | -------------------------- | -------------------------
 trio001 | trio001.fa |  0 |      0 |      1 |      1 | ~/bam/trio001.fa.bam  | ~/vcf/trio001.vcf
-
 trio001 | trio001.mo |  0 |      0 |      2 |      1 | ~/bam/trio001.mo.bam  | ~/vcf/trio001.vcf
 trio001 | trio001.p1 |  trio001.fa |      trio001.mo |      1 |      2 | ~/bam/trio001.p1.bam  | ~/vcf/trio001.vcf
 
