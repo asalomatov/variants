@@ -1,6 +1,7 @@
 min_DP: 10
-output_directory: /mnt/xfs1/home/asalomatov/projects/spark/feature_sets/hc
-ped_file_extended: /mnt/scratch/asalomatov/data/SPARK/spark.ped
+output_directory: /mnt/ceph/users/asalomatov/spark/denovo/def1/snp/hc/b1-2
+ped_file_extended: /mnt/xfs1/scratch/asalomatov/data/SPARK/ped/spark_spID_b1-2_ext_hc.ped
 variant_type: SNP
 bam_readcount: /mnt/scratch/asalomatov/software/installs/bin/bam-readcount
 genome_ref: /mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa
+denovo_definition: 1
