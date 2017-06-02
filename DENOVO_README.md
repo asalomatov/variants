@@ -67,8 +67,9 @@ To score all possible *de novo* variants decrease the class probability threasho
 Sample output
 
 ```
-var_id,pred_prob,test_var_alleles,DP_offspring,DP_father,DP_mother
-trio001.p1_10_32975032,0.998314760685,C_13_G_20,33,57,68
-trio001.p1_10_49668086,0.505049519446,T_7_A_3,10,11,11
-trio001.p1_19_44492568,0.822857483557,A_5_G_7,12,14,23
+ind_id,CHROM,POS,REF,ALT,pred_prob,DP_of,DP_fa,DP_mo,var_id,var_id_a,alleles_of,alleles_fa,alleles_mo,num_alt_of,num_alt_fa,num_alt_mo,num_alt_all,inherit_fa,inherit_mo,inherit_prnts
+trio001.p1,1,12073513,C,T,0.834789872169,10,28,26,trio001.p1_1_12073513,trio001.p1_1_12073513_C_T,C_8_T_2,C_28_none,C_26_none,1,0,0,1,0,0,0
+trio001.p1,1,12939426,T,C,2.73509740509e-05,49,135,162,trio001.p1_1_12939426,trio001.p1_1_12939426_T_C,T_40_C_9,T_107_C_27_G_1,T_162_none,1,2,0,3,1,0,1
+trio001.p1,1,12939440,C,G,0.000129409629153,49,142,156,trio001.p1_1_12939440,trio001.p1_1_12939440_C_G,C_38_G_11,C_116_A_1_G_25,C_153_A_3,1,2,1,4,1,0,1
+trio001.p1,1,12939476,G,C,6.94080290486e-06,57,139,172,trio001.p1_1_12939476,trio001.p1_1_12939476_G_C,G_37_C_20,G_135_C_4,G_120_C_52,1,1,1,3,1,1,2
 ```
