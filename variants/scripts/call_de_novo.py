@@ -63,9 +63,9 @@ with open(config_file, 'r') as f:
     cfg = yaml.safe_load(f)
 min_DP = cfg['min_DP']
 var_type = cfg['variant_type']
-vcf_pat = cfg['vcf_pattern']
-bam_pat = cfg['bam_pattern']
-bai_pat = bam_pat + '.bai'
+# vcf_pat = cfg['vcf_pattern']
+# bam_pat = cfg['bam_pattern']
+# bai_pat = bam_pat + '.bai'
 # ped_file = cfg['ped_file']
 ped_file_extended = cfg['ped_file_extended']
 bam_readcount = cfg['bam_readcount']
