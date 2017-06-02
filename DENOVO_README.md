@@ -48,8 +48,8 @@ trio id | sample id | father's id (0 if missing) | mother's id (0 if missing) | 
 ------- | --------- | -------------------------- | -------------------------- | ------------------- | --------------------------------- | -------------------------- | -------------------------
 trio001 | trio001.fa |  0 |      0 |      1 |      1 | ~/bam/trio001.fa.bam  | ~/vcf/trio001.vcf
 
-trio001 | trio001.mo |  0 |      0 |      2 |      1 | | ~/bam/trio001.mo.bam  | ~/vcf/trio001.vcf
-trio001 | trio001.p1 |  trio001.fa |      trio001.mo |      1 |      2 | | ~/bam/trio001.p1.bam  | ~/vcf/trio001.vcf
+trio001 | trio001.mo |  0 |      0 |      2 |      1 | ~/bam/trio001.mo.bam  | ~/vcf/trio001.vcf
+trio001 | trio001.p1 |  trio001.fa |      trio001.mo |      1 |      2 | ~/bam/trio001.p1.bam  | ~/vcf/trio001.vcf
 
 The VCF file specified in the extended pedigree file must contain genotype information about the trio.
 Single sample VCF files are not supported.
