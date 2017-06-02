@@ -66,7 +66,7 @@ var_type = cfg['variant_type']
 vcf_pat = cfg['vcf_pattern']
 bam_pat = cfg['bam_pattern']
 bai_pat = bam_pat + '.bai'
-ped_file = cfg['ped_file']
+# ped_file = cfg['ped_file']
 ped_file_extended = cfg['ped_file_extended']
 bam_readcount = cfg['bam_readcount']
 genome_ref = cfg['genome_ref']
@@ -108,21 +108,7 @@ if known_vars:
     func.runInShell('mkdir -p ' + output_dir_known)
 
 # populate ped DF
-if ped_file and ped_file_extended:
-    sys.exit('only one of ped_file, ped_file_extended may be non-empty')
-if ped_file:
-    myped = ped.Ped(ped_file)
-    myped.addVcf(file_pat=vcf_pat)
-    myped.ped.dropna(subset=['vcf'], inplace=True)
-    myped.addBam(file_pat=bam_pat)
-    myped.ped.dropna(subset=['bam'], inplace=True)
-    myped.addBai(file_pat=bai_pat)
-    myped.ped.dropna(subset=['bai'], inplace=True)
-elif ped_file_extended:
-    myped = ped.Ped(ped_file_extended, ['bam', 'vcf'])
-else:
-    sys.exit('ped_file or ped_file_extended must be defined')
-
+myped = ped.Ped(ped_file_extended, ['bam', 'vcf'])
 f = features.Features(myped, known_vars)
 
 # trio has to be complete with no files missing
@@ -218,7 +204,7 @@ else:
         if row['ind_id'] != child_id:
             continue
     #    print 'processing', i, row['ind_id']
-        #myped.ped.test.iat[i]
+        # myped.ped.test.iat[i]
         tst = train.TrainTest(row['test'],
                               list_of_features,
                               m_pkl['y_name'],
