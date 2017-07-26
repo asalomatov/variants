@@ -42,6 +42,7 @@ else:
 func.runInShell('mkdir -p ' + output_dir)
 
 igv_inp = pandas.read_csv(input_file, dtype=str)
+#igv_inp['centers'] = 'SF'
 #igv_inp = pandas.read_table(input_file, dtype=str)
 #for reg
 if args.genome_build in [38]:
@@ -92,7 +93,7 @@ for i, row in igv_inp.iterrows():
                                      row['lab_id'],
                                      row['CHROM'],
                                      row['POS'],
-                                     row['GENE'],
+                                     row['ANN.GENE'],
                                      row['centers']]) + '.png'
     print sample_bam, father_bam, mother_bam, chr_pos, sample_snapshot_name
     snapshot_list.append(tmpl3 % locals())

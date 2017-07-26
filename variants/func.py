@@ -16,16 +16,22 @@ import yaml
 vcf_required_fields = ['CHROM', 'POS', 'ID', 'REF', 'ALT',
                                 'QUAL', 'FILTER']
 
+def mergeFieldsForVariant(x):
+    y = (x.HGVSc + ';' + x.EXON + ';' + x.INTRON + ';' + x.HGVSp).tolist()
+    y = [i for i in y if i[0] != '-']
+    return '|'.join(y)
+
+
 
 def parentForOffspring(smpl_id, ped_file, sex=1):
     ped = pandas.read_table(ped_file, usecols=range(6), header=None, dtype=str)
     ped.columns = ['fam_id', 'ind_id', 'fa_id', 'mo_id',
                    'sex', 'pheno']
     if sex == 1:
-        fa_id = ped.fa_id[ped.ind_id == smpl_id].iloc[0] 
+        fa_id = ped.fa_id[ped.ind_id == smpl_id].iloc[0]
         return fa_id
     else:
-        mo_id = ped.mo_id[ped.ind_id == smpl_id].iloc[0] 
+        mo_id = ped.mo_id[ped.ind_id == smpl_id].iloc[0]
         return mo_id
 
 
@@ -40,6 +46,41 @@ def siblingsForOffspring(smpl_id, ped_file):
     children = ped.ind_id[ped.ff == ff].tolist()
     sibs = [i for i in children if i not in prnts_prob]
     return '_'.join(sibs)
+
+
+def sibFromDataMart(smpl_id, dmrt_df):
+	sibs = dmrt_df.ix[dmrt_df.user_sp_id == smpl_id, 'sibling_sp_id'].tolist()
+	sibs_cons = dmrt_df.ix[(dmrt_df.user_sp_id == smpl_id) &
+		(dmrt_df.sibling_genetic_consented == 1), 'sibling_sp_id'].tolist()
+	sibs_dna = dmrt_df.ix[(dmrt_df.user_sp_id == smpl_id) &
+		(dmrt_df.sibling_with_dna == 1), 'sibling_sp_id'].tolist()
+	sibs_seq = dmrt_df.ix[(dmrt_df.user_sp_id == smpl_id) &
+		(dmrt_df.sibling_sequenced == 1), 'sibling_sp_id'].tolist()
+	sibs_aff = dmrt_df.ix[(dmrt_df.user_sp_id == smpl_id) &
+		(dmrt_df.sibling_affected == 1), 'sibling_sp_id'].tolist()
+	sibs_unaff = [i for i in sibs if i not in sibs_aff]
+	twins = dmrt_df.ix[(dmrt_df.user_sp_id == smpl_id) &
+		(dmrt_df.twins == 1), 'sibling_sp_id'].tolist()
+	twins_unaff = [i for i in twins if i in sibs_unaff]
+	twins_aff = [i for i in twins if i in sibs_aff]
+	res = pandas.Series(
+					['_'.join(sibs),
+                    '_'.join(sibs_cons),
+                    '_'.join(sibs_dna),
+                    '_'.join(sibs_seq),
+                    '_'.join(sibs_aff),
+					'_'.join(sibs_unaff),
+					'_'.join(twins_aff),
+					'_'.join(twins_unaff)],
+					['Siblings',
+                    'Consented siblings',
+                    'Siblings with dna',
+                    'Sequenced siblings',
+                    'Affected siblings',
+					'Unaffected siblings',
+					'Affected twins',
+					'Unaffected twins'])
+	return res
 
 
 def sumGene(x):
@@ -64,7 +105,7 @@ def sumGene(x):
          LGDscore_perc_rank,
          RVIS_perc_rank,
          indiv],
-        index=['N', 'N_LOF', 'N_DMIS', 
+        index=['N', 'N_LOF', 'N_DMIS',
                'N_indiv', 'SFARI',
                'lof_z', 'mis_z',
                'pLI',
@@ -179,8 +220,8 @@ def readVcfToDF1(fname, sample_list=None, chunk_size=None):
         cat = 'zcat'
     cmd = ' '.join([cat, path, '| head -10000 | grep ^# | grep -v ^##'])
     vcf_clmns = runInShell(cmd, True).split('\t')
-    vcf_clmns = [x.strip() for x in vcf_clmns]        
-    vcf_clmns = [x.strip('#') for x in vcf_clmns]        
+    vcf_clmns = [x.strip() for x in vcf_clmns]
+    vcf_clmns = [x.strip('#') for x in vcf_clmns]
     print(vcf_clmns)
     df_cols = []
     df_cols_ind = []
@@ -234,7 +275,7 @@ def readVcfToDF(fname, chunk_size=None):
     cmd = ' '.join([cat, fname, '| grep ^# | grep -v ^##'])
     vcf_clmns = runInShell(cmd, True).split('\t')
     vcf_clmns = [x.strip() for x in vcf_clmns]
-    vcf_clmns = [x.strip('#') for x in vcf_clmns]        
+    vcf_clmns = [x.strip('#') for x in vcf_clmns]
     vcf_field_types = collections.OrderedDict()
     for i in vcf_clmns:
         vcf_field_types[i] = str
@@ -284,7 +325,7 @@ def listFiles(pattern):
         return l[0]
     else:
         return l
-    
+
 
 def run_once(f):
     def wrapper(*args, **kwargs):
@@ -300,7 +341,7 @@ def refAtPos(chrom, pos, genref):
                             str(chrom)+':'+str(pos)+'-'+str(pos))[1].strip()
     return ref_allel
 
-# /mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa  
+# /mnt/xfs1/bioinfo/data/bcbio_nextgen/150607/genomes/Hsapiens/GRCh37/seq/GRCh37.fa
 
 def bamrcIndel2vcfIndel(ind_id, chrom, position, ref, smpl_alt, genref):
     REF = ref
@@ -373,7 +414,7 @@ def df2sklearn(mydf, col_to_keep):
     #res = mydf[col_to_keep]
     mydf[col_to_keep] = mydf[col_to_keep].astype(float)
     mydf = mydf.dropna(subset=col_to_keep)
-    return mydf[col_to_keep] 
+    return mydf[col_to_keep]
 
 
 def varType(row):
@@ -424,9 +465,9 @@ def runBamReadcounts(vcffile, bamfile, output_dir,
     if os.path.splitext(vcffile)[1] == '.gz':
         cat = 'zcat '
     bam_name = os.path.splitext(os.path.basename(bamfile))[0]
-    tmp_dir = tempfile.mkdtemp()    
-    tmp_bed = tempfile.mktemp(dir=tmp_dir, suffix='.bed', prefix=bam_name+'_')    
-    outp_fn = os.path.join(output_dir, bam_name+'.txt')    
+    tmp_dir = tempfile.mkdtemp()
+    tmp_bed = tempfile.mktemp(dir=tmp_dir, suffix='.bed', prefix=bam_name+'_')
+    outp_fn = os.path.join(output_dir, bam_name+'.txt')
     cmd1 = cat + vcffile + \
         " | grep -v ^# | awk \'{print $1\"\t\"$2\"\t\"$2}' > " + tmp_bed
     cmd2 = ' '.join([brc, '-f', genome_ref, bamfile, '-l',tmp_bed, \
@@ -434,7 +475,7 @@ def runBamReadcounts(vcffile, bamfile, output_dir,
     cmd3 = ' '  # 'rm -rf '+tmp_dir
     cmd = ';'.join([cmd1, cmd2, cmd3])
     return runInShell(cmd)
-    
+
 
 def runBamReadcountsRegions(regionsfile,
                             bamfile,
@@ -449,24 +490,24 @@ def runBamReadcountsRegions(regionsfile,
     cmd = ' '.join([brc, '-f', genome_ref, bamfile, '-l', regionsfile,
                     ' > ' + output_file])
     return runInShell(cmd)
-   
+
 
 def readBamReadcount1(file_name, vartype):
     """Read bam-readcount output into pandas DF,
     vartype = ['SNP', 'INS', 'DEL', 'INDEL']
     """
     dir_name = os.path.dirname(file_name)
-    tmp_file = file_name + '.' + vartype    
-    if vartype == 'SNP':    
+    tmp_file = file_name + '.' + vartype
+    if vartype == 'SNP':
         cmd1 = 'cat ' + file_name + \
                " | grep -v + | grep -v - >" + tmp_file
-    elif vartype == 'INS':    
+    elif vartype == 'INS':
         cmd1 = 'cat ' + file_name + \
                " | grep + >" + tmp_file
-    elif vartype == 'DEL':    
+    elif vartype == 'DEL':
         cmd1 = 'cat ' + file_name + \
                " | grep - >" + tmp_file
-    elif vartype == 'INDEL':    
+    elif vartype == 'INDEL':
         cmd1 = 'cat ' + file_name + \
                " | grep -e '-\|+' >" + tmp_file
     else:
@@ -612,7 +653,7 @@ def parseBamReadcountSNP(row):
                     'num_q2_containing_reads',
                     'avg_dist_to_q2_start_in_q2_reads',
                     'avg_clipped_length',
-                    'avg_dist_to_effective_3p_end']     
+                    'avg_dist_to_effective_3p_end']
     res = pandas.Series(ref_split +
                         [num_allels, '_'.join(alts), alt_read_count] +
                         cum_array.tolist() +
@@ -641,7 +682,7 @@ def splitAlleles(x, n_allels=1):
     col_names = ['REF', 'ref_DP']
     if len(res) == 3:
         res = [res[0], int(res[1]), '.', 0, int(res[1])]
-        return pandas.Series(res, col_names + ['ALT', 'alt_DP', 'DP']) 
+        return pandas.Series(res, col_names + ['ALT', 'alt_DP', 'DP'])
     for i in range(len(res)/2)[1:]:
         col_names += ['ALT%s' % str(i), 'alt%s_DP' % str(i)]
     DP = sum(map(int, res[1::2]))

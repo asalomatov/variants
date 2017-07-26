@@ -52,7 +52,7 @@ class Variants:
 
     def infoFieldDescr(self, field_name):
         return self.infos[field_name].desc
-    
+
     def infoFieldType(self, field_name):
         return self.infos[field_name].type
 
@@ -110,21 +110,21 @@ class Variants:
 #                return 'mo'
 #            else:
 #                return 'fa'
-    
-    def _colNamesFormat(self): 
+
+    def _colNamesFormat(self):
         col_names_format = []
 #        memb = [self._sample2member(x.sample) for x in self.current_record.samples]
         for smpl in self.samples:
             for format_f in self.format_fields:
                     if format_f == 'AD':
-                        col_names_format.append('_'.join(['format', smpl, 'ref', format_f])) 
-                        col_names_format.append('_'.join(['format', smpl, 'alt', format_f])) 
+                        col_names_format.append('_'.join(['format', smpl, 'ref', format_f]))
+                        col_names_format.append('_'.join(['format', smpl, 'alt', format_f]))
                     elif format_f == 'PL':
-                        col_names_format.append('_'.join(['format', smpl, '0', format_f])) 
-                        col_names_format.append('_'.join(['format', smpl, '1', format_f])) 
-                        col_names_format.append('_'.join(['format', smpl, '2', format_f])) 
+                        col_names_format.append('_'.join(['format', smpl, '0', format_f]))
+                        col_names_format.append('_'.join(['format', smpl, '1', format_f]))
+                        col_names_format.append('_'.join(['format', smpl, '2', format_f]))
                     else:
-                        col_names_format.append('_'.join(['format', smpl, format_f])) 
+                        col_names_format.append('_'.join(['format', smpl, format_f]))
             col_names_format.append('_'.join([smpl, 'gt_type']))
         return col_names_format
 
@@ -166,7 +166,7 @@ class Variants:
             return 'snp'
         else:
             return self.current_record.var_type
-    
+
     def readFromVcf(self, min_depth=8):
         lines = []
         num_multiallelic = 0
@@ -181,12 +181,12 @@ class Variants:
                 num_multiallelic += 1
                 continue
             for i_alt, nucl_alt in enumerate(record.ALT):
-                line_required = [record.CHROM, 
-                        record.POS, 
-                        record.ID, 
-                        record.REF, 
+                line_required = [record.CHROM,
+                        record.POS,
+                        record.ID,
+                        record.REF,
                         nucl_alt.sequence, #record.ALT[0].sequence,
-                        record.QUAL, 
+                        record.QUAL,
                         self._formatFilter(record.FILTER)]
                 #INFO
                 line_info = self._parseInfo(i_alt)
@@ -222,8 +222,8 @@ class Variants:
         print(cmd)
         l = func.runInShell(cmd, True)
         return l
-        #vcf_clmns = [x.strip() for x in vcf_clmns]        
-        #vcf_clmns = [x.strip('#') for x in vcf_clmns]        
+        #vcf_clmns = [x.strip() for x in vcf_clmns]
+        #vcf_clmns = [x.strip('#') for x in vcf_clmns]
         #df_cols = []
         #df_cols_ind = []
 
@@ -237,8 +237,8 @@ class Variants:
         cmd = ' '.join([cat, path, '| head -10000 | grep ^# | grep -v ^##'])
         self.vcf_header = func.runInShell(cmd_header, True)
         vcf_clmns = func.runInShell(cmd, True).split('\t')
-        vcf_clmns = [x.strip() for x in vcf_clmns]        
-        vcf_clmns = [x.strip('#') for x in vcf_clmns]        
+        vcf_clmns = [x.strip() for x in vcf_clmns]
+        vcf_clmns = [x.strip('#') for x in vcf_clmns]
         df_cols = []
         df_cols_ind = []
         if sample_list is None:
@@ -316,9 +316,9 @@ class Variants:
         """
         gt = self.variants[sample_name].apply(lambda i: i.split(':')[0])
         gt = [i.strip() for i in gt]
-        self.variants[sample_name+'_gt'] = gt        
+        self.variants[sample_name+'_gt'] = gt
         c1 = self.variants[sample_name+'_gt'].isin(['0/0', '0|0'])
-        c2 = self.variants[sample_name+'_gt'].apply(lambda i: '.' in i)        
+        c2 = self.variants[sample_name+'_gt'].apply(lambda i: '.' in i)
         self.variants = self.variants[(~c1) & (~c2)]
         return 0
 
@@ -327,9 +327,9 @@ class Variants:
         """
         gt = self.variants[sample_name].apply(lambda i: i.split(':')[0])
         gt = [i.strip() for i in gt]
-        self.variants[sample_name+'_gt'] = gt        
-        c1 = self.variants[sample_name+'_gt'].apply(lambda i: '.' in i)        
-        self.variants = self.variants[~c1]         
+        self.variants[sample_name+'_gt'] = gt
+        c1 = self.variants[sample_name+'_gt'].apply(lambda i: '.' in i)
+        self.variants = self.variants[~c1]
         return 0
 
     def removeNaN(self, sample_name):
@@ -347,15 +347,15 @@ class Variants:
         return 0
 
     def removeHomVar(self, sample_name):
-        """Remove loci where sample_name has 1/1 genotype, or undefined 
+        """Remove loci where sample_name has 1/1 genotype, or undefined
         genotype"""
         gt = self.variants[sample_name].apply(lambda i: i.split(':')[0])
         gt = [i.strip() for i in gt]
-        self.variants[sample_name+'_gt'] = gt        
+        self.variants[sample_name+'_gt'] = gt
         c1 = self.variants[sample_name+'_gt'].isin(['1/1'])
-        c2 = self.variants[sample_name+'_gt'].apply(lambda i: '.' in i)        
-        c3 = self.variants[sample_name+'_gt'].apply(lambda i: '0' in i)        
-        self.variants = self.variants[(~c1) & (~c2) & c3]         
+        c2 = self.variants[sample_name+'_gt'].apply(lambda i: '.' in i)
+        c3 = self.variants[sample_name+'_gt'].apply(lambda i: '0' in i)
+        self.variants = self.variants[(~c1) & (~c2) & c3]
         return 0
 
     def extractGtCall(self, sample_name):
@@ -407,7 +407,7 @@ class Variants:
         c2 = self.variants[smpl_fa + '_gt'].isin(['0/0', '0|0'])
         c3 = self.variants[smpl_mo + '_gt'].isin(['0/0', '0|0'])
         # insted if the stricter definition above try this one
-        
+
         def newAllel(row, smpl_ch=smpl_ch, smpl_fa=smpl_fa, smpl_mo=smpl_mo):
             ch_gt = row[smpl_ch + '_gt']
             fa_gt = row[smpl_fa + '_gt']
@@ -439,7 +439,7 @@ class Variants:
         with open(target_vcf, 'w') as f:
             f.write(self.vcf_header)
         with open(target_vcf, 'a') as f:
-            f[self.vcf_clmns].write('#' + '\t'.join(self.vcf_clmns) + '\n')
+            f.write('#' + '\t'.join(self.vcf_clmns) + '\n')
             self.variants.to_csv(f, header=False, index=False, sep='\t')
 
 if __name__ == '__main__':

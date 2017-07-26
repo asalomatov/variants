@@ -10,7 +10,7 @@ import yaml
 # import datetime
 import summarizeVariants
 
-cols_to_output = summarizeVariants.cols_to_output[:]
+cols_to_output = summarizeVariants.cols_to_output[:] + ['HGVSc;Exon;Intron;HGVSp']
 extra_cols = summarizeVariants.extra_cols[:]
 
 
@@ -113,19 +113,47 @@ def summarizeMutations(infile,
                              vn.REF.astype(str) + '_' +\
                              vn.ALT.astype(str) + '_' +\
                              vn['ANN.FEATUREID'].astype(str)
-    
+
+    # if VEP anno is refseq based, translate to ensembl
+    if vep.Feature.str.startswith('NM').sum() > 0 or\
+                vep.Feature.str.startswith('XM').sum() > 0:
+        ens_refseq = pandas.read_csv(cfg['ens_refseq'])
+        vep['vep_transcript'] = vep.Feature.apply(
+                lambda i: i.split('.')[0])
+        vep = vep.merge(ens_refseq[['enst', 'nm']],
+                        how='left',
+                        left_on='vep_transcript',
+                        right_on='nm')
+    else:
+        vep['enst'] = vep.Feature
+    vep['chr_pos'] = vep['CHROM'].astype(str) + '_' +\
+                             vep.POS.astype(str)
+    vep['chr_pos_allel'] = vep['CHROM'].astype(str) + '_' +\
+                             vep.POS.astype(str) + '_' +\
+                             vep.REF.astype(str) + '_' +\
+                             vep.ALT.astype(str)
+    # join all transcripts
+    vep_by_var = vep.groupby('chr_pos').apply(func.mergeFieldsForVariant).to_frame()
+    vep_by_var.reset_index(inplace=True)
+    vep_by_var.columns = ['chr_pos', 'HGVSc;Exon;Intron;HGVSp']
     vep['chr_pos_allel_tr'] = vep['CHROM'].astype(str) + '_' +\
                              vep.POS.astype(str) + '_' +\
                              vep.REF.astype(str) + '_' +\
                              vep.ALT.astype(str) + '_' +\
-                             vep.Feature.astype(str)
+                             vep.enst.astype(str)
+    print(vn.chr_pos_allel_tr)
+    print(vep.chr_pos_allel_tr)
     print('vn dim before merging with vep:')
     print(vn.shape)
     vn = vn.merge(vep, how='left',
                   left_on='chr_pos_allel_tr',
                   right_on='chr_pos_allel_tr',
                   suffixes=['', '_vep'])
-    #vn = vn.merge(kv_vcf[['var_id', 'status']], on='var_id', how='left')
+    vn = vn.merge(vep_by_var, how='left',
+                  left_on='chr_pos',
+                  right_on='chr_pos',
+                  suffixes=['', '_vep'])
+    # vn = vn.merge(kv_vcf[['var_id', 'status']], on='var_id', how='left')
     print('vn dim after merging with vep:')
     print(vn.shape)
     print('before dedup')
@@ -158,9 +186,9 @@ def summarizeMutations(infile,
 
     vn.ix[:, 'effect_cat'] = 'other'
     vn.ix[vn['ANN.EFFECT'].str.contains(
-        '|'.join(cfg['snpeff']['effect_synon'])), 'effect_cat'] = 'syn' 
+        '|'.join(cfg['snpeff']['effect_synon'])), 'effect_cat'] = 'syn'
     vn.ix[vn['ANN.EFFECT'].str.contains(
-        '|'.join(cfg['snpeff']['effect_dmgmis'])), 'effect_cat'] = 'mis' 
+        '|'.join(cfg['snpeff']['effect_dmgmis'])), 'effect_cat'] = 'mis'
     vn.ix[vn['ANN.EFFECT'].str.contains(
         '|'.join(cfg['snpeff']['effect_lof'])), 'effect_cat'] = 'lof'
     vn['c_effect_cat'] = ~vn.effect_cat.isin(['other'])
@@ -238,7 +266,7 @@ def summarizeMutations(infile,
 #    vn = vn[~vn.FILTER.isnull()]
     print('vn shape in vcf')
     print(vn.shape)
-    
+
     non_coding_vars = ['intron_variant', 'downstream_gene_variant',
                        'upstream_gene_variant', 'sequence_feature',
                        '5_prime_UTR_variant', '3_prime_UTR_variant']
@@ -321,6 +349,7 @@ def summarizeMutations(infile,
     vn_lof = vn[c_lof & c_impact_lof & c_prev]
     vn_lof_clinical = vn[c_lof & c_impact_lof & c_prev & c_spark_genes]
 #    vn_diff = pandas.concat([vn_diff, getDiff(vn_full, vn_lof, msg='impact_lof')])
+    vn_lof_dmis_clinical = pandas.concat([vn_lof_clinical, vn_mis_clinical])
 
     vn_syn = vn[c_syn & c_prev]
     vn_syn_clinical = vn[c_syn & c_prev & c_spark_genes]
@@ -336,10 +365,10 @@ def summarizeMutations(infile,
     c_TP = (vn.pred_labels == 1) & vn.status.isin(['Y'])
     vn_TP = vn[cols_to_output][c_TP]
     #vn_TP = vn_TP[~vn_TP.v_id.duplicated()]
-    
+
     var_type = cfg['variant_type']
     outp_suffix = '' # '{:%Y-%m-%d_%H-%M-%S-%f}'.format(datetime.datetime.now())
-    
+
     def writeVariants(df, cols_to_output, var_type, prefix, suffix, outp_dir):
         if df.empty:
             print('%s is empty' % prefix)
@@ -352,7 +381,7 @@ def summarizeMutations(infile,
                                          var_type,
                                          suffix]) + '.csv'),
                   index=False)
-    
+
     writeVariants(vn[c_all_denovo], cols_to_output + extra_cols, var_type,
                   prefix, 'ALL_DENOVO', outp_dir)
     writeVariants(vn[vn.c_biotype], cols_to_output + extra_cols, var_type,
@@ -373,6 +402,8 @@ def summarizeMutations(infile,
                   prefix + '_MIS', 'clinical', outp_dir)
     writeVariants(vn_lof_clinical, cols_to_output + extra_cols, var_type,
                   prefix + '_LOF', 'clinical', outp_dir)
+    writeVariants(vn_lof_dmis_clinical, cols_to_output + extra_cols, var_type,
+                  prefix + '_LOF_DMIS', 'clinical', outp_dir)
     writeVariants(vn_syn_clinical, cols_to_output + extra_cols, var_type,
                   prefix + '_SYN', 'clinical', outp_dir)
     writeVariants(vn_other_clinical, cols_to_output + extra_cols,
@@ -381,7 +412,7 @@ def summarizeMutations(infile,
 
 #    writeVariants(vn_diff, cols_to_output[:-2]+['step'], var_type,
 #                  prefix + '_DIFF', outp_suffix, outp_dir)
-        
+
 #    vn_TP[cols_to_output[:-2]].to_csv(
 #        os.path.join(outp_dir, 'true_pos_snp' + outp_suffix + '.csv'), index=False)
 #    vn_mis[cols_to_output[:-2]][c_new].to_csv(

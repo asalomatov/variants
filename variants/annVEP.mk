@@ -1,11 +1,12 @@
-### 
+###
 SHELL = /bin/bash
 USR = $(shell whoami)
 INCLMK = ~/projects/pipeline/ppln/include.mk
+VEPREFSEQ =
 include $(INCLMK)
 ### may override on cl
 PREFIX = 1
-SUFFIX = 
+SUFFIX =
 INDIR = .
 OUTDIR = .
 LOGDIR = $(OUTDIR)
@@ -27,7 +28,7 @@ $(outFile): $(inFile)
 	mkdir -p $(OUTDIR)
 	mkdir -p $(TMPDIR)
 	mkdir -p $(OUTDIR)
-	$(VEP) --tab --output_file $@ --input_file $< 
+	$(VEP) --tab $(VEPREFSEQ) --output_file $@ --input_file $<
 
 
 #--fields dbNSFP_M_CAP_pred,ind_id,pred_prob

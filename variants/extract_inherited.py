@@ -71,3 +71,7 @@ vrs.readVcfToDF(sample_list=[f.sample_id, f.father_id, f.mother_id])
 vrs.removeNoGT(f.sample_id)
 vrs.removeHomRef(f.sample_id)
 vrs.saveAsVcf(os.path.join(output_dir, 'aaa.vcf'))
+vrs.variants.shape
+AAA = pandas.DataFrame()
+AAA.convert_objects
+
