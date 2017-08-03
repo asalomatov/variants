@@ -4,6 +4,7 @@ import pandas as pd
 import sys, os, re
 import func
 import collections
+import logging
 
 
 class Variants:
@@ -157,6 +158,7 @@ class Variants:
                         raise
             line_format.append(smpl.gt_type)
         return line_format
+
     def _varType(self):
         if self.current_record.is_deletion:
             return 'del'
@@ -226,6 +228,16 @@ class Variants:
         #vcf_clmns = [x.strip('#') for x in vcf_clmns]
         #df_cols = []
         #df_cols_ind = []
+
+    def readVcfHeader(self, vcf_file=None):
+        if vcf_file is None:
+            path = self.fname
+        else:
+            path = vcf_file
+        cat, compression = self.catOrzcat(path)
+        cmd_header = ' '.join([cat, path, '| head -10000 | grep ^##'])
+        res = func.runInShell(cmd_header, True)
+        return res
 
     def readVcfToDF(self, sample_list=None, chunk_size=None):
         """read vcf file into pandas DF without parsing.
@@ -358,6 +370,13 @@ class Variants:
         self.variants = self.variants[(~c1) & (~c2) & c3]
         return 0
 
+    def removeFailingFilter(self):
+        """Remove loci where FILTER is not in ('PASS', '.') """
+        c1 = self.variants.FILTER.isin(['PASS', '.'])
+        logging.info('%s variants failed FILTER, and were removed' % sum(~c1))
+        self.variants = self.variants[c1]
+        return 0
+
     def extractGtCall(self, sample_name):
         """Separate GT for the sample into the column
         named $sample_list_gt"""
@@ -435,12 +454,16 @@ class Variants:
             self.variants = self.variants[dnv2 & (~dnv1)]
         return 0
 
+    def addLineToVcfHeader(self, header_line):
+        self.vcf_header += header_line + '\n'
+
     def saveAsVcf(self, target_vcf):
         with open(target_vcf, 'w') as f:
             f.write(self.vcf_header)
         with open(target_vcf, 'a') as f:
             f.write('#' + '\t'.join(self.vcf_clmns) + '\n')
-            self.variants.to_csv(f, header=False, index=False, sep='\t')
+            self.variants[self.vcf_clmns].to_csv(f, header=False,
+                                                 index=False, sep='\t')
 
 if __name__ == '__main__':
     pass
