@@ -20,17 +20,6 @@ conda create --name test_env python=2
 source activate test_env
 ```
 
-Install prerequestives
-
-```
-conda install matplotlib
-conda install numpy
-conda install scipy
-conda install pandas
-conda install scikit-learn
-pip install xgboost
-```
-
 Install **_variants_** from github
 
 ```
