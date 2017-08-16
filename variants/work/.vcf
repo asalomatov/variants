@@ -1,0 +1,1 @@
+/mnt/xfs1/bioinfoCentos7/software/builds/perlbrew/cellar/perls/perl-5.22.1/bin/perl /mnt/xfs1/bioinfoCentos7/software/builds/ensembl/ensembl-tools-release-85/scripts/variant_effect_predictor/variant_effect_predictor.pl --quiet --cache --dir=/mnt/ceph/users/carriero/VEPcache/.vep --assembly=GRCh37 --offline --force_overwrite --everything

@@ -1,7 +1,3 @@
-working_models/
-working_config/
-output/
-variants/work/
 variants/model*
 variants/*_feature_contrib.csv
 variants/col_sum*
