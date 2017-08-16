@@ -27,11 +27,11 @@ if __name__ == '__main__':
             'Topic :: Scientific/Engineering :: Bio-Informatics',
             ],
         install_requires=[
-            'scikit-learn>=0.17.0',
-            'pandas>=0.17.1',
-            'numpy>=1.10.2',
-            'keras>=0.3.3',
-            'seaborn',
+            'scikit-learn==0.18.1',
+            'pandas==0.19.2',
+            'numpy==1.11.3',
+            'keras==1.1.1',
+            'seaborn==0.6.0',
             'PyVcf'
         ],
     )
