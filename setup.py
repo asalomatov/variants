@@ -34,6 +34,7 @@ if __name__ == '__main__':
             'seaborn==0.6.0',
             'xgboost==0.6a2',
             'matplotlib==2.0.0',
+            'pysam==0.8.3',
             'PyVcf'
         ],
     )
