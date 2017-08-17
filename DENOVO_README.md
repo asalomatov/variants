@@ -26,6 +26,13 @@ Install **_variants_** from github
 pip install git+git://github.com/asalomatov/variants.git
 ```
 
+Install prerequisites 
+
+```
+pip install pysam
+pip install tensorflow
+```
+
 #### Configuration
 
 Put together a yaml config file, see
