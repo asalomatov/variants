@@ -76,9 +76,11 @@ input_file_bn = os.path.splitext(os.path.basename(input_file))[0]
 outp_tsv = os.path.join(tmp_dir, input_file_bn + '.tsv')
 print(outp_tsv)
 func.writePredAsVcf(dnvo, outp_tsv, min_DP=min_DP)
-# script_name = os.path.basename(os.path.realpath(sys.argv[0]))
-script_name = os.path.abspath(pkg_resources.resource_filename('variants',
-                                                              'vcf2table.sh'))
+script_name = os.path.join(
+    os.path.dirname(os.path.realpath(sys.argv[0])),
+    'vcf2table.sh')
+#script_name = os.path.abspath(pkg_resources.resource_filename('variants',
+#                                                              'vcf2table.sh'))
 cmd = ' '.join([script_name,
                 outp_tsv,
                 os.path.dirname(script_name),
@@ -90,7 +92,7 @@ func.runInShell(cmd)
 vn = summarizeVariants.summarizeMutations(
     os.path.join(tmp_dir,
                  input_file_bn +
-                 '-ann-onePline.tsv'),
+                 '-ann.vcf.onePline.tsv'),
     os.path.join(tmp_dir,
                  input_file_bn +
                  '-vep.tsv'),
