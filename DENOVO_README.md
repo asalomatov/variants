@@ -26,10 +26,9 @@ Install **_variants_** from github
 pip install git+git://github.com/asalomatov/variants.git
 ```
 
-Install prerequisites 
+Install prerequisite 
 
 ```
-pip install pysam
 pip install tensorflow
 ```
 
