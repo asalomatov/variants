@@ -4,7 +4,6 @@ variants/col_sum*
 variants/*.h5
 variants/grid_search*
 variants/*.yml
-variants/*.txt
 *#*#
 .~lock*
 .#*

@@ -1,0 +1,23 @@
+##INFO=<ID=ind_id,Number=A,Type=String,Description="ind_id">
+##INFO=<ID=pred_labels,Number=A,Type=Integer,Description="preciction labels">
+##INFO=<ID=pred_prob,Number=A,Type=Float,Description="preciction probabilities">
+##INFO=<ID=status,Number=A,Type=String,Description="validation status">
+##INFO=<ID=ref_DP,Number=A,Type=Integer,Description="DP for ref allele">
+##INFO=<ID=alt_DP,Number=A,Type=Integer,Description="DP for alt allele">
+##INFO=<ID=DP,Number=A,Type=Integer,Description="DP">
+##INFO=<ID=DP_of,Number=A,Type=Integer,Description="DP of offspring">
+##INFO=<ID=DP_fa,Number=A,Type=Integer,Description="DP of father">
+##INFO=<ID=DP_mo,Number=A,Type=Integer,Description="DP of mother">
+##INFO=<ID=var_id,Number=A,Type=String,Description="ind_id_CHROM_POS">
+##INFO=<ID=var_id_a,Number=A,Type=String,Description="ind_id_CHROM_POS">
+##INFO=<ID=alleles_of,Number=A,Type=String,Description="REF_ref_count_ALT1_alt1Count... for ind_id">
+##INFO=<ID=alleles_fa,Number=A,Type=String,Description="REF_ref_count_ALT1_alt1Count... for father">
+##INFO=<ID=alleles_mo,Number=A,Type=String,Description="REF_ref_count_ALT1_alt1Count... for mother">
+##INFO=<ID=num_alt_of,Number=A,Type=String,Description="number of alt alleles for ind_id">
+##INFO=<ID=num_alt_fa,Number=A,Type=String,Description="number of alt alleles for father">
+##INFO=<ID=num_alt_mo,Number=A,Type=String,Description="number of alt alleles for mother">
+##INFO=<ID=num_alt_all,Number=A,Type=String,Description="number of alt alleles for the trio">
+##INFO=<ID=inherit_mo,Number=A,Type=Integer,Description="1 if mother shares alt allele, 0 otherwise">
+##INFO=<ID=inherit_fa,Number=A,Type=Integer,Description="1 if father shares alt allele, 0 otherwise">
+##INFO=<ID=inherit_prnts,Number=A,Type=Integer,Description="sum of inherit_mo and inherit_fa">
+#CHROM  POS ID  REF ALT QUAL    FILTER  INFO
