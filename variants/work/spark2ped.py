@@ -195,20 +195,20 @@ def insertBamAndBatch(row, id_column='lab_sample_id', N_batches=3):
 ### change below
 
 x = pandas.read_csv(
-    '/mnt/xfs1/scratch/asalomatov/data/SPARK/info/trio_samples_all_menemonic_20170620.csv',
+    '/mnt/xfs1/scratch/asalomatov/data/SPARK/info/trio_samples_all_menemonic_20170818.csv',
     dtype=str)
 
-b = pandas.read_csv(
-    '/mnt/xfs1/scratch/asalomatov/data/SPARK/info/trios_500.csv', header=None)
-b.columns = ['SP_id']
+#b = pandas.read_csv(
+#    '/mnt/xfs1/scratch/asalomatov/data/SPARK/info/trios_500.csv', header=None)
+#b.columns = ['SP_id']
 #b = pandas.read_csv(
 #    '/mnt/xfs1/scratch/asalomatov/data/SPARK/info/ids_by_batch_deduplicated.csv')
-#b = pandas.read_table(
-#    '/mnt/xfs1/scratch/asalomatov/data/SPARK/info/sampleID_lookup_table_b10', sep='\s')
+b = pandas.read_table(
+    '/mnt/xfs1/scratch/asalomatov/data/SPARK/info/sampleID_lookup_table_b11', sep='\s')
 
-#b.columns = ['bam', 'smpl_id', 'barcode', 'lab_id']
-#x_b = x[x.lab_sample_id.isin(b.lab_id)]
-x_b = x[x.SP_Descriptor.isin(b.SP_id)]
+b.columns = ['bam', 'smpl_id', 'barcode', 'lab_id']
+x_b = x[x.lab_sample_id.isin(b.lab_id)]
+#x_b = x[x.SP_Descriptor.isin(b.SP_id)]
 x_b = x_b[~x_b.duplicated()]
 x_b['fam_id'] = x_b.Mnemonic_Descriptor.apply(lambda i: i[:6])
 
