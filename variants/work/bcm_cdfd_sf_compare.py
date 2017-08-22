@@ -156,7 +156,7 @@ def whyNotDeNovo(row, clr):
                     'grep',
                     str(row['POS'])])
     res = func.runInShell(cmd, True)
-    print res
+    # print res
     if row['is_dn'] and not row['is_filt']:
         res = res.split('\n')[0]
         outp = res.split(',')[-len(sf_dn_c_columns):]
@@ -164,7 +164,7 @@ def whyNotDeNovo(row, clr):
         outp = [None] * len(sf_dn_c_columns)
 
     ser_out = pandas.Series(outp, sf_dn_c_columns, dtype=str)
-    print ser_out
+    # print ser_out
     # ser_out = ser_out[sf_dn_c_columns]
     return ser_out
 
@@ -295,8 +295,17 @@ if __name__ == '__main__':
                             default='b8',
                             type=str,
                             help='batch to output along with the full set')
+    arg_parser.add_argument('--p_snp',
+                            default=0.88,
+                            type=float,
+                            help='Classifier threashold for SNPs')
+    arg_parser.add_argument('--p_indel',
+                            default=0.0045,
+                            type=float,
+                            help='Classifier theashold for INDELs')
+
     args = arg_parser.parse_args()
-    print args
+    # print args
     asd_gene_prob_anno = '/mnt/xfs1/scratch/asalomatov/data/gene-scores/asd_gene_prediction_olga.csv'
     ios_anno = '/mnt/xfs1/scratch/asalomatov/data/gene-scores/ioss_lgd_rvis.scores.csv'
     asd_gene_prob_df = pandas.read_csv(asd_gene_prob_anno)
@@ -383,7 +392,7 @@ if __name__ == '__main__':
         sf_calls[
             sf_calls.cohort_freq &
             sf_calls.v_id.isin(sf_calls_passed_hard_filters)],
-        .88, .0045)
+        args.p_snp, args.p_indel)
     # sf_calls = sf_calls[sf_calls.v_id.isin(sf_calls_research.v_id)]
     print('after prob filter:')
     print(sf_calls.shape)
@@ -473,7 +482,6 @@ if __name__ == '__main__':
     sf_calls_research = sf_calls_research[sf_cohfreq]
     print('after coh freq:')
     print(sf_calls_research.shape)
-    print(sf_calls_research[sf_calls_research.POS.astype(int) == 179397473])
 
     # temporary fix below, add optimizer for threasholds
     sf_calls_research = func.numCoding(sf_calls_research, .88, .0045)
@@ -529,12 +537,9 @@ if __name__ == '__main__':
         other_calls = pandas.concat([codif_calls,
                                      bcm_calls[codif_calls.columns],
                                      sy_calls[codif_calls.columns]])
-        print(other_calls[other_calls.POS.astype(int) == 25463566])
         other_calls = other_calls[~other_calls.v_id.duplicated()]
-        print(other_calls[other_calls.POS.astype(int) == 25463566])
         other_calls['in_SF'] = other_calls.v_id.apply(lambda i: i in sf_set)
         other_calls = other_calls[~other_calls.v_id.isin(sf_calls.v_id)]
-        print(other_calls[other_calls.POS.astype(int) == 25463566])
         # sys.exit(1)
         other_calls['in_BCM'] = other_calls.v_id.apply(lambda i: i in bcm_set)
         other_calls['in_Cdfd'] = other_calls.v_id.apply(lambda i:
@@ -573,7 +578,6 @@ if __name__ == '__main__':
                 isDeNovo(row, clr),
                 axis=1)
 
-        print(other_calls[other_calls.POS.astype(int) == 25463566])
         other_calls['inVCF'] = isInVcfSNP(other_calls)
         other_calls['isDeNovo'] = isDeNovoSNP(other_calls)
         other_calls.to_csv(os.path.join(sf_calls_dir,
