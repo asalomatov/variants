@@ -2,7 +2,7 @@ import os, sys, pandas
 #from variants import func
 
 b = pandas.read_csv(
-    '/mnt/xfs1/scratch/asalomatov/data/SPARK/info/ids_by_batch_deduplicated.csv',
+    '/mnt/xfs1/scratch/asalomatov/data/SPARK/info/ids_by_batch.csv',
     dtype=str)
 labID2spID = {}
 spID2labID = {}
