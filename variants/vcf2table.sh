@@ -12,6 +12,9 @@ work_dir="$(dirname $input_tsv)"
 
 cp ${script_dir}/header_extra.txt ${work_dir}/tmp-${prefix}.vcf
 cat $input_tsv | sort -V -k1,1 -k2,2 >> ${work_dir}/tmp-${prefix}.vcf
+echo ''
+echo "vcfintersect -b $target_bed ${work_dir}/tmp-${prefix}.vcf > ${work_dir}/${prefix}.vcf"
+
 vcfintersect -b $target_bed ${work_dir}/tmp-${prefix}.vcf > ${work_dir}/${prefix}.vcf
 echo 'running VEP'
 make -f ${script_dir}/annVEP.mk INCLMK=$incl_make VEPREFSEQ=$vep_refseq PREFIX=${prefix} SUFFIX=.vcf INDIR=$work_dir OUTDIR=$work_dir

@@ -1,10 +1,11 @@
 '''
 Output a table with mutaions ready for validation submittion.
 '''
-
+from __future__ import print_function
 from collections import OrderedDict
 import pandas
 import func
+import argparse
 
 
 validation_clms = OrderedDict()
@@ -36,10 +37,34 @@ validation_clms['Affected twins'] = 'Affected twins'
 validation_clms['Unaffected twins'] = 'Unaffected twins'
 validation_clms['HGVSc;Exon;Intron;HGVSp'] = 'HGVSc;Exon;Intron;HGVSp'
 
-ped_file = '/mnt/xfs1/scratch/asalomatov/data/SPARK/ped/b1-9_pedigree.ped'
-dmrt_df = pandas.read_csv('/mnt/xfs1/scratch/asalomatov/data/SPARK/info/SPARK_datamart_validation.csv')
-AAA = pandas.read_csv(
-    '/mnt/ceph/users/asalomatov/spark/denovo/def1/spark_b1-9_for_validation-1_LOF_DMIS_ALL_clinical.csv')
+arg_parser = argparse.ArgumentParser(
+    description='Output variants in a validation ready format')
+arg_parser.add_argument('input_variants',
+                        nargs='+',
+                        type=str,
+                        help='A file that looks like output\
+                        of annotateAndFilter, or ann_table')
+arg_parser.add_argument('datamart_table',
+                        nargs='+',
+                        type=str,
+                        help='A table with containg info on relatives')
+arg_parser.add_argument('pedigree_file',
+                        nargs='+',
+                        type=str,
+                        help='Path to ped file')
+
+# example args below
+# '/mnt/ceph/users/asalomatov/spark/denovo/def1/test_valid_ALL_LOF.csv'
+# '/mnt/xfs1/scratch/asalomatov/data/SPARK/info/SPARK_datamart_validation.csv'
+# '/mnt/xfs1/scratch/asalomatov/data/SPARK/ped/b1-9_pedigree.ped'
+
+args = arg_parser.parse_args()
+print(args)
+
+ped_file = args.pedigree_file[0]
+dmrt_df = pandas.read_csv(args.datamart_table[0])
+AAA = pandas.read_csv(args.input_variants[0])
+
 if 'SP_id' not in AAA.columns:
     AAA['SP_id'] = AAA.ind_id
 AAA['Zygosity'] = 'Het'
