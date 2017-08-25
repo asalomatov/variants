@@ -98,7 +98,9 @@ def isPossibleDeNovo(row, clr):
     if len(row['REF']) == len(row['ALT']):
         v_t = 'snp'
     else:
-        v_t = 'indels'
+        #IA: 08/23/2017: subdirectory is indel
+        v_t = 'indel'
+        #v_t = 'indels'   
     cmd = ' '.join(['cat',
                     os.path.join(
                         sf_calls_dir,
@@ -120,7 +122,9 @@ def isDeNovo(row, clr):
         v_t = 'snp'
         v_tt = 'SNP'
     else:
-        v_t = 'indels'
+        #IA: 08/23/2017: subdirectory is indel
+        v_t = 'indel'
+        #v_t = 'indels'   
         v_tt = 'INDEL'
     cmd = ' '.join(['cat',
                     os.path.join(
