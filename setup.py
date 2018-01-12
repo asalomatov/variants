@@ -32,7 +32,7 @@ if __name__ == '__main__':
             'numpy==1.11.3',
             'keras==1.1.1',
             'seaborn==0.6.0',
-            'xgboost==0.6a2',
+            'py-xgboost',
             'matplotlib==2.0.0',
             'pysam==0.8.3',
             'PyVcf'
